@@ -1,6 +1,6 @@
 # RDF/JS Wrapper
 
-[![Test Workflow](https://github.com/theodi/rdfjs-wrapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/theodi/rdfjs-wrapper/actions/workflows/ci.yml?query=branch%3Amain)
+[![Test Workflow](https://github.com/rdfjs/wrapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rdfjs/wrapper/actions/workflows/ci.yml?query=branch%3Amain)
 [![npm](https://img.shields.io/npm/v/rdfjs-wrapper)](https://www.npmjs.com/package/rdfjs-wrapper)
 
 An [RDF/JS](https://rdf.js.org/data-model-spec/) object mapping library.
