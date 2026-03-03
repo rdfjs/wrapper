@@ -17,10 +17,10 @@ export class ParentDataset extends DatasetWrapper {
     }
 
     public get matchSubjectsOfPropertyanyObjectparentGraphany(): Iterable<Parent> {
-        return this.matchSubjectsOf(Parent, undefined, Example.Parent, undefined)
+        return this.matchSubjectsOf(Parent, undefined, this.factory.namedNode(Example.Parent), undefined)
     }
 
     public get matchObjectsOfSubjectxPropertyhaschildGraphany(): Iterable<Child> {
-        return this.matchObjectsOf(Child, "x", Example.hasChild, undefined)
+        return this.matchObjectsOf(Child, this.factory.namedNode("x"), this.factory.namedNode(Example.hasChild), undefined)
     }
 }
