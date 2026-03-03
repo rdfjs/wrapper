@@ -15,6 +15,15 @@ In other words, [RDF data](https://en.wikipedia.org/wiki/Resource_Description_Fr
 Additionally, standard mapping classes can be defined and reused in any number of context where they are relevant (see for example [@solid/object](https://github.com/solid/object)).
 
 
+## How To?
+
+### Publish the package
+
+1. Run `npm version major | minor | patch` locally (see [npm-version](https://docs.npmjs.com/cli/v8/commands/npm-version))
+1. [Draft a new release](https://github.com/theodi/wrapper/releases)
+1. The [Continuous Deployment action](https://github.com/theodi/wrapper/actions/workflows/cd.yml) will be triggered and automatically publish to npm
+
+
 ## Background
 
 RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/) specifications.
