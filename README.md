@@ -1,6 +1,6 @@
 # RDF/JS Wrapper
 
-[![Test Workflow](https://github.com/theodi/rdfjs-wrapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/theodi/rdfjs-wrapper/actions/workflows/ci.yml?query=branch%3Amain)
+[![Test Workflow](https://github.com/rdfjs/wrapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rdfjs/wrapper/actions/workflows/ci.yml?query=branch%3Amain)
 [![npm](https://img.shields.io/npm/v/rdfjs-wrapper)](https://www.npmjs.com/package/rdfjs-wrapper)
 
 An [RDF/JS](https://rdf.js.org/data-model-spec/) object mapping library.
@@ -13,6 +13,15 @@ The purpose of the RDF/JS Wrapper library is to enable idiomatic JavaScript obje
 In other words, [RDF data](https://en.wikipedia.org/wiki/Resource_Description_Framework) is abstracted away and developers can define standard mapping classes to program over it.
 
 Additionally, standard mapping classes can be defined and reused in any number of context where they are relevant (see for example [@solid/object](https://github.com/solid/object)).
+
+
+## How To?
+
+### Publish the package
+
+1. Run `npm version major | minor | patch` locally (see [npm-version](https://docs.npmjs.com/cli/v8/commands/npm-version))
+1. [Draft a new release](https://github.com/theodi/wrapper/releases)
+1. The [Continuous Deployment action](https://github.com/theodi/wrapper/actions/workflows/cd.yml) will be triggered and automatically publish to npm
 
 
 ## Background

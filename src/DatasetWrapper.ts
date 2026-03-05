@@ -37,40 +37,32 @@ abstract class DatasetCoreBase implements DatasetCore {
 
 export class DatasetWrapper extends DatasetCoreBase {
     protected* subjectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
-        for (const q of this.matchSubjectsOf(termWrapper, predicate)) {
+        for (const q of this.matchSubjectsOf(termWrapper, this.factory.namedNode(predicate))) {
             yield q
-        }
-    }
-
-    protected* matchSubjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, predicate?: string, object?: string, graph?: string): Iterable<T> {
-        const p = predicate ? this.factory.namedNode(predicate) : undefined
-        const o = object ? this.factory.namedNode(object) : undefined
-        const g = graph ? this.factory.namedNode(graph) : undefined
-
-        for (const q of this.match(undefined, p, o, g)) {
-            yield new termWrapper(q.subject, this, this.factory)
         }
     }
 
     protected* objectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
-        for (const q of this.matchObjectsOf(termWrapper, undefined, predicate)) {
+        for (const q of this.matchObjectsOf(termWrapper, undefined, this.factory.namedNode(predicate))) {
             yield q
-        }
-    }
-
-    protected* matchObjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, subject?: string, predicate?: string, graph?: string): Iterable<T> {
-        const s = subject ? this.factory.namedNode(subject) : undefined
-        const p = predicate ? this.factory.namedNode(predicate) : undefined
-        const g = graph ? this.factory.namedNode(graph) : undefined
-
-        for (const q of this.match(s, p, undefined, g)) {
-            yield new termWrapper(q.object, this, this.factory)
         }
     }
 
     protected* instancesOf<T>(type: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
-        for (const q of this.matchSubjectsOf(constructor, RDF.type, type)) {
+        for (const q of this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(type))) {
             yield q
+        }
+    }
+
+    protected* matchSubjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T> {
+        for (const q of this.match(undefined, predicate, object, graph)) {
+            yield new termWrapper(q.subject, this, this.factory)
+        }
+    }
+
+    protected* matchObjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, subject?: Term, predicate?: Term, graph?: Term): Iterable<T> {
+        for (const q of this.match(subject, predicate, undefined, graph)) {
+            yield new termWrapper(q.object, this, this.factory)
         }
     }
 }
