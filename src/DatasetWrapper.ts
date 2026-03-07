@@ -65,4 +65,8 @@ export class DatasetWrapper extends DatasetCoreBase {
             yield new termWrapper(q.object, this, this.factory)
         }
     }
+
+    get [Symbol.toStringTag]() {
+        return this.constructor.name
+    }
 }

@@ -22,6 +22,10 @@ export class TermWrapper {
         this.factory = factory;
     }
 
+    get [Symbol.toStringTag]() {
+        return this.constructor.name
+    }
+
     protected singular<T>(p: string, valueMapping: IValueMapping<T>): T {
         const predicate = this.factory.namedNode(p)
         const matches = this.dataset.match(this.term, predicate)[Symbol.iterator]()
