@@ -7,6 +7,10 @@ import { Something } from "./something.js"
 
 
 export class TermWrapper extends Something {
+    get [Symbol.toStringTag]() {
+        return this.constructor.name
+    }
+
     protected singular<T>(p: string, valueMapping: IValueMapping<T>): T {
         const predicate = this.factory.namedNode(p)
         const matches = this.dataset.match(this as Term, predicate)[Symbol.iterator]()

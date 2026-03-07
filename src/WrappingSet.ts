@@ -69,7 +69,7 @@ export class WrappingSet<T> implements Set<T> {
     }
 
     get [Symbol.toStringTag](): string {
-        return `collection wrapper for subject ${this.subject} predicate ${this.predicate}` // TODO: Direction
+        return this.constructor.name
     }
 
     private quad(value: T): Quad {

@@ -48,8 +48,8 @@ export class DatasetWrapper extends DatasetCoreBase {
         }
     }
 
-    protected* instancesOf<T>(type: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
-        for (const q of this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(type))) {
+    protected* instancesOf<T>(predicate: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
+        for (const q of this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(predicate))) {
             yield q
         }
     }
@@ -64,5 +64,9 @@ export class DatasetWrapper extends DatasetCoreBase {
         for (const q of this.match(subject, predicate, undefined, graph)) {
             yield new termWrapper(q.object, this, this.factory)
         }
+    }
+
+    get [Symbol.toStringTag]() {
+        return this.constructor.name
     }
 }

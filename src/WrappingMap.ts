@@ -93,7 +93,7 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
     }
 
     get [Symbol.toStringTag](): string {
-        return "WrappingMap"
+        return this.constructor.name
     }
 
     private get matches(): Iterable<Quad> {

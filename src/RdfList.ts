@@ -202,6 +202,10 @@ export class RdfList<T> implements Array<T> {
         }
     }
 
+    get [Symbol.toStringTag]() {
+        return this.constructor.name
+    }
+
     private get items(): Iterable<ListItem<T>> {
         return this.root.items()
     }
