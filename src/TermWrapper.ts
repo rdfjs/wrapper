@@ -10,6 +10,22 @@ export class TermWrapper extends AnyTermWithContext {
         return this.constructor.name
     }
 
+    toJSON() {
+        const result = {}
+
+        for (let instance = this; instance !== null; instance = Object.getPrototypeOf(instance)) {
+            for (const [propertyName, {value: propertyValue}] of Object.entries(Object.getOwnPropertyDescriptors(instance))) {
+                if (propertyValue !== undefined) {
+                    continue
+                }
+
+                Reflect.set(result, propertyName, Reflect.get(this, propertyName))
+            }
+        }
+
+        return result
+    }
+
     protected singular<T>(p: string, termAs: ITermAsValueMapping<T>): T {
         const predicate = this.factory.namedNode(p)
         const matches = this.dataset.match(this as Term, predicate)[Symbol.iterator]()

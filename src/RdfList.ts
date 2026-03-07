@@ -209,4 +209,8 @@ export class RdfList<T> implements Array<T> {
     private get items(): Iterable<ListItem<T>> {
         return this.root.items()
     }
+
+    toJSON() {
+        return [...this]
+    }
 }

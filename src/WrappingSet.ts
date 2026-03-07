@@ -72,6 +72,10 @@ export class WrappingSet<T> implements Set<T> {
         return this.constructor.name
     }
 
+    toJSON() {
+        return [...this]
+    }
+
     private quad(value: T): Quad {
         const s = this.subject as Quad_Subject // TODO: guard
         const p = this.subject.factory.namedNode(this.predicate)

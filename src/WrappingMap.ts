@@ -96,6 +96,10 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
         return this.constructor.name
     }
 
+    toJSON(){
+        return Object.fromEntries(this)
+    }
+
     private get matches(): Iterable<Quad> {
         const p = this.subject.factory.namedNode(this.predicate)
 
