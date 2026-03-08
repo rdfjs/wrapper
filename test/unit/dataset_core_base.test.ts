@@ -4,7 +4,6 @@ import { DataFactory } from "n3"
 import { ParentDataset } from "./model/ParentDataset.js"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 
-
 const rdf = `
 prefix : <https://example.org/>
 
@@ -21,7 +20,6 @@ prefix : <https://example.org/>
     ] ;
 .
 `;
-
 
 await describe("Dataset Core Bases", async () => {
     const parentDataset = new ParentDataset(datasetFromRdf(rdf), DataFactory)

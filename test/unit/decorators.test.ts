@@ -5,7 +5,6 @@ import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import { ParentDecorated } from "./model/ParentDecorated.js"
 import { ChildDecorated } from "./model/ChildDecorated.js"
 
-
 const rdf = `
 prefix : <https://example.org/>
 

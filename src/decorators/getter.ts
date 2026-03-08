@@ -5,7 +5,6 @@ import type { TermWrapper } from "../TermWrapper.js"
 import { GetterArity } from "./GetterArity.js"
 import { TermMapping } from "../mapping/TermMapping.js"
 
-
 export function getter(predicate: string, getterArity: GetterArity, valueMapping: IValueMapping<any>, termMapping: ITermMapping<any> = TermMapping.stringToLiteral): any {
     return function (target: any, context: ClassGetterDecoratorContext): any {
         return function (this: TermWrapper): any {

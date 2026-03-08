@@ -6,7 +6,6 @@ import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import { Parent } from "./model/Parent.js"
 import type { Term } from "@rdfjs/types"
 
-
 const rdf = `
 prefix : <https://example.org/>
 
@@ -37,7 +36,6 @@ await describe("Term Wrapper", async () => {
     const dataset = datasetFromRdf(rdf)
     const parent = new Parent("x", dataset, DataFactory)
 
-
     await describe("Value Mapping", async () => {
         await it("get blank node to string", async () => {
             assert.equal(parent.hasBlankNode, "b0_0")
@@ -63,7 +61,6 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.hasIri, "https://example.org")
         })
     })
-
 
     await describe("Term Mapping", async () => {
         await it("set date to literal", async () => {
@@ -100,7 +97,6 @@ await describe("Term Wrapper", async () => {
         })
     })
 
-
     await describe("Object Mapping", async () => {
         await it("get wrapped term", async () => {
             assert.equal(parent.hasChild.hasString, "child string 1")
@@ -113,7 +109,6 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.hasChild.hasString, "child string 4")
         })
     })
-
 
     await describe("Arity Mapping", async () => {
         await describe("Singular", async () => {
@@ -128,10 +123,9 @@ await describe("Term Wrapper", async () => {
             })
 
             await it("set singular to undefined throws", async () => {
-                assert.throws(() => { parent.hasString = undefined as any })
+                assert.throws(() => parent.hasString = undefined as any)
             })
         })
-
 
         await describe("Singular Nullable", async () => {
             await it("get nullable", async () => {
@@ -155,7 +149,6 @@ await describe("Term Wrapper", async () => {
 
         // TODO: Set Arity
     })
-
 
     await describe("Set Mapping", async () => {
         // TODO: test primitive types wrapping set

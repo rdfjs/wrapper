@@ -2,7 +2,6 @@ import type { Literal, Term } from "@rdfjs/types"
 import type { ILangString } from "../type/ILangString.js"
 import type { TermWrapper } from "../TermWrapper.js"
 
-
 /*
  * Read from the RDF dataset
  * Transform RDF Terms to JavaScript primitive types

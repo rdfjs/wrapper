@@ -5,7 +5,6 @@ import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
 import { Something } from "./something.js"
 
-
 export class TermWrapper extends Something {
     get [Symbol.toStringTag]() {
         return this.constructor.name
