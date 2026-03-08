@@ -19,11 +19,11 @@ export class TermWrapper extends Something {
         const {value: first, done: none} = matches.next()
 
         if (none) {
-            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
+            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
         }
 
         if (!matches.next().done) {
-            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
+            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
         }
 
         return valueMapping(new TermWrapper(first.object, this.dataset, this.factory))
