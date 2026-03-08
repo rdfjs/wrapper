@@ -43,11 +43,11 @@ export class TermWrapper extends AnyTermWithContext {
         const {value: first, done: none} = matches.next()
 
         if (none) {
-            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
+            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
         }
 
         if (!matches.next().done) {
-            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
+            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
         }
 
         return termAs(new TermWrapper(first.object, this.dataset, this.factory))
