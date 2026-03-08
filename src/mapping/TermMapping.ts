@@ -3,7 +3,6 @@ import type { ILangString } from "../type/ILangString.js"
 
 import { TermWrapper } from "../TermWrapper.js"
 
-
 /*
  * Write to the RDF dataset
  * Transform JavaScript primitive types to Term Wrapper

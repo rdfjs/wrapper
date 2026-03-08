@@ -4,7 +4,6 @@ import { DataFactory } from "n3"
 import { ParentDataset } from "./model/ParentDataset.js"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 
-
 const rdf = `
 prefix : <https://example.org/>
 

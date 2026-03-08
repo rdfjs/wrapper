@@ -4,7 +4,6 @@ import type { TermWrapper } from "../TermWrapper.js"
 import type { ITermMapping } from "../type/ITermMapping.js"
 import { RdfList } from "../RdfList.js"
 
-
 /*
  * Read and write the RDF dataset
  * Map RDF to Term Wrapper instances

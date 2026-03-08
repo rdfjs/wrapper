@@ -1,5 +1,4 @@
 import type { ILangString } from "../../../dist/type/ILangString.js"
-
 import { ObjectMapping, TermMapping, TermWrapper, ValueMapping } from "rdfjs-wrapper"
 import { Child } from "./Child.js"
 import { Example } from "../vocabulary/Example.js"
@@ -36,23 +35,23 @@ export class Parent extends TermWrapper {
         this.overwrite(Example.hasBlankNode, value, TermMapping.stringToBlankNode)
     }
 
-    public set hasDate(value: Date ) {
+    public set hasDate(value: Date) {
         this.overwrite(Example.hasDate, value, TermMapping.dateToLiteral)
     }
 
-    public set hasLangString(value: ILangString ) {
+    public set hasLangString(value: ILangString) {
         this.overwrite(Example.hasLangString, value, TermMapping.langStringToLiteral)
     }
 
-    public set hasNumber(value: number ) {
+    public set hasNumber(value: number) {
         this.overwrite(Example.hasNumber, value, TermMapping.numberToLiteral)
     }
 
-    public set hasString(value: string ) {
+    public set hasString(value: string) {
         this.overwrite(Example.hasString, value, TermMapping.stringToLiteral)
     }
 
-    public set hasIri(value: string ) {
+    public set hasIri(value: string) {
         this.overwrite(Example.hasIri, value, TermMapping.stringToIri)
     }
 
@@ -80,7 +79,7 @@ export class Parent extends TermWrapper {
         return this.singularNullable(Example.hasNullableString, ValueMapping.literalToString)
     }
 
-    public set hasNullableString(value: string | undefined ) {
+    public set hasNullableString(value: string | undefined) {
         this.overwriteNullable(Example.hasNullableString, value, TermMapping.stringToLiteral)
     }
 

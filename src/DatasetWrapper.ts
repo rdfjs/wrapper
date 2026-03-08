@@ -3,7 +3,6 @@ import type { ITermWrapperConstructor } from "./type/ITermWrapperConstructor.js"
 
 import { RDF } from "./vocabulary/RDF.js"
 
-
 abstract class DatasetCoreBase implements DatasetCore {
     public constructor(private readonly dataset: DatasetCore, protected readonly factory: DataFactory) {
     }

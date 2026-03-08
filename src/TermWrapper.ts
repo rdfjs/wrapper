@@ -4,7 +4,6 @@ import type { IValueMapping } from "./type/IValueMapping.js"
 import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
 
-
 export class TermWrapper {
     public readonly term: Term;
     public readonly dataset: DatasetCore;
