@@ -21,37 +21,37 @@ prefix : <https://example.org/>
     ] .
 `;
 
-describe("Decorators", async () => {
+await describe("Decorators", async () => {
     const dataset = datasetFromRdf(rdf)
     const parentDecorated = new ParentDecorated(DataFactory.namedNode("x"), dataset, DataFactory)
     const newChild = new ChildDecorated(DataFactory.blankNode(), dataset, DataFactory)
 
-    describe("Term Mappings", async () => {
-        it("get single literal to string", () => {
+    await describe("Term Mappings", async () => {
+        await it("get single literal to string", async () => {
             assert.equal(parentDecorated.hasString, "string 1")
         })
 
-        it("get single wrapped term", () => {
+        await it("get single wrapped term", async () => {
             assert.equal(parentDecorated.hasChild.hasString, "child string 1")
         })
 
-        it("get set of wrapped terms' single literal to string", () => {
+        await it("get set of wrapped terms' single literal to string", async () => {
             for (const child of parentDecorated.hasChildSet) {
                 assert.equal(["child string 2", "child string 3"].includes(child.hasString!), true)
             }
         })
     })
 
-    describe("Value Mappings", async () => {
-        it("set single literal to string", () => {
+    await describe("Value Mappings", async () => {
+        await it("set single literal to string", async () => {
             parentDecorated.hasString = "xxxxx"
             assert.equal(parentDecorated.hasString, "xxxxx")
         })
 
-        it("set single wrapped term", () => {
+        await it("set single wrapped term", async () => {
             newChild.hasString = "new string"
             parentDecorated.hasChild = newChild
-            assert.equal(parentDecorated.hasChild.hasString, "new string" )
+            assert.equal(parentDecorated.hasChild.hasString, "new string")
         })
     })
 })
