@@ -30,10 +30,10 @@ prefix : <https://example.org/>
 `;
 
 
-describe("Dataset Wrappers", async () => {
+await describe("Dataset Wrappers", async () => {
     const parentDataset = new ParentDataset(datasetFromRdf(rdf), DataFactory)
 
-    it("get instances of Parent as Parent", () => {
+    await it("get instances of Parent as Parent", async () => {
         assert.equal(Array.from(parentDataset.instancesOfParent).length, 1)
 
         for (const parent of parentDataset.instancesOfParent) {
@@ -41,7 +41,7 @@ describe("Dataset Wrappers", async () => {
         }
     })
 
-    it("get subjects of hasChild as Parent instances", () => {
+    await it("get subjects of hasChild as Parent instances", async () => {
         assert.equal(Array.from(parentDataset.subjectsOfHasChild).length, 2)
 
         for (const parent of parentDataset.subjectsOfHasChild) {
@@ -49,7 +49,7 @@ describe("Dataset Wrappers", async () => {
         }
     })
 
-    it("get objects of hasChild as Child instances", () => {
+    await it("get objects of hasChild as Child instances", async () => {
         assert.equal((Array.from(parentDataset.objectsOfHasChild).length), 2)
 
         for (const child of parentDataset.objectsOfHasChild) {
@@ -57,7 +57,7 @@ describe("Dataset Wrappers", async () => {
         }
     })
 
-    it("get matching subjects of `?s ?p :Parent ?g` as Parent instances", () => {
+    await it("get matching subjects of `?s ?p :Parent ?g` as Parent instances", async () => {
         assert.equal((Array.from(parentDataset.matchSubjectsOfPropertyanyObjectparentGraphany).length), 1)
 
         for (const parent of parentDataset.matchSubjectsOfPropertyanyObjectparentGraphany) {
@@ -65,7 +65,7 @@ describe("Dataset Wrappers", async () => {
         }
     })
 
-    it("get matching objects of `<x> :hasChild ?o ?g` as Child instances", () => {
+    await it("get matching objects of `<x> :hasChild ?o ?g` as Child instances", async () => {
         assert.equal((Array.from(parentDataset.matchObjectsOfSubjectxPropertyhaschildGraphany).length), 1)
 
         for (const child of parentDataset.matchObjectsOfSubjectxPropertyhaschildGraphany) {
@@ -73,7 +73,7 @@ describe("Dataset Wrappers", async () => {
         }
     })
 
-    it("iterates", () => {
+    await it("iterates", async () => {
         assert.equal((Array.from(parentDataset).length), 11)
 
         for (const x of parentDataset) {

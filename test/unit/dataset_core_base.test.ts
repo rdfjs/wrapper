@@ -23,35 +23,35 @@ prefix : <https://example.org/>
 `;
 
 
-describe("Dataset Core Bases", async () => {
+await describe("Dataset Core Bases", async () => {
     const parentDataset = new ParentDataset(datasetFromRdf(rdf), DataFactory)
     const newQuad = DataFactory.quad(DataFactory.blankNode(), DataFactory.namedNode("x"), DataFactory.literal("x"))
 
-    it("get size", () => {
+    await it("get size", async () => {
         assert.equal(parentDataset.size, 8)
     })
 
-    it("add quad", () => {
+    await it("add quad", async () => {
         parentDataset.add(newQuad)
         assert.equal(parentDataset.size, 9)
     })
 
-    it("add the same quad twice", () => {
+    await it("add the same quad twice", async () => {
         parentDataset.add(newQuad)
         assert.equal(parentDataset.size, 9)
     })
 
-    it("has quad", () => {
+    await it("has quad", async () => {
         assert.equal(parentDataset.has(newQuad), true)
     })
 
-    it("delete quad", () => {
+    await it("delete quad", async () => {
         parentDataset.delete(newQuad)
         assert.equal(parentDataset.size, 8)
         assert.equal(parentDataset.has(newQuad), false)
     })
 
-    it("match quads", () => {
+    await it("match quads", async () => {
         parentDataset.add(newQuad)
         assert.equal((Array.from(parentDataset.match(newQuad.subject, newQuad.predicate, newQuad.object, newQuad.graph)).length), 1)
         parentDataset.delete(newQuad)
