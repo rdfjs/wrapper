@@ -3,9 +3,9 @@ import type { ITermMapping } from "./type/ITermMapping.js"
 import type { IValueMapping } from "./type/IValueMapping.js"
 import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
-import { Something } from "./something.js"
+import { AnyTermWithContext } from "./AnyTermWithContext.js"
 
-export class TermWrapper extends Something {
+export class TermWrapper extends AnyTermWithContext {
     get [Symbol.toStringTag]() {
         return this.constructor.name
     }
