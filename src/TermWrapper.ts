@@ -4,6 +4,7 @@ import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
 import { AnyTermWithContext } from "./AnyTermWithContext.js"
+import { AnyTerm } from "./AnyTerm.js"
 
 export class TermWrapper extends AnyTermWithContext {
     get [Symbol.toStringTag]() {
@@ -11,16 +12,19 @@ export class TermWrapper extends AnyTermWithContext {
     }
 
     toJSON() {
-        const result = {
-            equals: (other: any) =>
-                this.term.equals(other.term()),
-
-            term: () => this.term
-        }
+        const result = {}
 
         for (let instance = this; instance !== null; instance = Object.getPrototypeOf(instance)) {
+                if (instance.constructor.name === AnyTerm.name) {
+                    continue
+                }
+
             for (const [propertyName, {value: propertyValue}] of Object.entries(Object.getOwnPropertyDescriptors(instance))) {
                 if (propertyName === "__proto__") {
+                    continue
+                }
+
+                if (propertyName === "constructor") {
                     continue
                 }
 
