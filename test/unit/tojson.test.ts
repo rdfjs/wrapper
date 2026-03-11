@@ -69,35 +69,64 @@ describe("tojson", () => {
 
     it("3.2", () => {
         class Wrapper extends TermWrapper {
-            get p1(): string {
-                return this.singular("p1", ValueMapping.literalToString)
+            get name(): string {
+                return this.singular("name", ValueMapping.literalToString)
             }
 
-            get p2(): Wrapper | undefined {
-                return this.singularNullable("p2", ObjectMapping.as(Wrapper))
+            get child(): Wrapper | undefined {
+                return this.singularNullable("child", ObjectMapping.as(Wrapper))
+            }
+
+            get child2(): Wrapper | undefined {
+                return this.singularNullable("child2", ObjectMapping.as(Wrapper))
             }
         }
 
         const rdf = `
-<s>
-    <p1> "o1" ;
-    <p2> <s> ;
-.`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
+<s1>
+    <name> "o1" ;
+    <child> <s2> ;
+    <child2> <s3> ;
+.
 
-        const x: any[] = []
-        JSON.stringify(wrapper, function (this: any, key: string, value: any) {
-            if ((value as any)["term"]!==undefined) {
-                if (x.some(xx => xx.equal(value.term))) {
-                    return
+<s2>
+    <name> "o2" ;
+    <child> <s3> ;
+.
+
+<s3>
+    <name> "o3" ;
+.
+`
+        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
+
+        const seen: Array<{ equals: (other: any) => boolean }> = []
+        const stringified = JSON.stringify(wrapper, function (this: any, key: string, current: any) {
+            console.log(seen)
+            if (current !== undefined && current["equals"] !== undefined) {
+                if (seen.some(previous => previous.equals(current))) {
+                    return "CYCLE"
                 }
-                x.push(value.term)
+
+                seen.push(current)
             }
-            return value
+
+            return current
         })
 
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p1: "o1", p2: {p1: "o2"}})
+        assert.deepStrictEqual(JSON.parse(stringified),
+            {
+                name: "o1",
+                child: {
+                    name: "o2",
+                    child: {
+                        name: "o3",
+                    }
+                },
+                child2: {
+                    name: "o3",
+                }
+            })
     })
 
     it("4", () => {

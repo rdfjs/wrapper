@@ -11,10 +11,19 @@ export class TermWrapper extends AnyTermWithContext {
     }
 
     toJSON() {
-        const result = {}
+        const result = {
+            equals: (other: any) =>
+                this.term.equals(other.term()),
+
+            term: () => this.term
+        }
 
         for (let instance = this; instance !== null; instance = Object.getPrototypeOf(instance)) {
             for (const [propertyName, {value: propertyValue}] of Object.entries(Object.getOwnPropertyDescriptors(instance))) {
+                if (propertyName === "__proto__") {
+                    continue
+                }
+
                 if (propertyValue !== undefined) {
                     continue
                 }
