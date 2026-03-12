@@ -4,6 +4,7 @@ import { DataFactory } from "n3"
 import { Child } from "./model/Child.js"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import { Parent } from "./model/Parent.js"
+import type { Term } from "@rdfjs/types"
 
 const rdf = `
 prefix : <https://example.org/>
@@ -180,7 +181,7 @@ await describe("Term Wrapper", async () => {
 
     await describe("Recursion Mapping", async () => {
         await it("get recursive wrapped term", async () => {
-            assert.equal(parent.term.equals(parent.hasRecursive.hasRecursive.hasRecursive.term), true)
+            assert.equal(parent.equals(parent.hasRecursive.hasRecursive.hasRecursive as Term), true)
         })
 
         await it("set recursive property", async () => {
@@ -190,7 +191,7 @@ await describe("Term Wrapper", async () => {
             // TODO: check for typed error singular no value
             assert.throws(() => parent.hasRecursive)
             parent.hasRecursive = "x"
-            assert.equal(parent.hasRecursive.hasRecursive.hasRecursive.term.value, "x")
+            assert.equal(parent.hasRecursive.hasRecursive.hasRecursive.value, "x")
         })
 
         // TODO: test recursion in wrapping set

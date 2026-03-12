@@ -3,6 +3,7 @@ import type { ITermWrapperConstructor } from "../type/ITermWrapperConstructor.js
 import type { TermWrapper } from "../TermWrapper.js"
 import type { ITermMapping } from "../type/ITermMapping.js"
 import { RdfList } from "../RdfList.js"
+import type { Term } from "@rdfjs/types"
 
 /*
  * Read and write the RDF dataset
@@ -17,10 +18,10 @@ import { RdfList } from "../RdfList.js"
 */
 export namespace ObjectMapping {
     export function as<T>(constructor: ITermWrapperConstructor<T>): IValueMapping<T> {
-        return (termWrapper: TermWrapper) => new constructor(termWrapper.term, termWrapper.dataset, termWrapper.factory)
+        return (termWrapper: TermWrapper) => new constructor(termWrapper as Term, termWrapper.dataset, termWrapper.factory)
     }
 
     export function asList<T>(subject: TermWrapper, predicate: string, valueMapping: IValueMapping<T>, termMapping: ITermMapping<T>): IValueMapping<T[]> {
-        return w => new RdfList(w.term, subject, predicate, valueMapping, termMapping)
+        return w => new RdfList(w as Term, subject, predicate, valueMapping, termMapping)
     }
 }

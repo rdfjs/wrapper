@@ -1,7 +1,7 @@
 import { TermWrapper } from "./TermWrapper.js"
 import type { IValueMapping } from "./type/IValueMapping.js"
 import type { ITermMapping } from "./type/ITermMapping.js"
-import type { Quad, Quad_Object, Quad_Subject } from "@rdfjs/types"
+import type { Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 
 export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
     constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly valueMapping: IValueMapping<[TKey, TValue]>, private readonly termMapping: ITermMapping<[TKey, TValue]>) {
@@ -23,9 +23,9 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
 
             this.subject.dataset.delete(
                 this.subject.factory.quad(
-                    this.subject.term as Quad_Subject,
+                    this.subject as Quad_Subject,
                     p,
-                    this.termMapping(entry, this.subject.dataset, this.subject.factory)!.term as Quad_Object))
+                    this.termMapping(entry, this.subject.dataset, this.subject.factory) as Quad_Object))
 
             return true
         }
@@ -99,7 +99,7 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
     private get matches(): Iterable<Quad> {
         const p = this.subject.factory.namedNode(this.predicate)
 
-        return this.subject.dataset.match(this.subject.term, p)
+        return this.subject.dataset.match(this.subject as Term, p)
     }
 
     private add(k: TKey, v: TValue) {
@@ -107,8 +107,8 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
 
         this.subject.dataset.add(
             this.subject.factory.quad(
-                this.subject.term as Quad_Subject,
+                this.subject as Quad_Subject,
                 p,
-                this.termMapping([k, v], this.subject.dataset, this.subject.factory)!.term as Quad_Object))
+                this.termMapping([k, v], this.subject.dataset, this.subject.factory) as Quad_Object))
     }
 }

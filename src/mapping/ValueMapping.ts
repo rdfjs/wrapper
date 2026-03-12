@@ -9,32 +9,31 @@ import type { TermWrapper } from "../TermWrapper.js"
 export namespace ValueMapping {
     export function blankNodeToString(termWrapper: TermWrapper): string {
         // TODO: Throw typed error
-        if (termWrapper.term.termType != "BlankNode") {
-            throw Error(`Value mapping expected blank node but got ${termWrapper.term.termType}`)
+        if (termWrapper.termType != "BlankNode") {
+            throw Error(`Value mapping expected blank node but got ${termWrapper.termType}`)
         }
         return iriOrBlankNodeToString(termWrapper)
     }
 
     export function literalToDate(termWrapper: TermWrapper): Date {
         // TODO: Check term type
-        return new Date(termWrapper.term.value)
+        return new Date(termWrapper.value)
     }
 
     // TODO: Lang string dictionary value mapping
     export function literalToLangString(termWrapper: TermWrapper): ILangString {
         // TODO: Check term type
-        const x = termWrapper.term as Literal
-        return { lang: x.language, string: x.value }
+        return { lang: termWrapper.language, string: termWrapper.value }
     }
 
     export function literalToNumber(termWrapper: TermWrapper): number {
         // TODO: Check term type
-        return Number(termWrapper.term.value)
+        return Number(termWrapper.value)
     }
 
     export function literalToString(termWrapper: TermWrapper): string {
         // TODO: Check term type
-        return termWrapper.term.value
+        return termWrapper.value
     }
 
     export function iriToString(termWrapper: TermWrapper): string {
@@ -43,10 +42,10 @@ export namespace ValueMapping {
     }
 
     export function iriOrBlankNodeToString(termWrapper: TermWrapper): string {
-        return termWrapper.term.value
+        return termWrapper.value
     }
 
     export function asIs(termWrapper: TermWrapper): Term {
-        return termWrapper.term
+        return termWrapper as Term
     }
 }

@@ -32,7 +32,7 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get isNil(): boolean {
-        return this.term.equals(this.factory.namedNode(RDF.nil))
+        return this.equals(this.factory.namedNode(RDF.nil))
     }
 
     public get first(): T {
@@ -44,7 +44,7 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get rest(): ListItem<T> {
-        return this.singular(RDF.rest, w => new ListItem(w.term, w.dataset, w.factory, this.valueMapping, this.termMapping))
+        return this.singular(RDF.rest, w => new ListItem(w as Term, w.dataset, w.factory, this.valueMapping, this.termMapping))
     }
 
     public set rest(value: ListItem<T>) {

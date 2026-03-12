@@ -1,6 +1,6 @@
 import type { IValueMapping } from "./type/IValueMapping.js"
 import type { ITermMapping } from "./type/ITermMapping.js"
-import type { DatasetCore, Quad, Quad_Object, Quad_Subject } from "@rdfjs/types"
+import type { DatasetCore, Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import { TermWrapper } from "./TermWrapper.js"
 
 export class WrappingSet<T> implements Set<T> {
@@ -24,10 +24,10 @@ export class WrappingSet<T> implements Set<T> {
             return false
         }
 
-        const o = this.termMapping(value, this.subject.dataset, this.subject.factory)?.term // TODO: guards
+        const o = this.termMapping(value, this.subject.dataset, this.subject.factory) // TODO: guards
         const p = this.subject.factory.namedNode(this.predicate)
 
-        for (const q of this.subject.dataset.match(this.subject.term, p, o)) {
+        for (const q of this.subject.dataset.match(this.subject as Term, p, o as Term)) {
             this.subject.dataset.delete(q)
         }
 
@@ -73,15 +73,15 @@ export class WrappingSet<T> implements Set<T> {
     }
 
     private quad(value: T): Quad {
-        const s = this.subject.term as Quad_Subject // TODO: guard
+        const s = this.subject as Quad_Subject // TODO: guard
         const p = this.subject.factory.namedNode(this.predicate)
-        const o = this.termMapping(value, this.subject.dataset, this.subject.factory)?.term as Quad_Object // TODO: guards
+        const o = this.termMapping(value, this.subject.dataset, this.subject.factory) as Quad_Object // TODO: guards
         const q = this.subject.factory.quad(s, p, o)
         return q
     }
 
     private get matches(): DatasetCore {
         const p = this.subject.factory.namedNode(this.predicate)
-        return this.subject.dataset.match(this.subject.term, p)
+        return this.subject.dataset.match(this.subject as Term, p)
     }
 }

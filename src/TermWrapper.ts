@@ -1,43 +1,28 @@
-import type { DataFactory, DatasetCore, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import type { ITermMapping } from "./type/ITermMapping.js"
 import type { IValueMapping } from "./type/IValueMapping.js"
 import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
+import { AnyTermWithContext } from "./AnyTermWithContext.js"
 
-export class TermWrapper {
-    public readonly term: Term;
-    public readonly dataset: DatasetCore;
-    public readonly factory: DataFactory;
-
-    public constructor(term: string, dataset: DatasetCore, factory: DataFactory);
-    public constructor(term: Term, dataset: DatasetCore, factory: DataFactory);
-    public constructor(term: string | Term, dataset: DatasetCore, factory: DataFactory) {
-        if (typeof term === "string") {
-            this.term = factory.namedNode(term);
-        } else {
-            this.term = term;
-        }
-        this.dataset = dataset;
-        this.factory = factory;
-    }
-
+export class TermWrapper extends AnyTermWithContext {
     get [Symbol.toStringTag]() {
         return this.constructor.name
     }
 
     protected singular<T>(p: string, valueMapping: IValueMapping<T>): T {
         const predicate = this.factory.namedNode(p)
-        const matches = this.dataset.match(this.term, predicate)[Symbol.iterator]()
+        const matches = this.dataset.match(this as Term, predicate)[Symbol.iterator]()
 
         // TODO: Expose standard errors
         const {value: first, done: none} = matches.next()
 
         if (none) {
-            throw new Error(`No value found for predicate ${p} on term ${this.term.value}`)
+            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
         }
 
         if (!matches.next().done) {
-            throw new Error(`More than one value for predicate ${p} on term ${this.term.value}`)
+            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
         }
 
         return valueMapping(new TermWrapper(first.object, this.dataset, this.factory))
@@ -46,7 +31,7 @@ export class TermWrapper {
     protected singularNullable<T>(p: string, valueMapping: IValueMapping<T>): T | undefined {
         const predicate = this.factory.namedNode(p)
 
-        for (const q of this.dataset.match(this.term, predicate)) {
+        for (const q of this.dataset.match(this as Term, predicate)) {
             return valueMapping(new TermWrapper(q.object, this.dataset, this.factory))
         }
 
@@ -64,7 +49,7 @@ export class TermWrapper {
     protected overwriteNullable<T>(p: string, value: T | undefined, termMapping: ITermMapping<T>): void {
         const predicate = this.factory.namedNode(p)
 
-        for (const q of this.dataset.match(this.term, predicate)) {
+        for (const q of this.dataset.match(this as Term, predicate)) {
             this.dataset.delete(q)
         }
 
@@ -73,9 +58,9 @@ export class TermWrapper {
             return
         }
 
-        // TODO: Do we really need to test if this.term is a Quad Subject here?
+        // TODO: Do we really need to test if this is a Quad Subject here?
         // @Samu I imagine this is tested at instantiation time in the constructor if at all
-        if (!TermWrapper.isQuadSubject(this.term)) {
+        if (!TermWrapper.isQuadSubject(this as Term)) {
             return // TODO: throw error?
         }
 
@@ -86,11 +71,11 @@ export class TermWrapper {
             return // TODO: throw error?
         }
 
-        if (!TermWrapper.isQuadObject(o.term)) {
+        if (!TermWrapper.isQuadObject(o as Term)) {
             return // TODO: throw error?
         }
 
-        const q = this.factory.quad(this.term, predicate, o.term)
+        const q = this.factory.quad(this as Quad_Subject, predicate, o as Quad_Object)
         this.dataset.add(q)
     }
 
