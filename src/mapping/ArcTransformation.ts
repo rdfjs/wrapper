@@ -12,17 +12,17 @@ export namespace ArcTransformation {
         }
 
         const predicate = anchor.factory.namedNode(p)
-        const matches = anchor.dataset.match(anchor.term, predicate)[Symbol.iterator]()
+        const matches = anchor.dataset.match(anchor as Term, predicate)[Symbol.iterator]()
 
         // TODO: Expose standard errors
         const {value: first, done: none} = matches.next()
 
         if (none) {
-            throw new Error(`No value found for predicate ${p} on term ${anchor.term.value}`)
+            throw new Error(`No value found for predicate ${p} on term ${anchor.value}`)
         }
 
         if (!matches.next().done) {
-            throw new Error(`More than one value for predicate ${p} on term ${anchor.term.value}`)
+            throw new Error(`More than one value for predicate ${p} on term ${anchor.value}`)
         }
 
         return valueMapping(new TermWrapper(first.object, anchor.dataset, anchor.factory))
@@ -35,7 +35,7 @@ export namespace ArcTransformation {
 
         const predicate = anchor.factory.namedNode(p)
 
-        for (const q of anchor.dataset.match(anchor.term, predicate)) {
+        for (const q of anchor.dataset.match(anchor as Term, predicate)) {
             return valueMapping(new TermWrapper(q.object, anchor.dataset, anchor.factory))
         }
     }
@@ -55,7 +55,7 @@ export namespace ArcTransformation {
 
         const predicate = anchor.factory.namedNode(p)
 
-        for (const q of anchor.dataset.match(anchor.term, predicate)) {
+        for (const q of anchor.dataset.match(anchor as Term, predicate)) {
             anchor.dataset.delete(q)
         }
 
@@ -64,9 +64,9 @@ export namespace ArcTransformation {
             return
         }
 
-        // TODO: Do we really need to test if anchor.term is a Quad Subject here?
+        // TODO: Do we really need to test if anchor is a Quad Subject here?
         // @Samu I imagine this is tested at instantiation time in the constructor if at all
-        if (!isQuadSubject(anchor.term)) {
+        if (!isQuadSubject(anchor as Term)) {
             return // TODO: throw error?
         }
 
@@ -77,11 +77,11 @@ export namespace ArcTransformation {
             return // TODO: throw error?
         }
 
-        if (!isQuadObject(o.term)) {
+        if (!isQuadObject(o as Term)) {
             return // TODO: throw error?
         }
 
-        const q = anchor.factory.quad(anchor.term, predicate, o.term)
+        const q = anchor.factory.quad(anchor as Quad_Subject, predicate, o as Quad_Object)
         anchor.dataset.add(q)
     }
 
