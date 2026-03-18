@@ -31,6 +31,11 @@ export namespace ValueMapping {
         return Number(termWrapper.value)
     }
 
+    export function literalToBoolean(termWrapper: TermWrapper): boolean {
+        // TODO: Check term type
+        return termWrapper.value === "true" || termWrapper.value === "1"
+    }
+
     export function literalToString(termWrapper: TermWrapper): string {
         // TODO: Check term type
         return termWrapper.value

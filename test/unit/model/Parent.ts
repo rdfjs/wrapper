@@ -21,6 +21,10 @@ export class Parent extends TermWrapper {
         return this.singular(Example.hasNumber, ValueMapping.literalToNumber)
     }
 
+    public get hasBoolean(): boolean {
+        return this.singular(Example.hasBoolean, ValueMapping.literalToBoolean)
+    }
+
     public get hasString(): string {
         return this.singular(Example.hasString, ValueMapping.literalToString)
     }
@@ -45,6 +49,10 @@ export class Parent extends TermWrapper {
 
     public set hasNumber(value: number) {
         this.overwrite(Example.hasNumber, value, TermMapping.numberToLiteral)
+    }
+
+    public set hasBoolean(value: boolean) {
+        this.overwrite(Example.hasBoolean, value, TermMapping.booleanToLiteral)
     }
 
     public set hasString(value: string) {
