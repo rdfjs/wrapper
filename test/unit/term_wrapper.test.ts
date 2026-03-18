@@ -14,6 +14,7 @@ prefix : <https://example.org/>
     :hasDate "1969-01-01" ;
     :hasLangString "lang string 1"@en ;
     :hasNumber "1" ;
+    :hasBoolean true ;
     :hasString "string 1" ;
     :hasIri <https://example.org> ;
     :hasTooManySingularString "o3", "o4" ;
@@ -57,6 +58,10 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.hasString, "string 1")
         })
 
+        await it("get literal to boolean", async () => {
+            assert.equal(parent.hasBoolean, true)
+        })
+
         await it("get iri to string", async () => {
             assert.equal(parent.hasIri, "https://example.org")
         })
@@ -77,6 +82,11 @@ await describe("Term Wrapper", async () => {
         await it("set number to literal", async () => {
             parent.hasNumber = 2
             assert.equal(parent.hasNumber, 2)
+        })
+
+        await it("set boolean to literal", async () => {
+            parent.hasBoolean = false
+            assert.equal(parent.hasBoolean, false)
         })
 
         await it("set string to blank node", async () => {
@@ -133,10 +143,10 @@ await describe("Term Wrapper", async () => {
             })
 
             await it("set nullable to undefined", async () => {
-                assert.equal(parent.dataset.size, 20)
+                assert.equal(parent.dataset.size, 21)
                 parent.hasNullableString = undefined
                 assert.equal(parent.hasNullableString, undefined)
-                assert.equal(parent.dataset.size, 19)
+                assert.equal(parent.dataset.size, 20)
             })
 
             await it("set nullable to string", async () => {
@@ -185,9 +195,9 @@ await describe("Term Wrapper", async () => {
         })
 
         await it("set recursive property", async () => {
-            assert.equal(parent.dataset.size, 22)
+            assert.equal(parent.dataset.size, 23)
             parent.hasRecursive = undefined
-            assert.equal(parent.dataset.size, 21)
+            assert.equal(parent.dataset.size, 22)
             // TODO: check for typed error singular no value
             assert.throws(() => parent.hasRecursive)
             parent.hasRecursive = "x"

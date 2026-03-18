@@ -25,6 +25,10 @@ export namespace TermMapping {
         return new TermWrapper(factory.literal(value.toString(), factory.namedNode("http://www.w3.org/2001/XMLSchema#double")), dataset, factory)
     }
 
+    export function booleanToLiteral(value: boolean, dataset: DatasetCore, factory: DataFactory): TermWrapper | undefined {
+        return new TermWrapper(factory.literal(value.toString(), factory.namedNode("http://www.w3.org/2001/XMLSchema#boolean")), dataset, factory)
+    }
+
     export function stringToBlankNode(value: string | undefined, dataset: DatasetCore, factory: DataFactory): TermWrapper | undefined {
         return new TermWrapper(factory.blankNode(value), dataset, factory)
     }

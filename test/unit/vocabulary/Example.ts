@@ -4,6 +4,7 @@ export const Example = {
     hasDate: "https://example.org/hasDate",
     hasLangString: "https://example.org/hasLangString",
     hasNumber: "https://example.org/hasNumber",
+    hasBoolean: "https://example.org/hasBoolean",
     hasIri: "https://example.org/hasIri",
     hasString: "https://example.org/hasString",
     /* Object mapping */
