@@ -1,4 +1,4 @@
-import type { Literal, Term } from "@rdfjs/types"
+import type { Term } from "@rdfjs/types"
 import type { ILangString } from "../type/ILangString.js"
 import type { TermWrapper } from "../TermWrapper.js"
 
