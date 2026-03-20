@@ -1,5 +1,5 @@
 import { describe, it } from "node:test"
-import { TermWrapper } from "rdfjs-wrapper"
+import { TermWrapper } from "@rdfjs/wrapper"
 import { DataFactory, Literal } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import assert from "node:assert"

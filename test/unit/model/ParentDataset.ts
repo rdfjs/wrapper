@@ -1,4 +1,4 @@
-import { DatasetWrapper } from "rdfjs-wrapper"
+import { DatasetWrapper } from "@rdfjs/wrapper"
 import { Parent } from "./Parent.js"
 import { Child } from "./Child.js"
 import { Example } from "../vocabulary/Example.js"

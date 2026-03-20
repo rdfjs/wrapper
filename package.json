@@ -1,5 +1,5 @@
 {
-  "name": "rdfjs-wrapper",
+  "name": "@rdfjs/wrapper",
   "version": "0.29.0",
   "description": "RDF/JS object mapping library",
   "main": "dist/mod.js",

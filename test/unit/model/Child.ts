@@ -1,4 +1,4 @@
-import { TermMapping, TermWrapper, ValueMapping } from "rdfjs-wrapper"
+import { TermMapping, TermWrapper, ValueMapping } from "@rdfjs/wrapper"
 import { Example } from "../vocabulary/Example.js"
 
 export class Child extends TermWrapper {

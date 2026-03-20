@@ -1,7 +1,7 @@
 # RDF/JS Wrapper
 
 [![Test Workflow](https://github.com/rdfjs/wrapper/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/rdfjs/wrapper/actions/workflows/ci.yml?query=branch%3Amain)
-[![npm](https://img.shields.io/npm/v/rdfjs-wrapper)](https://www.npmjs.com/package/rdfjs-wrapper)
+[![npm](https://img.shields.io/npm/v/@rdfjs/wrapper)](https://www.npmjs.com/package/@rdfjs/wrapper)
 
 An [RDF/JS](https://rdf.js.org/data-model-spec/) object mapping library.
 
@@ -55,7 +55,7 @@ A [term](https://www.w3.org/TR/rdf12-concepts/#section-terms) wrapper instantiat
 For example you can write a `Person` class with one `name` property:
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping } from "https://unpkg.com/rdfjs-wrapper"
+import { TermWrapper, ValueMapping, TermMapping } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {
@@ -134,7 +134,7 @@ for (const person of people) {
 For example you can write a `Person` class with one `name` and one `mum` property:
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "https://unpkg.com/rdfjs-wrapper"
+import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {

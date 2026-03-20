@@ -1,5 +1,5 @@
 import type { ILangString } from "../../../dist/type/ILangString.js"
-import { ObjectMapping, TermMapping, TermWrapper, ValueMapping } from "rdfjs-wrapper"
+import { ObjectMapping, TermMapping, TermWrapper, ValueMapping } from "@rdfjs/wrapper"
 import { Child } from "./Child.js"
 import { Example } from "../vocabulary/Example.js"
 

@@ -1,4 +1,4 @@
-import { getter, GetterArity, ObjectMapping, setter, SetterArity, TermMapping, TermWrapper, ValueMapping } from "rdfjs-wrapper"
+import { getter, GetterArity, ObjectMapping, setter, SetterArity, TermMapping, TermWrapper, ValueMapping } from "@rdfjs/wrapper"
 import { Example } from "../vocabulary/Example.js"
 import { ChildDecorated } from "./ChildDecorated.js"
 

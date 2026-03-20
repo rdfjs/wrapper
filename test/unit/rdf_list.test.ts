@@ -1,7 +1,7 @@
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
-import { ObjectMapping, TermMapping, TermWrapper, ValueMapping } from "rdfjs-wrapper"
+import { ObjectMapping, TermMapping, TermWrapper, ValueMapping } from "@rdfjs/wrapper"
 import assert from "node:assert"
 
 class Wrapper extends TermWrapper {
