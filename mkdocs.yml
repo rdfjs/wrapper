@@ -1,0 +1,55 @@
+site_name: RDF/JS Wrapper
+site_description: An RDF/JS object mapping library
+site_url: https://rdfjs.github.io/wrapper
+repo_url: https://github.com/rdfjs/wrapper
+repo_name: rdfjs/wrapper
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: custom
+      accent: custom
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started: getting-started.md
+  - Guides:
+      - Wrapping Terms: guides/term-wrapper.md
+      - Wrapping Datasets: guides/dataset-wrapper.md
+      - Nested Objects: guides/nested-objects.md
+      - Sets and Maps: guides/sets-and-maps.md
+      - RDF Lists: guides/rdf-lists.md
+      - Decorators: guides/decorators.md
+  - API Reference:
+      - TermWrapper: api/term-wrapper.md
+      - DatasetWrapper: api/dataset-wrapper.md
+      - ValueMapping: api/value-mapping.md
+      - TermMapping: api/term-mapping.md
+      - ObjectMapping: api/object-mapping.md
+      - Decorators: api/decorators.md
+
+markdown_extensions:
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences
+  - admonition
+  - pymdownx.details
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true

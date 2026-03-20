@@ -1,0 +1,22 @@
+/* Solid Project brand colour: Royal Lavender */
+:root {
+  --md-primary-fg-color: #7C4DFF;
+  --md-primary-fg-color--light: #9e74ff;
+  --md-primary-fg-color--dark: #5a2ee0;
+  --md-accent-fg-color: #7C4DFF;
+}
+
+/* Masthead / header */
+.md-header {
+  background-color: #7C4DFF;
+}
+
+/* Footer */
+.md-footer {
+  background-color: #7C4DFF;
+}
+
+/* Primary navigation tabs */
+.md-tabs {
+  background-color: #7C4DFF;
+}

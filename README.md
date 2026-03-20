@@ -5,197 +5,167 @@
 
 An [RDF/JS](https://rdf.js.org/data-model-spec/) object mapping library.
 
+Full documentation is available at **[rdfjs.github.io/wrapper](https://rdfjs.github.io/wrapper)**.
+
 
 ## Purpose
 
 The purpose of the RDF/JS Wrapper library is to enable idiomatic JavaScript object-oriented programming over RDF with type system support (TypeScript compatible).
 
-In other words, [RDF data](https://en.wikipedia.org/wiki/Resource_Description_Framework) is abstracted away and developers can define standard mapping classes to program over it.
-
-Additionally, standard mapping classes can be defined and reused in any number of context where they are relevant (see for example [@solid/object](https://github.com/solid/object)).
+[RDF data](https://en.wikipedia.org/wiki/Resource_Description_Framework) is abstracted away so developers can define standard mapping classes to work over it. These classes can be defined once and reused in any context where they are relevant (see for example [@solid/object](https://github.com/solid/object)).
 
 
-## How To?
+## Installation
 
-### Publish the package
+```sh
+npm install @rdfjs/wrapper
+```
 
-1. Run `npm version major | minor | patch` locally (see [npm-version](https://docs.npmjs.com/cli/v8/commands/npm-version))
-1. [Draft a new release](https://github.com/theodi/wrapper/releases)
-1. The [Continuous Deployment action](https://github.com/theodi/wrapper/actions/workflows/cd.yml) will be triggered and automatically publish to npm
-
-
-## Background
-
-RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/) specifications.
-
-Practically, to map RDF to objects, you need to:
-1. Write a class or use an existing class that extends TermWrapper
-1. Each class needs a Term, a Dataset, and a DataFactory to be instantiated
-1. Each class property will have an associated RDF Property (a string, generally a URL, that is defined by an ontology/vocabulary)
-1. Each class property will have an associated arity (singular, singular nullable or set)
-1. Each class property depending on its type can have:
-    1. a corresponding ValueMapping to get values, that is translating RDF Terms to JavaScript [primitive values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#primitive_values) (string, number, boolean...)
-    1. a corresponding TermMapping to set values, that is translating Javascript primitive values to RDF Terms
-    1. a corresponding ObjectMapping to wrap child objects as a TermWrapper
-    1. a corresponding ValueMapping and TermMapping for sets of primitive values (both can be an ObjectMapping)
-1. Each class mutates the underlying Dataset that is passed to it at instantiation time
+Requires Node.js ≥ 24.
 
 
-## Wrapping RDF
-
-In order to wrap RDF, one needs an underlying data structure. Therefore, both `TermWrapper` and `DatasetWrapper` take an RDF/JS [Dataset](https://rdf.js.org/dataset-spec/#datasetcore-interface) and [Datafactory](https://rdf.js.org/data-model-spec/#datafactory-interface) as constructor parameters.
-
-
-### Wrapping Terms
-
-Term wrapping lets you manipulate data in a graph via class properties.
-
-A [term](https://www.w3.org/TR/rdf12-concepts/#section-terms) wrapper instantiates a class from a term.
-
-For example you can write a `Person` class with one `name` property:
+## Quick Example
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping } from "https://unpkg.com/@rdfjs/wrapper"
+import { TermWrapper, ValueMapping, TermMapping } from "@rdfjs/wrapper"
 
 class Person extends TermWrapper {
-	get name() {
-		return this.singularNullable("https://example.org/name", ValueMapping.literalToString)
-	}
+    get name() {
+        return this.singularNullable("https://schema.org/name", ValueMapping.literalToString)
+    }
 
-	set name(value) {
-		this.overwriteNullable("https://example.org/name", value, TermMapping.literalToString)
-	}
+    set name(value) {
+        this.overwriteNullable("https://schema.org/name", value, TermMapping.stringToLiteral)
+    }
 }
 ```
 
-Assuming the following RDF has been loaded in a dataset `dataset_x`:
+Given an RDF dataset containing:
 
 ```turtle
-PREFIX ex: <https://example.org/>
-
-ex:person1 ex:name "Alice" .
+<https://example.org/alice> <https://schema.org/name> "Alice" .
 ```
 
 Class usage:
 
 ```javascript
-const person1 = new Person("https://example.org/person1", dataset_x, DataFactory)
+const alice = new Person("https://example.org/alice", dataset, DataFactory)
 
-// Get property
-console.log(person1.name)
-// outputs "Alice"
+console.log(alice.name)  // "Alice"
 
-// Set property
-person1.name = [...person1].reverse().join("")
-console.log(person1.name)
-// outputs "ecilA"
+alice.name = "Alicia"
+console.log(alice.name)  // "Alicia"
 ```
 
 
-### Wrapping Datasets
+## Wrapping Terms
 
-Dataset wrapping lets you find data in a graph that is meant to be wrapped.
-
-For example, you can write a `People` dataset wrapper to find each `Person` in a graph:
+`TermWrapper` wraps a single RDF resource (a named node or blank node). Properties on the class correspond to RDF predicates via **value mappings** (RDF → JS) and **term mappings** (JS → RDF).
 
 ```javascript
-class People extends DatasetWrapper {
-	[Symbol.iterator]() {
-		return this.subjectsOf("https://example.org/name", Person)
-	}
+import { TermWrapper, ValueMapping, TermMapping } from "@rdfjs/wrapper"
+
+class Book extends TermWrapper {
+    get title() {
+        return this.singular("https://schema.org/name", ValueMapping.literalToString)
+    }
+
+    set title(value) {
+        this.overwrite("https://schema.org/name", value, TermMapping.stringToLiteral)
+    }
+
+    get isbn() {
+        return this.singularNullable("https://schema.org/isbn", ValueMapping.literalToString)
+    }
+
+    set isbn(value) {
+        this.overwriteNullable("https://schema.org/isbn", value, TermMapping.stringToLiteral)
+    }
 }
 ```
 
-Assuming the following RDF has been loaded in a dataset `dataset_y`:
 
-```turtle
-PREFIX ex: <https://example.org/>
+## Wrapping Datasets
 
-ex:person1 ex:name "Alice" .
-ex:person2 ex:name "Bob" .
-```
-
-Dataset Wrapper usage:
+`DatasetWrapper` wraps an entire RDF dataset and lets you query it, returning typed `TermWrapper` instances.
 
 ```javascript
-const people = new People(dataset_y, DataFactory)
+import { DatasetWrapper } from "@rdfjs/wrapper"
 
-for (const person of people) {
-	console.log(person.name)
+class Library extends DatasetWrapper {
+    get books() {
+        return this.instancesOf("https://schema.org/Book", Book)
+    }
 }
-// outputs
-// Alice
-// Bob
+
+const library = new Library(dataset, DataFactory)
+
+for (const book of library.books) {
+    console.log(book.title)
+}
 ```
 
 
-### Wrapping objects
+## Nested Objects
 
-For example you can write a `Person` class with one `name` and one `mum` property:
+Use `ObjectMapping.as` to wrap related resources as typed objects:
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "https://unpkg.com/@rdfjs/wrapper"
+import { ObjectMapping } from "@rdfjs/wrapper"
 
 class Person extends TermWrapper {
-	get name() {
-		return this.singularNullable("https://example.org/name", ValueMapping.literalToString)
-	}
+    get address() {
+        return this.singularNullable("https://schema.org/address", ObjectMapping.as(Address))
+    }
 
-	set name(value) {
-		this.singularNullable("https://example.org/name", value, TermMapping.literalToString)
-	}
-
-	get mum() {
-		return this.singularNullable("https://example.org/mum", ObjectMapping.as(Person))
-	}
-
-	set mum(value) {
-		this.overwriteNullable("https://example.org/mum", value, ObjectMapping.as(Person))
-	}
+    set address(value) {
+        this.overwriteNullable("https://schema.org/address", value, ObjectMapping.as(Address))
+    }
 }
 ```
 
-Assuming the following RDF has been loaded in a dataset `dataset_z`:
 
-```turtle
-PREFIX ex: <https://example.org/>
+## Decorators
 
-ex:person1 ex:name "Alice" .
-
-ex:person2
-	ex:name "Bob" ;
-	ex:mum ex:person2 ;
-.
-```
-
-Class usage:
+A decorator-based alternative is available for a more declarative style:
 
 ```javascript
-const person2 = new Person("https://example.org/person2", dataset_z, DataFactory)
+import { getter, setter, GetterArity, SetterArity, ValueMapping, TermMapping } from "@rdfjs/wrapper"
 
-// Get property
-console.log(person2.name)
-// outputs "Bob"
+class Person extends TermWrapper {
+    @getter("https://schema.org/name", GetterArity.SingularNullable, ValueMapping.literalToString)
+    get name() { throw new Error() }
 
-// Get property from child class
-console.log(person2.mum.name)
-// outputs "Alice"
-
-// Set class properties
-const person3 = new Person("https://example.org/person3", dataset_z, DataFactory)
-person3.name = "Joanne"
-person1.mum = person3
-console.log(person1.mum.name)
-// outputs "Joanne"
-console.log(person2.mum.mum.name)
-// outputs "Joanne"
+    @setter("https://schema.org/name", SetterArity.SingularNullable, TermMapping.stringToLiteral)
+    set name(_) {}
+}
 ```
+
+
+## Documentation
+
+- [Getting Started](https://rdfjs.github.io/wrapper/getting-started/)
+- [Wrapping Terms](https://rdfjs.github.io/wrapper/guides/term-wrapper/)
+- [Wrapping Datasets](https://rdfjs.github.io/wrapper/guides/dataset-wrapper/)
+- [Nested Objects](https://rdfjs.github.io/wrapper/guides/nested-objects/)
+- [Sets and Maps](https://rdfjs.github.io/wrapper/guides/sets-and-maps/)
+- [RDF Lists](https://rdfjs.github.io/wrapper/guides/rdf-lists/)
+- [Decorators](https://rdfjs.github.io/wrapper/guides/decorators/)
+- [API Reference](https://rdfjs.github.io/wrapper/api/term-wrapper/)
 
 
 ## See also
 
 - [RDF](https://en.wikipedia.org/wiki/Resource_Description_Framework)
 - [Knowledge Graph](https://en.wikipedia.org/wiki/Knowledge_graph)
+- [RDF/JS Specifications](https://rdf.js.org/)
+
+
+## How to Publish
+
+1. Run `npm version major | minor | patch` locally (see [npm-version](https://docs.npmjs.com/cli/v8/commands/npm-version))
+1. [Draft a new release](https://github.com/rdfjs/wrapper/releases)
+1. The [Continuous Deployment action](https://github.com/rdfjs/wrapper/actions/workflows/cd.yml) will be triggered and automatically publish to npm
 
 
 ## License
