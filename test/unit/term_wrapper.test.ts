@@ -118,6 +118,18 @@ await describe("Term Wrapper", async () => {
             assert.deepEqual(parent.hasLangString, langString)
         })
 
+        await it("set lang string with rtl direction round-trips direction", async () => {
+            const langString = {direction: "rtl" as const, lang: "ar", string: "نص"}
+            parent.hasLangString = langString
+            assert.deepEqual(parent.hasLangString, langString)
+        })
+
+        await it("set lang string with ltr direction round-trips direction", async () => {
+            const langString = {direction: "ltr" as const, lang: "en", string: "text"}
+            parent.hasLangString = langString
+            assert.deepEqual(parent.hasLangString, langString)
+        })
+
         await it("set number to literal", async () => {
             parent.hasNumber = 2
             assert.equal(parent.hasNumber, 2)
