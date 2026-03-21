@@ -101,8 +101,7 @@ The `valueMapping` must return a `[key, value]` tuple, and the `termMapping` mus
 ### Example: String-keyed Map
 
 ```typescript
-import { TermWrapper, ValueMapping, TermMapping } from "@rdfjs/wrapper"
-import type { ILangString } from "@rdfjs/wrapper"
+import { TermWrapper, ValueMapping } from "@rdfjs/wrapper"
 
 class Resource extends TermWrapper {
     /**

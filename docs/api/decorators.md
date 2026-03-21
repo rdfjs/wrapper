@@ -5,7 +5,7 @@ RDF/JS Wrapper provides two TypeScript decorators for declaring property mapping
 ## Import
 
 ```typescript
-import { getter, setter, GetterArity, SetterArity } from "@rdfjs/wrapper"
+import { getter, setter, GetterArity, SetterArity, ValueMapping, TermMapping } from "@rdfjs/wrapper"
 ```
 
 ---
@@ -18,7 +18,7 @@ function getter(
     arity: GetterArity,
     valueMapping: IValueMapping<any>,
     termMapping?: ITermMapping<any>,
-): ClassGetterDecoratorContext => ClassGetterDecoratorContext
+): (target: unknown, context: ClassGetterDecoratorContext) => () => unknown
 ```
 
 Applies to a **class getter**. Replaces the getter body with a call to the appropriate `TermWrapper` read method.
@@ -70,7 +70,7 @@ function setter(
     predicate: string,
     arity: SetterArity,
     termMapping: ITermMapping<any>,
-): ClassSetterDecoratorContext => ClassSetterDecoratorContext
+): (target: any, context: ClassSetterDecoratorContext) => (value: any) => void
 ```
 
 Applies to a **class setter**. Replaces the setter body with a call to the appropriate `TermWrapper` write method.

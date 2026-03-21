@@ -13,7 +13,7 @@ import { ObjectMapping } from "@rdfjs/wrapper"
 ## ObjectMapping.as
 
 ```typescript
-ObjectMapping.as<T>(constructor: ITermWrapperConstructor<T>): IValueMapping<T>
+ObjectMapping.as<T>(constructor: ITermWrapperConstructor<T>): IValueMapping<T> & ITermMapping<T>
 ```
 
 Returns a function that:

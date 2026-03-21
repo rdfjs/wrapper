@@ -111,7 +111,11 @@ for (const book of library.books) {
 Use `ObjectMapping.as` to wrap related resources as typed objects:
 
 ```javascript
-import { ObjectMapping } from "@rdfjs/wrapper"
+import { TermWrapper, ObjectMapping } from "@rdfjs/wrapper"
+
+class Address extends TermWrapper {
+    // Define address-related mappings here, e.g. street, city, etc.
+}
 
 class Person extends TermWrapper {
     get address() {
@@ -129,15 +133,15 @@ class Person extends TermWrapper {
 
 A decorator-based alternative is available for a more declarative style:
 
-```javascript
-import { getter, setter, GetterArity, SetterArity, ValueMapping, TermMapping } from "@rdfjs/wrapper"
+```typescript
+import { TermWrapper, getter, setter, GetterArity, SetterArity, ValueMapping, TermMapping } from "@rdfjs/wrapper"
 
 class Person extends TermWrapper {
     @getter("https://schema.org/name", GetterArity.SingularNullable, ValueMapping.literalToString)
-    get name() { throw new Error() }
+    get name(): string | undefined { throw new Error() }
 
     @setter("https://schema.org/name", SetterArity.SingularNullable, TermMapping.stringToLiteral)
-    set name(_) {}
+    set name(_: string | undefined) {}
 }
 ```
 
