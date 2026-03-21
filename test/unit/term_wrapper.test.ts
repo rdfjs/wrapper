@@ -5,6 +5,7 @@ import { Child } from "./model/Child.js"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import { Parent } from "./model/Parent.js"
 import type { Term } from "@rdfjs/types"
+import { SingularNoValueError, SingularTooManyValuesError, TermWrapper, ValueMapping, ValueMappingError } from "@rdfjs/wrapper"
 
 const rdf = `
 prefix : <https://example.org/>
@@ -47,7 +48,7 @@ await describe("Term Wrapper", async () => {
         })
 
         await it("get literal to lang string", async () => {
-            assert.deepEqual(parent.hasLangString, {lang: "en", string: "lang string 1"})
+            assert.deepEqual(parent.hasLangString, {direction: "", lang: "en", string: "lang string 1"})
         })
 
         await it("get literal to number", async () => {
@@ -65,6 +66,44 @@ await describe("Term Wrapper", async () => {
         await it("get iri to string", async () => {
             assert.equal(parent.hasIri, "https://example.org")
         })
+
+        await describe("Type Errors", async () => {
+            const namedNode = new TermWrapper(DataFactory.namedNode("x"), dataset, DataFactory)
+            const literal = new TermWrapper(DataFactory.literal("hello"), dataset, DataFactory)
+            const blankNode = new TermWrapper(DataFactory.blankNode(), dataset, DataFactory)
+
+            await it("blankNodeToString throws ValueMappingError on non-blank-node", async () => {
+                assert.throws(() => ValueMapping.blankNodeToString(namedNode), ValueMappingError)
+            })
+
+            await it("literalToDate throws ValueMappingError on named node", async () => {
+                assert.throws(() => ValueMapping.literalToDate(namedNode), ValueMappingError)
+            })
+
+            await it("literalToLangString throws ValueMappingError on named node", async () => {
+                assert.throws(() => ValueMapping.literalToLangString(namedNode), ValueMappingError)
+            })
+
+            await it("literalToNumber throws ValueMappingError on named node", async () => {
+                assert.throws(() => ValueMapping.literalToNumber(namedNode), ValueMappingError)
+            })
+
+            await it("literalToBoolean throws ValueMappingError on named node", async () => {
+                assert.throws(() => ValueMapping.literalToBoolean(namedNode), ValueMappingError)
+            })
+
+            await it("literalToString throws ValueMappingError on named node", async () => {
+                assert.throws(() => ValueMapping.literalToString(namedNode), ValueMappingError)
+            })
+
+            await it("iriToString throws ValueMappingError on literal", async () => {
+                assert.throws(() => ValueMapping.iriToString(literal), ValueMappingError)
+            })
+
+            await it("iriToString throws ValueMappingError on blank node", async () => {
+                assert.throws(() => ValueMapping.iriToString(blankNode), ValueMappingError)
+            })
+        })
     })
 
     await describe("Term Mapping", async () => {
@@ -74,7 +113,7 @@ await describe("Term Wrapper", async () => {
         })
 
         await it("set lang string to literal", async () => {
-            const langString = {lang: "fr", string: "lang string 2"}
+            const langString = {direction: "" as const, lang: "fr", string: "lang string 2"}
             parent.hasLangString = langString
             assert.deepEqual(parent.hasLangString, langString)
         })
@@ -123,13 +162,11 @@ await describe("Term Wrapper", async () => {
     await describe("Arity Mapping", async () => {
         await describe("Singular", async () => {
             await it("get singular throws if more than 1", async () => {
-                // TODO: Test for specific errors
-                assert.throws(() => parent.hasTooManySingularString)
+                assert.throws(() => parent.hasTooManySingularString, SingularTooManyValuesError)
             })
 
             await it("get singular throws if no value", async () => {
-                // TODO: Test for specific errors
-                assert.throws(() => parent.hasNoSingularString)
+                assert.throws(() => parent.hasNoSingularString, SingularNoValueError)
             })
 
             await it("set singular to undefined throws", async () => {
@@ -154,14 +191,56 @@ await describe("Term Wrapper", async () => {
                 assert.equal(parent.hasNullableString, "o2 edited")
             })
 
-            // TODO: Test nullable object
+            await it("get nullable child when not set", async () => {
+                assert.equal(parent.hasNullableChild, undefined)
+            })
+
+            await it("set nullable child", async () => {
+                const newChild = new Child(DataFactory.blankNode(), dataset, DataFactory)
+                parent.hasNullableChild = newChild
+                assert.equal(parent.hasNullableChild?.value, newChild.value)
+            })
+
+            await it("set nullable child to undefined", async () => {
+                parent.hasNullableChild = undefined
+                assert.equal(parent.hasNullableChild, undefined)
+            })
         })
 
-        // TODO: Set Arity
+        await describe("Set", async () => {
+            await it("get empty string set", async () => {
+                assert.equal(parent.hasStringSet.size, 0)
+            })
+
+            await it("add to string set", async () => {
+                parent.hasStringSet.add("a")
+                assert.equal(parent.hasStringSet.size, 1)
+            })
+
+            await it("delete from string set", async () => {
+                parent.hasStringSet.delete("a")
+                assert.equal(parent.hasStringSet.size, 0)
+            })
+        })
     })
 
     await describe("Set Mapping", async () => {
-        // TODO: test primitive types wrapping set
+        await it("get and iterate string set", async () => {
+            parent.hasStringSet.add("string a")
+            parent.hasStringSet.add("string b")
+            assert.equal(parent.hasStringSet.size, 2)
+            const values = [...parent.hasStringSet]
+            assert.equal(values.includes("string a"), true)
+            assert.equal(values.includes("string b"), true)
+            parent.hasStringSet.clear()
+        })
+
+        await it("has string in set", async () => {
+            parent.hasStringSet.add("string a")
+            assert.equal(parent.hasStringSet.has("string a"), true)
+            assert.equal(parent.hasStringSet.has("string b"), false)
+            parent.hasStringSet.clear()
+        })
 
         await it("get set of lang string", async () => {
             assert.equal(parent.hasLangStringSet.size, 3)
@@ -198,8 +277,7 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.dataset.size, 23)
             parent.hasRecursive = undefined
             assert.equal(parent.dataset.size, 22)
-            // TODO: check for typed error singular no value
-            assert.throws(() => parent.hasRecursive)
+            assert.throws(() => parent.hasRecursive, SingularNoValueError)
             parent.hasRecursive = "x"
             assert.equal(parent.hasRecursive.hasRecursive.hasRecursive.value, "x")
         })

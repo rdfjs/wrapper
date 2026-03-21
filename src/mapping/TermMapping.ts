@@ -13,12 +13,8 @@ export namespace TermMapping {
         return new TermWrapper(factory.literal(value.toISOString(), factory.namedNode("http://www.w3.org/2001/XMLSchema#date")), dataset, factory)
     }
 
-    // TODO: Lang string dictionary value mapping
     export function langStringToLiteral(value: ILangString, dataset: DatasetCore, factory: DataFactory): TermWrapper | undefined {
-        // TODO: Fix bug in N3.JS function literal line 340 (test languageOrDataType === 'string')
-        // Then re-establish proper factory method
-        //return new TermWrapper(factory.literal(value.string, { language: value.lang } ), dataset, factory)
-        return new TermWrapper(factory.literal(value.string, value.lang), dataset, factory)
+        return new TermWrapper(factory.literal(value.string, { language: value.lang, direction: value.direction ?? '' }), dataset, factory)
     }
 
     export function numberToLiteral(value: number, dataset: DatasetCore, factory: DataFactory): TermWrapper | undefined {

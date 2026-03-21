@@ -12,4 +12,7 @@ export * from "./mapping/TermMapping.js"
 export * from "./mapping/ValueMapping.js"
 
 export * from "./DatasetWrapper.js"
+export * from "./SingularNoValueError.js"
+export * from "./SingularTooManyValuesError.js"
 export * from "./TermWrapper.js"
+export * from "./ValueMappingError.js"

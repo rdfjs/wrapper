@@ -4,6 +4,8 @@ import type { IValueMapping } from "./type/IValueMapping.js"
 import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
 import { AnyTermWithContext } from "./AnyTermWithContext.js"
+import { SingularNoValueError } from "./SingularNoValueError.js"
+import { SingularTooManyValuesError } from "./SingularTooManyValuesError.js"
 
 export class TermWrapper extends AnyTermWithContext {
     get [Symbol.toStringTag]() {
@@ -14,15 +16,14 @@ export class TermWrapper extends AnyTermWithContext {
         const predicate = this.factory.namedNode(p)
         const matches = this.dataset.match(this as Term, predicate)[Symbol.iterator]()
 
-        // TODO: Expose standard errors
         const {value: first, done: none} = matches.next()
 
         if (none) {
-            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
+            throw new SingularNoValueError(p, this.value)
         }
 
         if (!matches.next().done) {
-            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
+            throw new SingularTooManyValuesError(p, this.value)
         }
 
         return valueMapping(new TermWrapper(first.object, this.dataset, this.factory))

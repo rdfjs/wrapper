@@ -1,6 +1,7 @@
 import type { Term } from "@rdfjs/types"
 import type { ILangString } from "../type/ILangString.js"
 import type { TermWrapper } from "../TermWrapper.js"
+import { ValueMappingError } from "../ValueMappingError.js"
 
 /*
  * Read from the RDF dataset
@@ -8,41 +9,51 @@ import type { TermWrapper } from "../TermWrapper.js"
 */
 export namespace ValueMapping {
     export function blankNodeToString(termWrapper: TermWrapper): string {
-        // TODO: Throw typed error
-        if (termWrapper.termType != "BlankNode") {
-            throw Error(`Value mapping expected blank node but got ${termWrapper.termType}`)
+        if (termWrapper.termType !== "BlankNode") {
+            throw new ValueMappingError("BlankNode", termWrapper.termType)
         }
         return iriOrBlankNodeToString(termWrapper)
     }
 
     export function literalToDate(termWrapper: TermWrapper): Date {
-        // TODO: Check term type
+        if (termWrapper.termType !== "Literal") {
+            throw new ValueMappingError("Literal", termWrapper.termType)
+        }
         return new Date(termWrapper.value)
     }
 
-    // TODO: Lang string dictionary value mapping
     export function literalToLangString(termWrapper: TermWrapper): ILangString {
-        // TODO: Check term type
-        return { lang: termWrapper.language, string: termWrapper.value }
+        if (termWrapper.termType !== "Literal") {
+            throw new ValueMappingError("Literal", termWrapper.termType)
+        }
+        return { direction: termWrapper.direction ?? '', lang: termWrapper.language, string: termWrapper.value }
     }
 
     export function literalToNumber(termWrapper: TermWrapper): number {
-        // TODO: Check term type
+        if (termWrapper.termType !== "Literal") {
+            throw new ValueMappingError("Literal", termWrapper.termType)
+        }
         return Number(termWrapper.value)
     }
 
     export function literalToBoolean(termWrapper: TermWrapper): boolean {
-        // TODO: Check term type
+        if (termWrapper.termType !== "Literal") {
+            throw new ValueMappingError("Literal", termWrapper.termType)
+        }
         return termWrapper.value === "true" || termWrapper.value === "1"
     }
 
     export function literalToString(termWrapper: TermWrapper): string {
-        // TODO: Check term type
+        if (termWrapper.termType !== "Literal") {
+            throw new ValueMappingError("Literal", termWrapper.termType)
+        }
         return termWrapper.value
     }
 
     export function iriToString(termWrapper: TermWrapper): string {
-        // TODO: Check term type
+        if (termWrapper.termType !== "NamedNode") {
+            throw new ValueMappingError("NamedNode", termWrapper.termType)
+        }
         return iriOrBlankNodeToString(termWrapper)
     }
 

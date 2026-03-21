@@ -73,6 +73,14 @@ export class Parent extends TermWrapper {
         this.overwriteNullable(Example.hasChild, value, ObjectMapping.as(Child))
     }
 
+    public get hasNullableChild(): Child | undefined {
+        return this.singularNullable(Example.hasNullableChild, ObjectMapping.as(Child))
+    }
+
+    public set hasNullableChild(value: Child | undefined) {
+        this.overwriteNullable(Example.hasNullableChild, value, ObjectMapping.as(Child))
+    }
+
 
     /* Arity Mapping */
     public get hasNoSingularString(): string {
@@ -99,6 +107,10 @@ export class Parent extends TermWrapper {
 
     public get hasLangStringSet(): Set<ILangString> {
         return this.objects(Example.hasLangStringSet, ValueMapping.literalToLangString, TermMapping.langStringToLiteral)
+    }
+
+    public get hasStringSet(): Set<string> {
+        return this.objects(Example.hasStringSet, ValueMapping.literalToString, TermMapping.stringToLiteral)
     }
 
 

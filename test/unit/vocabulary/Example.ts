@@ -9,9 +9,11 @@ export const Example = {
     hasString: "https://example.org/hasString",
     /* Object mapping */
     hasChild: "https://example.org/hasChild",
+    hasNullableChild: "https://example.org/hasNullableChild",
     /* Set mapping */
     hasChildSet: "https://example.org/hasChildSet",
     hasLangStringSet: "https://example.org/hasLangStringSet",
+    hasStringSet: "https://example.org/hasStringSet",
     /* Arity mapping */
     hasNoSingularString: "https://example.org/hasNoSingularString",
     hasNullableString: "https://example.org/hasNullableString",
