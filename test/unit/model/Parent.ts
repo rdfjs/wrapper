@@ -107,7 +107,7 @@ export class Parent extends TermWrapper {
         return this.singular(Example.hasRecursive, TermAs.instance(Parent))
     }
 
-    public set hasRecursive(value: string | undefined) {
-        this.overwriteNullable(Example.hasRecursive, value, TermMapping.stringToIri)
+    public set hasRecursive(value: Parent | undefined) {
+        this.overwriteNullable(Example.hasRecursive, value, TermFrom.instance)
     }
 }

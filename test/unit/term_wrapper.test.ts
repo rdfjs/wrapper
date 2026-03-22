@@ -200,7 +200,7 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.dataset.size, 22)
             // TODO: check for typed error singular no value
             assert.throws(() => parent.hasRecursive)
-            parent.hasRecursive = "x"
+            parent.hasRecursive = parent
             assert.equal(parent.hasRecursive.hasRecursive.hasRecursive.value, "x")
         })
 
