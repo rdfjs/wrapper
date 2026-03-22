@@ -106,6 +106,9 @@ set age(_: number) {}
 
 ## Full Decorated Class Example
 
+!!! note "Self-referencing in decorators"
+    TypeScript evaluates decorator arguments at class definition time. This means `ObjectMapping.as(Person)` inside a `Person` class decorator would reference the class before it is fully declared, causing a TypeScript error. Use a non-decorator getter for self-referential properties, or reference a separate class.
+
 ```typescript
 import {
     TermWrapper,
@@ -133,7 +136,9 @@ class Person extends TermWrapper {
     @setter(SCHEMA + "age", SetterArity.SingularNullable, TermMapping.numberToLiteral)
     set age(_: number | undefined) {}
 
-    @getter(SCHEMA + "knows", GetterArity.Set, ObjectMapping.as(Person), ObjectMapping.as(Person))
-    get friends(): Set<Person> { throw new Error() }
+    // Self-referential properties cannot use decorators; use a manual getter instead:
+    get friends(): Set<Person> {
+        return this.objects(SCHEMA + "knows", ObjectMapping.as(Person), ObjectMapping.as(Person))
+    }
 }
 ```

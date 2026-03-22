@@ -18,7 +18,8 @@
   "scripts": {
     "start": "npm test",
     "build:test": "tsc && tsc -p test",
-    "test": "npm run build:test && node --experimental-test-coverage --test \"**/*.test.js\""
+    "test": "npm run build:test && node --experimental-test-coverage --test \"**/*.test.js\"",
+    "test:docs": "npm run build:test && node --experimental-test-coverage --test \"test/dist/docs/**/*.test.js\""
   },
   "keywords": [
     "rdf",

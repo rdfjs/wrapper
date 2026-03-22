@@ -7,5 +7,5 @@
       "@rdfjs/wrapper": ["../dist/mod.d.ts"]
     }
   },
-  "include": ["./unit"]
+  "include": ["./unit", "./docs"]
 }
