@@ -13,3 +13,8 @@ export * from "./mapping/ValueMapping.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
+
+export * from "./errors/WrapperError.js"
+export * from "./errors/TermError.js"
+export * from "./errors/TermTypeError.js"
+export * from "./errors/LiteralDatatypeError.js"
