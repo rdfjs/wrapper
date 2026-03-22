@@ -1,7 +1,6 @@
 import {
     TermWrapper,
     ValueMapping,
-    TermMapping,
     getter,
     GetterArity,
 } from "@rdfjs/wrapper"

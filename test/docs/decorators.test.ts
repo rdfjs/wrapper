@@ -1,7 +1,7 @@
 import assert from "node:assert"
 import { describe, it } from "node:test"
 import { DataFactory, Store, Parser } from "n3"
-import { Tag, Article } from "./examples/decorators-article.js"
+import { Article } from "./examples/decorators-article.js"
 import { ArticleManual, ArticleDecorated } from "./examples/decorators-equivalence.js"
 import { Friend, PersonDecorated } from "./examples/decorators-person.js"
 

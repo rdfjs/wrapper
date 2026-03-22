@@ -1,4 +1,4 @@
-import { TermWrapper, ValueMapping } from "@rdfjs/wrapper"
+import { TermWrapper } from "@rdfjs/wrapper"
 
 export class Resource extends TermWrapper {
     /**
