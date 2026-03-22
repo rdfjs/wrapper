@@ -31,6 +31,7 @@ jobs:
       - run: npm i
       - run: npx tsc
       - run: npm test
+
   summary:
     if: always()
     needs: [audit, test]
