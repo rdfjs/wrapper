@@ -31,3 +31,14 @@ jobs:
       - run: npm i
       - run: npx tsc
       - run: npm test
+
+  summary:
+    if: always()
+    needs: [audit, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Summary
+        run: |
+          if [[ "${{ needs.audit.result }}" != "success" ]] || [[ "${{ needs.test.result }}" != "success" ]]; then
+            exit 1
+          fi
