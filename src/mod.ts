@@ -7,8 +7,8 @@ export * from "./decorators/SetterArity.js"
 export * from "./decorators/getter.js"
 export * from "./decorators/setter.js"
 
-export * from "./mapping/TermMapping.js"
 export * from "./mapping/TermAs.js"
+export * from "./mapping/TermFrom.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
