@@ -31,6 +31,7 @@ jobs:
       - run: npm i
       - run: npx tsc
       - run: npm test
+      - run: npm run check-doc-examples
 
   summary:
     if: always()

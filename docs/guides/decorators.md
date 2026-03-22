@@ -106,7 +106,6 @@ The getter and setter bodies (`throw new Error()` and empty `{}`) are never exec
 import {
     TermWrapper,
     ValueMapping,
-    TermMapping,
     getter,
     GetterArity,
 } from "@rdfjs/wrapper"

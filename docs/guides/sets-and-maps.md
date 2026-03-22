@@ -117,7 +117,7 @@ The `valueMapping` must return a `[key, value]` tuple, and the `termMapping` mus
 
 <!-- example: sets-and-maps-map -->
 ```typescript
-import { TermWrapper, ValueMapping } from "@rdfjs/wrapper"
+import { TermWrapper } from "@rdfjs/wrapper"
 
 export class Resource extends TermWrapper {
     /**
