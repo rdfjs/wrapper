@@ -5,7 +5,7 @@ import { Child } from "./model/Child.js"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import { Parent } from "./model/Parent.js"
 import type { Term } from "@rdfjs/types"
-import { SingularNoValueError, SingularTooManyValuesError, TermWrapper, ValueMapping, ValueMappingError } from "@rdfjs/wrapper"
+import { SingularNoValueError, SingularTooManyValuesError, TermMapping, TermWrapper, ValueMapping, ValueMappingError } from "@rdfjs/wrapper"
 
 const rdf = `
 prefix : <https://example.org/>
@@ -116,6 +116,14 @@ await describe("Term Wrapper", async () => {
             const langString = {direction: "" as const, lang: "fr", string: "lang string 2"}
             parent.hasLangString = langString
             assert.deepEqual(parent.hasLangString, langString)
+        })
+
+        await it("N3 factory.literal accepts object { language } form and sets language correctly", async () => {
+            // Regression test for N3.js bug: factory.literal(text, { language }) was broken
+            // because N3.js checked `languageOrDataType === 'string'` and rejected object form,
+            // forcing the workaround factory.literal(text, language) instead.
+            const termWrapper = TermMapping.langStringToLiteral({ direction: "", lang: "en", string: "hello" }, dataset, DataFactory)
+            assert.equal(termWrapper?.language, "en")
         })
 
         await it("set lang string with rtl direction round-trips direction", async () => {
