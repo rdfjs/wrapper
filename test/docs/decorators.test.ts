@@ -1,47 +1,9 @@
-// Examples extracted from docs/guides/decorators.md and docs/api/decorators.md
-
 import assert from "node:assert"
 import { describe, it } from "node:test"
-import {
-    TermWrapper,
-    ValueMapping,
-    TermMapping,
-    ObjectMapping,
-    getter,
-    setter,
-    GetterArity,
-    SetterArity,
-} from "@rdfjs/wrapper"
 import { DataFactory, Store, Parser } from "n3"
-
-const SCHEMA = "https://schema.org/"
-
-// --- Example from docs/guides/decorators.md ---
-
-class Tag extends TermWrapper {
-    @getter(SCHEMA + "name", GetterArity.SingularNullable, ValueMapping.literalToString)
-    get name(): string | undefined {
-        throw new Error()
-    }
-
-    @setter(SCHEMA + "name", SetterArity.SingularNullable, TermMapping.stringToLiteral)
-    set name(_: string | undefined) {}
-}
-
-class Article extends TermWrapper {
-    @getter(SCHEMA + "headline", GetterArity.Singular, ValueMapping.literalToString)
-    get headline(): string {
-        throw new Error()
-    }
-
-    @setter(SCHEMA + "headline", SetterArity.Singular, TermMapping.stringToLiteral)
-    set headline(_: string) {}
-
-    @getter(SCHEMA + "keywords", GetterArity.Set, ObjectMapping.as(Tag), ObjectMapping.as(Tag))
-    get tags(): Set<Tag> {
-        throw new Error()
-    }
-}
+import { Tag, Article } from "./examples/decorators-article.js"
+import { ArticleManual, ArticleDecorated } from "./examples/decorators-equivalence.js"
+import { Friend, PersonDecorated } from "./examples/decorators-person.js"
 
 await describe("docs/guides/decorators — Article and Tag Example", async () => {
     const store = new Store()
@@ -75,21 +37,6 @@ await describe("docs/guides/decorators — Article and Tag Example", async () =>
     })
 })
 
-// --- Example from docs/guides/decorators.md: Equivalence to Manual Mappings ---
-
-class ArticleManual extends TermWrapper {
-    // Manual equivalent
-    get headline(): string {
-        return this.singular(SCHEMA + "headline", ValueMapping.literalToString)
-    }
-}
-
-class ArticleDecorated extends TermWrapper {
-    // Decorated
-    @getter(SCHEMA + "headline", GetterArity.Singular, ValueMapping.literalToString)
-    get headline(): string { throw new Error() }
-}
-
 await describe("docs/guides/decorators — Equivalence to Manual Mappings", async () => {
     const store = new Store()
     store.addQuads(new Parser().parse(`
@@ -104,35 +51,6 @@ await describe("docs/guides/decorators — Equivalence to Manual Mappings", asyn
         assert.strictEqual(manual.headline, decorated.headline)
     })
 })
-
-// --- Full Decorated Class Example from docs/api/decorators.md ---
-// Note: to avoid TypeScript's temporal dead zone error with self-referencing class
-// decorators, we split the self-referential "knows" relationship into two classes.
-
-class Friend extends TermWrapper {
-    @getter(SCHEMA + "name", GetterArity.SingularNullable, ValueMapping.literalToString)
-    get name(): string | undefined { throw new Error() }
-
-    @setter(SCHEMA + "name", SetterArity.SingularNullable, TermMapping.stringToLiteral)
-    set name(_: string | undefined) {}
-}
-
-class PersonDecorated extends TermWrapper {
-    @getter(SCHEMA + "name", GetterArity.SingularNullable, ValueMapping.literalToString)
-    get name(): string | undefined { throw new Error() }
-
-    @setter(SCHEMA + "name", SetterArity.SingularNullable, TermMapping.stringToLiteral)
-    set name(_: string | undefined) {}
-
-    @getter(SCHEMA + "age", GetterArity.SingularNullable, ValueMapping.literalToNumber)
-    get age(): number | undefined { throw new Error() }
-
-    @setter(SCHEMA + "age", SetterArity.SingularNullable, TermMapping.numberToLiteral)
-    set age(_: number | undefined) {}
-
-    @getter(SCHEMA + "knows", GetterArity.Set, ObjectMapping.as(Friend), ObjectMapping.as(Friend))
-    get friends(): Set<Friend> { throw new Error() }
-}
 
 await describe("docs/api/decorators — Full Decorated Class Example", async () => {
     const store = new Store()
@@ -177,3 +95,4 @@ await describe("docs/api/decorators — Full Decorated Class Example", async () 
         assert.strictEqual(alice.friends.size, 2)
     })
 })
+

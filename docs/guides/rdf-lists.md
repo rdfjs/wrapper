@@ -30,13 +30,13 @@ get items(): string[] | undefined {
 
 ## Full Example
 
+<!-- example: rdf-lists -->
 ```typescript
 import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "@rdfjs/wrapper"
-import { DataFactory, Store, Parser } from "n3"
 
-const EX = "https://example.org/"
+export const EX = "https://example.org/"
 
-class Playlist extends TermWrapper {
+export class Playlist extends TermWrapper {
     get tracks(): string[] | undefined {
         return this.singularNullable(
             EX + "tracks",
@@ -49,6 +49,11 @@ class Playlist extends TermWrapper {
         )
     }
 }
+```
+<!-- /example -->
+
+```typescript
+import { DataFactory, Store, Parser } from "n3"
 
 const store = new Store()
 store.addQuads(new Parser().parse(`

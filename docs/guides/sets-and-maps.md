@@ -22,11 +22,11 @@ The `Set` supports the full standard interface: `add`, `delete`, `has`, `size`, 
 
 ### Example: Set of Primitive Values
 
+<!-- example: sets-and-maps-article -->
 ```typescript
 import { TermWrapper, ValueMapping, TermMapping } from "@rdfjs/wrapper"
-import { DataFactory, Store, Parser } from "n3"
 
-class Article extends TermWrapper {
+export class Article extends TermWrapper {
     get tags(): Set<string> {
         return this.objects(
             "https://schema.org/keywords",
@@ -35,6 +35,11 @@ class Article extends TermWrapper {
         )
     }
 }
+```
+<!-- /example -->
+
+```typescript
+import { DataFactory, Store, Parser } from "n3"
 
 const store = new Store()
 store.addQuads(new Parser().parse(`
@@ -56,12 +61,17 @@ console.log(article.tags.size)          // 3
 
 Use `ObjectMapping.as(Constructor)` as both the value mapping and the term mapping:
 
+<!-- example: sets-and-maps-person -->
 ```typescript
-import { ObjectMapping } from "@rdfjs/wrapper"
+import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "@rdfjs/wrapper"
 
-class Person extends TermWrapper {
+export class Person extends TermWrapper {
     get name(): string | undefined {
         return this.singularNullable("https://schema.org/name", ValueMapping.literalToString)
+    }
+
+    set name(value: string | undefined) {
+        this.overwriteNullable("https://schema.org/name", value, TermMapping.stringToLiteral)
     }
 
     get friends(): Set<Person> {
@@ -72,6 +82,11 @@ class Person extends TermWrapper {
         )
     }
 }
+```
+<!-- /example -->
+
+```typescript
+import { DataFactory, Store } from "n3"
 
 // --- Usage ---
 const alice = new Person("https://example.org/alice", store, DataFactory)
@@ -100,10 +115,11 @@ The `valueMapping` must return a `[key, value]` tuple, and the `termMapping` mus
 
 ### Example: String-keyed Map
 
+<!-- example: sets-and-maps-map -->
 ```typescript
 import { TermWrapper, ValueMapping } from "@rdfjs/wrapper"
 
-class Resource extends TermWrapper {
+export class Resource extends TermWrapper {
     /**
      * Expose language-tagged labels as a Map<lang, label>.
      * The RDF object is a language-tagged literal; we split it into [lang, string].
@@ -119,3 +135,4 @@ class Resource extends TermWrapper {
     }
 }
 ```
+<!-- /example -->

@@ -53,6 +53,7 @@ Applies to a class setter. Replaces the setter body with the appropriate `TermWr
 
 ## Example
 
+<!-- example: decorators-article -->
 ```typescript
 import {
     TermWrapper,
@@ -67,7 +68,7 @@ import {
 
 const SCHEMA = "https://schema.org/"
 
-class Tag extends TermWrapper {
+export class Tag extends TermWrapper {
     @getter(SCHEMA + "name", GetterArity.SingularNullable, ValueMapping.literalToString)
     get name(): string | undefined {
         throw new Error()
@@ -77,7 +78,7 @@ class Tag extends TermWrapper {
     set name(_: string | undefined) {}
 }
 
-class Article extends TermWrapper {
+export class Article extends TermWrapper {
     @getter(SCHEMA + "headline", GetterArity.Singular, ValueMapping.literalToString)
     get headline(): string {
         throw new Error()
@@ -92,6 +93,7 @@ class Article extends TermWrapper {
     }
 }
 ```
+<!-- /example -->
 
 The getter and setter bodies (`throw new Error()` and empty `{}`) are never executed — the decorators replace them entirely. This pattern makes the intent clear while still satisfying TypeScript's type requirements.
 
@@ -99,17 +101,31 @@ The getter and setter bodies (`throw new Error()` and empty `{}`) are never exec
 
 ## Equivalence to Manual Mappings
 
-A decorated getter is equivalent to the manual version:
-
+<!-- example: decorators-equivalence -->
 ```typescript
-// Decorated
-@getter(SCHEMA + "headline", GetterArity.Singular, ValueMapping.literalToString)
-get headline(): string { throw new Error() }
+import {
+    TermWrapper,
+    ValueMapping,
+    TermMapping,
+    getter,
+    GetterArity,
+} from "@rdfjs/wrapper"
 
-// Manual equivalent
-get headline(): string {
-    return this.singular(SCHEMA + "headline", ValueMapping.literalToString)
+const SCHEMA = "https://schema.org/"
+
+export class ArticleManual extends TermWrapper {
+    // Manual equivalent
+    get headline(): string {
+        return this.singular(SCHEMA + "headline", ValueMapping.literalToString)
+    }
+}
+
+export class ArticleDecorated extends TermWrapper {
+    // Decorated
+    @getter(SCHEMA + "headline", GetterArity.Singular, ValueMapping.literalToString)
+    get headline(): string { throw new Error() }
 }
 ```
+<!-- /example -->
 
 Both approaches are supported; choose whichever fits your style.

@@ -92,13 +92,13 @@ get alicesHobbies(): Iterable<Hobby> {
 
 ## Complete Example
 
+<!-- example: dataset-wrapper -->
 ```typescript
 import { DatasetWrapper, TermWrapper, ValueMapping, TermMapping } from "@rdfjs/wrapper"
-import { DataFactory, Parser, Store } from "n3"
 
 const SCHEMA = "https://schema.org/"
 
-class Person extends TermWrapper {
+export class Person extends TermWrapper {
     get name(): string | undefined {
         return this.singularNullable(SCHEMA + "name", ValueMapping.literalToString)
     }
@@ -108,7 +108,7 @@ class Person extends TermWrapper {
     }
 }
 
-class People extends DatasetWrapper {
+export class People extends DatasetWrapper {
     /** All people in the dataset (via rdf:type schema:Person). */
     get all(): Iterable<Person> {
         return this.instancesOf(SCHEMA + "Person", Person)
@@ -119,6 +119,11 @@ class People extends DatasetWrapper {
         return this.subjectsOf(SCHEMA + "name", Person)
     }
 }
+```
+<!-- /example -->
+
+```typescript
+import { DataFactory, Parser, Store } from "n3"
 
 // --- Usage ---
 const store = new Store()

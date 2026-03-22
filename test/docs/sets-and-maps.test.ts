@@ -1,21 +1,11 @@
-// Examples extracted from docs/guides/sets-and-maps.md
-
 import assert from "node:assert"
 import { describe, it } from "node:test"
-import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "@rdfjs/wrapper"
 import { DataFactory, Store, Parser } from "n3"
+import { Article } from "./examples/sets-and-maps-article.js"
+import { Person } from "./examples/sets-and-maps-person.js"
+import { Resource } from "./examples/sets-and-maps-map.js"
 
 await describe("docs/guides/sets-and-maps — Set of Primitive Values", async () => {
-    class Article extends TermWrapper {
-        get tags(): Set<string> {
-            return this.objects(
-                "https://schema.org/keywords",
-                ValueMapping.literalToString,
-                TermMapping.stringToLiteral,
-            )
-        }
-    }
-
     const store = new Store()
     store.addQuads(new Parser().parse(`
         PREFIX schema: <https://schema.org/>
@@ -42,24 +32,6 @@ await describe("docs/guides/sets-and-maps — Set of Primitive Values", async ()
 })
 
 await describe("docs/guides/sets-and-maps — Set of Wrapped Objects", async () => {
-    class Person extends TermWrapper {
-        get name(): string | undefined {
-            return this.singularNullable("https://schema.org/name", ValueMapping.literalToString)
-        }
-
-        set name(value: string | undefined) {
-            this.overwriteNullable("https://schema.org/name", value, TermMapping.stringToLiteral)
-        }
-
-        get friends(): Set<Person> {
-            return this.objects(
-                "https://schema.org/knows",
-                ObjectMapping.as(Person),
-                ObjectMapping.as(Person),
-            )
-        }
-    }
-
     const store = new Store()
     const alice = new Person("https://example.org/alice", store, DataFactory)
     const bob = new Person("https://example.org/bob", store, DataFactory)
@@ -82,18 +54,6 @@ await describe("docs/guides/sets-and-maps — Set of Wrapped Objects", async () 
 })
 
 await describe("docs/guides/sets-and-maps — Map of Language Strings", async () => {
-    class Resource extends TermWrapper {
-        get labels(): Map<string, string> {
-            return this.map(
-                "https://www.w3.org/2000/01/rdf-schema#label",
-                (termWrapper) => [termWrapper.language, termWrapper.value] as [string, string],
-                ([lang, str], dataset, factory) => {
-                    return new TermWrapper(factory.literal(str, lang), dataset, factory)
-                },
-            )
-        }
-    }
-
     const store = new Store()
     store.addQuads(new Parser().parse(`
         <https://example.org/r1>
@@ -113,3 +73,4 @@ await describe("docs/guides/sets-and-maps — Map of Language Strings", async ()
         assert.strictEqual(resource.labels.get("en"), "hi")
     })
 })
+

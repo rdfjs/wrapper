@@ -1,25 +1,7 @@
-// Examples extracted from docs/guides/rdf-lists.md
-
 import assert from "node:assert"
 import { describe, it } from "node:test"
-import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "@rdfjs/wrapper"
 import { DataFactory, Store, Parser } from "n3"
-
-const EX = "https://example.org/"
-
-class Playlist extends TermWrapper {
-    get tracks(): string[] | undefined {
-        return this.singularNullable(
-            EX + "tracks",
-            ObjectMapping.asList(
-                this,
-                EX + "tracks",
-                ValueMapping.literalToString,
-                TermMapping.stringToLiteral,
-            ),
-        )
-    }
-}
+import { Playlist, EX } from "./examples/rdf-lists.js"
 
 await describe("docs/guides/rdf-lists — Full Example", async () => {
     const store = new Store()

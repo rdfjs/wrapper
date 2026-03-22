@@ -1,31 +1,7 @@
-// Examples extracted from docs/guides/dataset-wrapper.md
-
 import assert from "node:assert"
 import { describe, it } from "node:test"
-import { DatasetWrapper, TermWrapper, ValueMapping, TermMapping } from "@rdfjs/wrapper"
 import { DataFactory, Parser, Store } from "n3"
-
-const SCHEMA = "https://schema.org/"
-
-class Person extends TermWrapper {
-    get name(): string | undefined {
-        return this.singularNullable(SCHEMA + "name", ValueMapping.literalToString)
-    }
-
-    set name(value: string | undefined) {
-        this.overwriteNullable(SCHEMA + "name", value, TermMapping.stringToLiteral)
-    }
-}
-
-class People extends DatasetWrapper {
-    get all(): Iterable<Person> {
-        return this.instancesOf(SCHEMA + "Person", Person)
-    }
-
-    get named(): Iterable<Person> {
-        return this.subjectsOf(SCHEMA + "name", Person)
-    }
-}
+import { Person, People } from "./examples/dataset-wrapper.js"
 
 const store = new Store()
 store.addQuads(new Parser().parse(`

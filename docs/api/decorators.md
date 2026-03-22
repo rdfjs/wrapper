@@ -107,8 +107,9 @@ set age(_: number) {}
 ## Full Decorated Class Example
 
 !!! note "Self-referencing in decorators"
-    TypeScript evaluates decorator arguments at class definition time. This means `ObjectMapping.as(Person)` inside a `Person` class decorator would reference the class before it is fully declared, causing a TypeScript error. Use a non-decorator getter for self-referential properties, or reference a separate class.
+    TypeScript evaluates decorator arguments at class definition time. This means `ObjectMapping.as(Person)` inside a `Person` class decorator would reference the class before it is fully declared, causing a TypeScript error. Use a separate class for the linked type, as shown below (`Friend` and `PersonDecorated`).
 
+<!-- example: decorators-person -->
 ```typescript
 import {
     TermWrapper,
@@ -123,7 +124,15 @@ import {
 
 const SCHEMA = "https://schema.org/"
 
-class Person extends TermWrapper {
+export class Friend extends TermWrapper {
+    @getter(SCHEMA + "name", GetterArity.SingularNullable, ValueMapping.literalToString)
+    get name(): string | undefined { throw new Error() }
+
+    @setter(SCHEMA + "name", SetterArity.SingularNullable, TermMapping.stringToLiteral)
+    set name(_: string | undefined) {}
+}
+
+export class PersonDecorated extends TermWrapper {
     @getter(SCHEMA + "name", GetterArity.SingularNullable, ValueMapping.literalToString)
     get name(): string | undefined { throw new Error() }
 
@@ -136,9 +145,8 @@ class Person extends TermWrapper {
     @setter(SCHEMA + "age", SetterArity.SingularNullable, TermMapping.numberToLiteral)
     set age(_: number | undefined) {}
 
-    // Self-referential properties cannot use decorators; use a manual getter instead:
-    get friends(): Set<Person> {
-        return this.objects(SCHEMA + "knows", ObjectMapping.as(Person), ObjectMapping.as(Person))
-    }
+    @getter(SCHEMA + "knows", GetterArity.Set, ObjectMapping.as(Friend), ObjectMapping.as(Friend))
+    get friends(): Set<Friend> { throw new Error() }
 }
 ```
+<!-- /example -->

@@ -27,13 +27,13 @@ Because it acts as both a value mapping and a term mapping, a single `ObjectMapp
 
 ## Example: Person with Address
 
+<!-- example: nested-objects -->
 ```typescript
 import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "@rdfjs/wrapper"
-import { DataFactory, Store, Parser } from "n3"
 
 const SCHEMA = "https://schema.org/"
 
-class Address extends TermWrapper {
+export class Address extends TermWrapper {
     get street(): string | undefined {
         return this.singularNullable(SCHEMA + "streetAddress", ValueMapping.literalToString)
     }
@@ -47,7 +47,7 @@ class Address extends TermWrapper {
     }
 }
 
-class Person extends TermWrapper {
+export class Person extends TermWrapper {
     get name(): string | undefined {
         return this.singularNullable(SCHEMA + "name", ValueMapping.literalToString)
     }
@@ -59,7 +59,16 @@ class Person extends TermWrapper {
     set address(value: Address | undefined) {
         this.overwriteNullable(SCHEMA + "address", value, ObjectMapping.as(Address))
     }
+
+    get knows(): Person | undefined {
+        return this.singularNullable(SCHEMA + "knows", ObjectMapping.as(Person))
+    }
 }
+```
+<!-- /example -->
+
+```typescript
+import { DataFactory, Store, Parser } from "n3"
 
 // --- Usage ---
 const store = new Store()

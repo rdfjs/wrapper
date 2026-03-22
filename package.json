@@ -19,7 +19,9 @@
     "start": "npm test",
     "build:test": "tsc && tsc -p test",
     "test": "npm run build:test && node --experimental-test-coverage --test \"**/*.test.js\"",
-    "test:docs": "npm run build:test && node --experimental-test-coverage --test \"test/dist/docs/**/*.test.js\""
+    "test:docs": "npm run build:test && node --experimental-test-coverage --test \"test/dist/docs/**/*.test.js\"",
+    "sync-doc-examples": "node scripts/sync-doc-examples.mjs",
+    "check-doc-examples": "node scripts/sync-doc-examples.mjs --check"
   },
   "keywords": [
     "rdf",

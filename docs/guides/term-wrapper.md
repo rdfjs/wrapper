@@ -96,13 +96,13 @@ set description(value: string | undefined) {
 
 ## Complete Example
 
+<!-- example: term-wrapper -->
 ```typescript
 import { TermWrapper, ValueMapping, TermMapping } from "@rdfjs/wrapper"
-import { DataFactory, Store } from "n3"
 
 const SCHEMA = "https://schema.org/"
 
-class Book extends TermWrapper {
+export class Book extends TermWrapper {
     get title(): string {
         return this.singular(SCHEMA + "name", ValueMapping.literalToString)
     }
@@ -119,6 +119,11 @@ class Book extends TermWrapper {
         this.overwriteNullable(SCHEMA + "isbn", value, TermMapping.stringToLiteral)
     }
 }
+```
+<!-- /example -->
+
+```typescript
+import { DataFactory, Store } from "n3"
 
 // --- Usage ---
 const store = new Store()
