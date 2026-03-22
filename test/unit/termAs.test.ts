@@ -31,13 +31,15 @@ await describe("TermAs", async () => {
             assert.throws(() => TermAs.uInt8Array(wrapper), LiteralDatatypeError)
         })
 
-        await it("throws when illegal base64", async () => {
+        // TODO: Enable when Node 25
+        await it("throws when illegal base64", {skip: "Browser functionality with Uint8Array.fromBase64"}, async () => {
             const wrapper = new TermWrapper(DataFactory.literal("X", DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#base64Binary")), new Store(), DataFactory)
 
             assert.throws(() => TermAs.uInt8Array(wrapper), SyntaxError)
         })
 
-        await it("throws when illegal hex", async () => {
+        // TODO: Enable when Node 25
+        await it("throws when illegal hex", {skip: "Browser functionality with Uint8Array.fromHex"}, async () => {
             const wrapper = new TermWrapper(DataFactory.literal("X", DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#hexBinary")), new Store(), DataFactory)
 
             assert.throws(() => TermAs.uInt8Array(wrapper), SyntaxError)

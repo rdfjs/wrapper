@@ -107,6 +107,8 @@ export namespace TermAs {
      * @return An array of 8-bit unsigned integers decoded from the term's value according to its datatype.
      *
      * @remarks
+     * This method is only available in Node.js.
+     *
      * Supports the following datatypes:
      * - [`xsd:base64Binary`](https://www.w3.org/TR/xmlschema-2/#base64Binary)
      * - [`xsd:hexBinary`](https://www.w3.org/TR/xmlschema-2/#hexBinary)
@@ -168,13 +170,13 @@ export namespace TermAs {
 
         switch (term.datatype.value) {
             case XSD.hexBinary:
-                // TODO: Sort out typing
-                return (Uint8Array as any).fromHex(term.value)
+                // TODO: When Node 25 - return Uint8Array.fromHex(term.value)
+                return Uint8Array.from(Buffer.from(term.value, 'hex'))
 
             default:
             case XSD.base64Binary:
-                // TODO: Sort out typing
-                return (Uint8Array as any).fromBase64(term.value)
+                // TODO: When Node 25 - return Uint8Array.fromBase64(term.value)
+                return Uint8Array.from(Buffer.from(term.value, 'base64'))
         }
     }
 
