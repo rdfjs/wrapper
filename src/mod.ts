@@ -1,6 +1,7 @@
 export type * from "./type/ITermMapping.js"
 export type * from "./type/ITermWrapperConstructor.js"
 export type * from "./type/IValueMapping.js"
+export type * from "./type/ILangString.js"
 
 export * from "./decorators/GetterArity.js"
 export * from "./decorators/SetterArity.js"
