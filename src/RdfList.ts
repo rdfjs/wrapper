@@ -1,6 +1,6 @@
 import { TermWrapper } from "./TermWrapper.js"
-import type { IValueMapping } from "./type/IValueMapping.js"
-import type { ITermMapping } from "./type/ITermMapping.js"
+import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
+import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import { IndexerInterceptor } from "./IndexerInterceptor.js"
 import { ListItem } from "./ListItem.js"
 import { RDF } from "./vocabulary/RDF.js"
@@ -10,8 +10,8 @@ import { Overwriter } from "./Overwriter.js"
 export class RdfList<T> implements Array<T> {
     private root: ListItem<T>
 
-    constructor(root: Term, private readonly subject: TermWrapper, private readonly predicate: string, private readonly valueMapping: IValueMapping<T>, private readonly termMapping: ITermMapping<T>) {
-        this.root = new ListItem(root, this.subject.dataset, this.subject.factory, valueMapping, termMapping)
+    constructor(root: Term, private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
+        this.root = new ListItem(root, this.subject.dataset, this.subject.factory, termAs, termFrom)
 
         // TODO: Singleton interceptor?
         return new Proxy(this, new IndexerInterceptor<T>)
@@ -120,7 +120,7 @@ export class RdfList<T> implements Array<T> {
 
         for (const item of items) {
             // A node will be needed either to replace rdf:nil in an empty list or to add a new one to the end of an existing list
-            const newNode = new ListItem(this.subject.factory.blankNode(), this.subject.dataset, this.subject.factory, this.valueMapping, this.termMapping)
+            const newNode = new ListItem(this.subject.factory.blankNode(), this.subject.dataset, this.subject.factory, this.termAs, this.termFrom)
 
             const lastNode = this.root.isNil ?
                 // The statement representing an empty list is replaced by a new one whose object is the new node
@@ -188,7 +188,7 @@ export class RdfList<T> implements Array<T> {
     unshift(...items: T[]): number {
         for (const item of items.reverse()) {
             const firstNode = this.root
-            this.root = new Overwriter<T>(this.subject, this.predicate).listNode = new ListItem(this.subject.factory.blankNode(), this.subject.dataset, this.subject.factory, this.valueMapping, this.termMapping)
+            this.root = new Overwriter<T>(this.subject, this.predicate).listNode = new ListItem(this.subject.factory.blankNode(), this.subject.dataset, this.subject.factory, this.termAs, this.termFrom)
             this.root.first = item
             this.root.rest = firstNode
         }

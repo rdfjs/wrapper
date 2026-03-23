@@ -4,13 +4,13 @@ import type { Term } from "@rdfjs/types"
 import { TermTypeError } from "../errors/TermTypeError.js"
 import { LiteralDatatypeError } from "../errors/LiteralDatatypeError.js"
 import type { ITermWrapperConstructor } from "../type/ITermWrapperConstructor.js"
-import type { IValueMapping } from "../type/IValueMapping.js"
-import type { ITermMapping } from "../type/ITermMapping.js"
+import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
+import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
 import { RdfList } from "../RdfList.js"
 import type { ILangString } from "../type/ILangString.js"
 
 /**
- * A collection of {@link IValueMapping | mappers} that convert RDF terms to JavaScript constructs.
+ * A collection of {@link ITermAsValueMapping | mappers} that convert RDF terms to JavaScript constructs.
  */
 export namespace TermAs {
     export function bigint(term: TermWrapper): bigint {
@@ -40,11 +40,11 @@ export namespace TermAs {
         return new Date(term.value)
     }
 
-    export function instance<T>(constructor: ITermWrapperConstructor<T>): IValueMapping<T> {
+    export function instance<T>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T> {
         return (termWrapper: TermWrapper) => new constructor(termWrapper as Term, termWrapper.dataset, termWrapper.factory)
     }
 
-    export function is(term: TermWrapper): TermWrapper {
+    export function is<T extends TermWrapper>(term: T): T {
         return term
     }
 
@@ -57,8 +57,8 @@ export namespace TermAs {
         return {lang: term.language, string: term.value}
     }
 
-    export function list<T>(subject: TermWrapper, predicate: string, valueMapping: IValueMapping<T>, termMapping: ITermMapping<T>): IValueMapping<T[]> {
-        return w => new RdfList(w as Term, subject, predicate, valueMapping, termMapping)
+    export function list<T>(subject: TermWrapper, predicate: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): ITermAsValueMapping<T[]> {
+        return w => new RdfList(w as Term, subject, predicate, termAs, termFrom)
     }
 
     export function number(term: TermWrapper): number {
@@ -101,7 +101,7 @@ export namespace TermAs {
     }
 
     /**
-     * {@link IValueMapping | Maps} a binary literal to a typed array.
+     * {@link ITermAsValueMapping | Maps} a binary literal to a typed array.
      *
      * @param {TermWrapper} term - The term containing hexadecimal or Base64 encoded binary data.
      * @return An array of 8-bit unsigned integers decoded from the term's value according to its datatype.

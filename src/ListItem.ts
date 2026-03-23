@@ -1,13 +1,13 @@
 import { TermWrapper } from "./TermWrapper.js"
 import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
 import { RDF } from "./vocabulary/RDF.js"
-import type { IValueMapping } from "./type/IValueMapping"
-import type { ITermMapping } from "./type/ITermMapping.js"
+import type { ITermAsValueMapping } from "./type/ITermAsValueMapping"
+import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import { TermAs } from "./mapping/TermAs.js"
 import { TermFrom } from "./mapping/TermFrom.js"
 
 export class ListItem<T> extends TermWrapper {
-    constructor(term: Term, dataset: DatasetCore, factory: DataFactory, private readonly valueMapping: IValueMapping<T>, private readonly termMapping: ITermMapping<T>) {
+    constructor(term: Term, dataset: DatasetCore, factory: DataFactory, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
         super(term, dataset, factory)
     }
 
@@ -36,15 +36,15 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get first(): T {
-        return this.singular(RDF.first, this.valueMapping)
+        return this.singular(RDF.first, this.termAs)
     }
 
     public set first(value: T) {
-        this.overwrite(RDF.first, value, this.termMapping)
+        this.overwrite(RDF.first, value, this.termFrom)
     }
 
     public get rest(): ListItem<T> {
-        return this.singular(RDF.rest, w => new ListItem(w as Term, w.dataset, w.factory, this.valueMapping, this.termMapping))
+        return this.singular(RDF.rest, w => new ListItem(w as Term, w.dataset, w.factory, this.termAs, this.termFrom))
     }
 
     public set rest(value: ListItem<T>) {

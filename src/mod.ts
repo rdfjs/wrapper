@@ -1,6 +1,6 @@
-export type * from "./type/ITermMapping.js"
+export type * from "./type/ITermAsValueMapping.js"
 export type * from "./type/ITermWrapperConstructor.js"
-export type * from "./type/IValueMapping.js"
+export type * from "./type/ITermFromValueMapping.js"
 export type * from "./type/ILangString.js"
 
 export * from "./decorators/GetterArity.js"

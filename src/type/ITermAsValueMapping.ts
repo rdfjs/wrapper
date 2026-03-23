@@ -1,5 +1,5 @@
 import type { TermWrapper } from "../TermWrapper.js"
 
-export interface IValueMapping<T> {
+export interface ITermAsValueMapping<T> {
     (termWrapper: TermWrapper): T
 }
