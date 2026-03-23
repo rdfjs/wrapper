@@ -1,13 +1,13 @@
 import { TermWrapper } from "../TermWrapper.js"
 import { WrappingMap } from "../WrappingMap.js"
 import { WrappingSet } from "../WrappingSet.js"
-import type { IValueMapping } from "../type/IValueMapping.js"
-import type { ITermMapping } from "../type/ITermMapping.js"
+import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
+import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
 import type { Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 
 export namespace ArcTransformation {
-    export function singular<T>(anchor: TermWrapper, p: string, _?: T, valueMapping?: IValueMapping<T>): any {
-        if (valueMapping === undefined) {
+    export function singular<T>(anchor: TermWrapper, p: string, _?: T, termAs?: ITermAsValueMapping<T>): any {
+        if (termAs === undefined) {
             throw new Error // TODO: Describe
         }
 
@@ -25,31 +25,31 @@ export namespace ArcTransformation {
             throw new Error(`More than one value for predicate ${p} on term ${anchor.value}`)
         }
 
-        return valueMapping(new TermWrapper(first.object, anchor.dataset, anchor.factory))
+        return termAs(new TermWrapper(first.object, anchor.dataset, anchor.factory))
     }
 
-    export function singularNullable<T>(anchor: TermWrapper, p: string, _?: T, valueMapping?: IValueMapping<T>): any {
-        if (valueMapping === undefined) {
+    export function singularNullable<T>(anchor: TermWrapper, p: string, _?: T, termAs?: ITermAsValueMapping<T>): any {
+        if (termAs === undefined) {
             throw new Error // TODO: Describe
         }
 
         const predicate = anchor.factory.namedNode(p)
 
         for (const q of anchor.dataset.match(anchor as Term, predicate)) {
-            return valueMapping(new TermWrapper(q.object, anchor.dataset, anchor.factory))
+            return termAs(new TermWrapper(q.object, anchor.dataset, anchor.factory))
         }
     }
 
-    export function overwrite<T>(anchor: TermWrapper, p: string, value?: T, _?: IValueMapping<T>, termMapping?: ITermMapping<T>): any {
+    export function overwrite<T>(anchor: TermWrapper, p: string, value?: T, _?: ITermAsValueMapping<T>, termFrom?: ITermFromValueMapping<T>): any {
         if (value === undefined) {
             throw new Error("value cannot be undefined")
         }
 
-        return overwriteNullable(anchor, p, value, undefined, termMapping)
+        return overwriteNullable(anchor, p, value, undefined, termFrom)
     }
 
-    export function overwriteNullable<T>(anchor: TermWrapper, p: string, value?: T, _?: IValueMapping<T>, termMapping?: ITermMapping<T>): any {
-        if (termMapping === undefined) {
+    export function overwriteNullable<T>(anchor: TermWrapper, p: string, value?: T, _?: ITermAsValueMapping<T>, termFrom?: ITermFromValueMapping<T>): any {
+        if (termFrom === undefined) {
             throw new Error
         }
 
@@ -71,7 +71,7 @@ export namespace ArcTransformation {
         }
 
         // TODO: TermMapping undefined: the term mapping is not invoked if undefined
-        const o = termMapping(value, anchor.dataset, anchor.factory)
+        const o = termFrom(value, anchor.factory)
 
         if (o === undefined) {
             return // TODO: throw error?
@@ -85,28 +85,28 @@ export namespace ArcTransformation {
         anchor.dataset.add(q)
     }
 
-    export function objects<T>(anchor: TermWrapper, p: string, _?: T, valueMapping?: IValueMapping<T>, termMapping?: ITermMapping<T>): any {
-        if (valueMapping === undefined) {
+    export function objects<T>(anchor: TermWrapper, p: string, _?: T, termAs?: ITermAsValueMapping<T>, termFrom?: ITermFromValueMapping<T>): any {
+        if (termAs === undefined) {
             throw new Error // TODO: Describe
         }
 
-        if (termMapping === undefined) {
+        if (termFrom === undefined) {
             throw new Error // TODO: Describe
         }
 
-        return new WrappingSet(anchor, p, valueMapping, termMapping)
+        return new WrappingSet(anchor, p, termAs, termFrom)
     }
 
-    export function map<TKey, TValue>(anchor: TermWrapper, p: string, _?: [TKey, TValue], valueMapping?: IValueMapping<[TKey, TValue]>, termMapping?: ITermMapping<[TKey, TValue]>): any {
-        if (valueMapping === undefined) {
+    export function map<TKey, TValue>(anchor: TermWrapper, p: string, _?: [TKey, TValue], termAs?: ITermAsValueMapping<[TKey, TValue]>, termFrom?: ITermFromValueMapping<[TKey, TValue]>): any {
+        if (termAs === undefined) {
             throw new Error // TODO: Describe
         }
 
-        if (termMapping === undefined) {
+        if (termFrom === undefined) {
             throw new Error // TODO: Describe
         }
 
-        return new WrappingMap(anchor, p, valueMapping, termMapping)
+        return new WrappingMap(anchor, p, termAs, termFrom)
     }
 }
 

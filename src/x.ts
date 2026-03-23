@@ -164,8 +164,8 @@ namespace X {
 
     class NewWrappingSet<T> implements Set<T> {
         constructor(
-            private readonly termToValue: ITermToValue<T>,
-            private readonly valueToTerm: IValueToTerm<T>,
+            private readonly termToValue: ITermAsValueMapping<T>,
+            private readonly valueToTerm: ITermFromValueMapping<T>,
             private readonly dataset: RDF.DatasetCore,
             private readonly factory: RDF.DataFactory,
             private readonly position: QuadPosition,
@@ -310,7 +310,7 @@ namespace X {
         }
 
         private term(value: T): RDF.Term {
-            return this.valueToTerm.call(value, this.dataset, this.factory) as RDF.Term
+            return this.valueToTerm.call(value, this.factory) as RDF.Term
         }
 
         private pick(quad: RDF.Quad): RDF.Term {
@@ -346,16 +346,16 @@ namespace X {
         equals(other: RDF.Term | null | undefined): boolean
     }
 
-    interface ITermToValue<T> {
+    interface ITermAsValueMapping<T> {
         (this: TermWithContext): T
     }
 
-    interface IValueToTerm<T> {
-        (this: T, dataset: RDF.DatasetCore, factory: RDF.DataFactory): TermWithContext | undefined
+    interface ITermFromValueMapping<T> {
+        (this: T, factory: RDF.DataFactory): RDF.Term
     }
 
     interface IArcTransformation<T> {
-        (this: TermWithContext, predicate: string, value?: T, valueMapping?: ITermToValue<T>, termMapping?: IValueToTerm<T>): any
+        (this: TermWithContext, predicate: string, value?: T, termAs?: ITermAsValueMapping<T>, termFrom?: ITermFromValueMapping<T>): any
     }
 
     interface ITermExtractor {
@@ -381,8 +381,8 @@ namespace X {
     }
 
     namespace ArcTransformation {
-        export function singular<T>(this: TermWithContext, p: string, _?: T, valueMapping?: ITermToValue<T>): any {
-            if (valueMapping === undefined) {
+        export function singular<T>(this: TermWithContext, p: string, _?: T, termAs?: ITermAsValueMapping<T>): any {
+            if (termAs === undefined) {
                 throw new Error // TODO: Describe
             }
 
@@ -400,21 +400,21 @@ namespace X {
                 throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
             }
 
-            return valueMapping.call(new TermWithContext(first.object, this.dataset, this.factory))
+            return termAs.call(new TermWithContext(first.object, this.dataset, this.factory))
         }
 
-        export function objects<T>(this: TermWithContext, p: string, _?: T, valueMapping?: ITermToValue<T>, termMapping?: IValueToTerm<T>): any {
-            if (valueMapping === undefined) {
+        export function objects<T>(this: TermWithContext, p: string, _?: T, termAs?: ITermAsValueMapping<T>, termFrom?: ITermFromValueMapping<T>): any {
+            if (termAs === undefined) {
                 throw new Error // TODO: Describe
             }
 
-            if (termMapping === undefined) {
+            if (termFrom === undefined) {
                 throw new Error // TODO: Describe
             }
 
             return new NewWrappingSet(
-                valueMapping,
-                termMapping,
+                termAs,
+                termFrom,
                 this.dataset,
                 this.factory,
                 QuadPosition.object,
@@ -541,16 +541,16 @@ namespace X {
     }
 
     class Term extends TermWithContext {
-        protected singular<T>(p: string, valueMapping: ITermToValue<T>): T {
-            return this.process(ArcTransformation.singular, p, undefined, valueMapping)
+        protected singular<T>(p: string, termAs: ITermAsValueMapping<T>): T {
+            return this.process(ArcTransformation.singular, p, undefined, termAs)
         }
 
-        protected objects<T>(p: string, valueMapping: ITermToValue<T>, termMapping: IValueToTerm<T>): Set<T> {
-            return this.process(ArcTransformation.objects, p, undefined, valueMapping, termMapping)
+        protected objects<T>(p: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): Set<T> {
+            return this.process(ArcTransformation.objects, p, undefined, termAs, termFrom)
         }
 
-        protected process<T>(transformation: IArcTransformation<T>, predicate: string, value?: T, valueMapping?: ITermToValue<T>, termMapping?: IValueToTerm<T>): any {
-            return transformation.call(this, predicate, value, valueMapping, termMapping)
+        protected process<T>(transformation: IArcTransformation<T>, predicate: string, value?: T, termAs?: ITermAsValueMapping<T>, termFrom?: ITermFromValueMapping<T>): any {
+            return transformation.call(this, predicate, value, termAs, termFrom)
         }
     }
 }
