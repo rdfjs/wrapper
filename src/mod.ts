@@ -9,7 +9,11 @@ export * from "./decorators/getter.js"
 export * from "./decorators/setter.js"
 
 export * from "./mapping/TermAs.js"
+export * from "./mapping/LiteralAs.js"
+export * from "./mapping/LiteralFrom.js"
 export * from "./mapping/TermFrom.js"
+export * from "./mapping/NamedNodeFrom.js"
+export * from "./mapping/BlankNodeFrom.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"

@@ -1,66 +1,66 @@
 import type { ILangString } from "@rdfjs/wrapper"
-import { TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
+import { BlankNodeFrom, LiteralAs, LiteralFrom, NamedNodeFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
 import { Child } from "./Child.js"
 import { Example } from "../vocabulary/Example.js"
 
 export class Parent extends TermWrapper {
     /* Value Mapping */
     public get hasBlankNode(): string {
-        return this.singular(Example.hasBlankNode, TermAs.string)
+        return this.singular(Example.hasBlankNode, LiteralAs.string)
     }
 
     public get hasDate(): Date {
-        return this.singular(Example.hasDate, TermAs.date)
+        return this.singular(Example.hasDate, LiteralAs.date)
     }
 
     public get hasLangString(): ILangString {
-        return this.singular(Example.hasLangString, TermAs.langString)
+        return this.singular(Example.hasLangString, LiteralAs.langString)
     }
 
     public get hasNumber(): number {
-        return this.singular(Example.hasNumber, TermAs.number)
+        return this.singular(Example.hasNumber, LiteralAs.number)
     }
 
     public get hasBoolean(): boolean {
-        return this.singular(Example.hasBoolean, TermAs.boolean)
+        return this.singular(Example.hasBoolean, LiteralAs.boolean)
     }
 
     public get hasString(): string {
-        return this.singular(Example.hasString, TermAs.string)
+        return this.singular(Example.hasString, LiteralAs.string)
     }
 
     public get hasIri(): string {
-        return this.singular(Example.hasIri, TermAs.string)
+        return this.singular(Example.hasIri, LiteralAs.string)
     }
 
 
     /* Term Mapping */
     public set hasBlankNode(value: string) {
-        this.overwrite(Example.hasBlankNode, value, TermFrom.blankNodeLabel)
+        this.overwrite(Example.hasBlankNode, value, BlankNodeFrom.string)
     }
 
     public set hasDate(value: Date) {
-        this.overwrite(Example.hasDate, value, TermFrom.date)
+        this.overwrite(Example.hasDate, value, LiteralFrom.date)
     }
 
     public set hasLangString(value: ILangString) {
-        this.overwrite(Example.hasLangString, value, TermFrom.langString)
+        this.overwrite(Example.hasLangString, value, LiteralFrom.langString)
     }
 
     public set hasNumber(value: number) {
-        this.overwrite(Example.hasNumber, value, TermFrom.double)
+        this.overwrite(Example.hasNumber, value, LiteralFrom.double)
     }
 
     public set hasBoolean(value: boolean) {
-        this.overwrite(Example.hasBoolean, value, TermFrom.boolean)
+        this.overwrite(Example.hasBoolean, value, LiteralFrom.boolean)
     }
 
     public set hasString(value: string) {
-        this.overwrite(Example.hasString, value, TermFrom.string)
+        this.overwrite(Example.hasString, value, LiteralFrom.string)
     }
 
     public set hasIri(value: string) {
-        this.overwrite(Example.hasIri, value, TermFrom.namedString)
+        this.overwrite(Example.hasIri, value, NamedNodeFrom.string)
     }
 
 
@@ -76,19 +76,19 @@ export class Parent extends TermWrapper {
 
     /* Arity Mapping */
     public get hasNoSingularString(): string {
-        return this.singular(Example.hasNoSingularString, TermAs.string)
+        return this.singular(Example.hasNoSingularString, LiteralAs.string)
     }
 
     public get hasTooManySingularString(): string {
-        return this.singular(Example.hasTooManySingularString, TermAs.string)
+        return this.singular(Example.hasTooManySingularString, LiteralAs.string)
     }
 
     public get hasNullableString(): string | undefined {
-        return this.singularNullable(Example.hasNullableString, TermAs.string)
+        return this.singularNullable(Example.hasNullableString, LiteralAs.string)
     }
 
     public set hasNullableString(value: string | undefined) {
-        this.overwriteNullable(Example.hasNullableString, value, TermFrom.string)
+        this.overwriteNullable(Example.hasNullableString, value, LiteralFrom.string)
     }
 
 
@@ -98,7 +98,7 @@ export class Parent extends TermWrapper {
     }
 
     public get hasLangStringSet(): Set<ILangString> {
-        return this.objects(Example.hasLangStringSet, TermAs.langString, TermFrom.langString)
+        return this.objects(Example.hasLangStringSet, LiteralAs.langString, LiteralFrom.langString)
     }
 
 

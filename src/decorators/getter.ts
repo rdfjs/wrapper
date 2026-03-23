@@ -3,9 +3,9 @@ import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
 import type { TermWrapper } from "../TermWrapper.js"
 
 import { GetterArity } from "./GetterArity.js"
-import { TermFrom } from "../mapping/TermFrom.js"
+import { LiteralFrom } from "../mapping/LiteralFrom.js"
 
-export function getter(predicate: string, getterArity: GetterArity, termAs: ITermAsValueMapping<any>, termFrom: ITermFromValueMapping<any> = TermFrom.string): any {
+export function getter(predicate: string, getterArity: GetterArity, termAs: ITermAsValueMapping<any>, termFrom: ITermFromValueMapping<any> = LiteralFrom.string): any {
     return function (target: any, context: ClassGetterDecoratorContext): any {
         return function (this: TermWrapper): any {
             switch (getterArity) {
