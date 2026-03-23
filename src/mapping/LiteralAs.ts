@@ -3,10 +3,6 @@ import { TermWrapper } from "../TermWrapper.js"
 import type { Term } from "@rdfjs/types"
 import { TermTypeError } from "../errors/TermTypeError.js"
 import { LiteralDatatypeError } from "../errors/LiteralDatatypeError.js"
-import type { ITermWrapperConstructor } from "../type/ITermWrapperConstructor.js"
-import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
-import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
-import { RdfList } from "../RdfList.js"
 import type { ILangString } from "../type/ILangString.js"
 
 /**
