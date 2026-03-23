@@ -1,7 +1,5 @@
 import { TermWrapper } from "../TermWrapper.js"
 import type { Term } from "@rdfjs/types"
-import { TermTypeError } from "../errors/TermTypeError.js"
-import { LiteralDatatypeError } from "../errors/LiteralDatatypeError.js"
 import type { ITermWrapperConstructor } from "../type/ITermWrapperConstructor.js"
 import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
@@ -12,7 +10,12 @@ import { RdfList } from "../RdfList.js"
  */
 export namespace TermAs {
     export function instance<T>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T> {
-        return (termWrapper: TermWrapper) => new constructor(termWrapper as Term, termWrapper.dataset, termWrapper.factory)
+        return (term: TermWrapper) => {
+            ensurePresent(term)
+            ensureType(term)
+
+            return new constructor(term as Term, term.dataset, term.factory)
+        }
     }
 
     export function is<T extends TermWrapper>(term: T): T {
@@ -20,7 +23,12 @@ export namespace TermAs {
     }
 
     export function list<T>(subject: TermWrapper, predicate: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): ITermAsValueMapping<T[]> {
-        return w => new RdfList(w as Term, subject, predicate, termAs, termFrom)
+        return (term: TermWrapper) => {
+            ensurePresent(term)
+            ensureType(term)
+
+            return new RdfList(term as Term, subject, predicate, termAs, termFrom)
+        }
     }
 
     export function term(term: TermWrapper): Term {
@@ -37,17 +45,5 @@ function ensurePresent(term: any) {
 function ensureType(term: any) {
     if (!(term instanceof TermWrapper)) {
         throw new TypeError("Term must be a TermWrapper")
-    }
-}
-
-function ensureLiteral(term: TermWrapper) {
-    if (term.termType !== "Literal") {
-        throw new TermTypeError(term as Term, "Literal")
-    }
-}
-
-function ensureDatatype(term: TermWrapper, ...datatypes: string[]) {
-    if (!datatypes.includes(term.datatype.value)) {
-        throw new LiteralDatatypeError(term as Term, datatypes)
     }
 }
