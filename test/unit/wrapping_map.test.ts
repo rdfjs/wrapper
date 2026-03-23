@@ -13,8 +13,8 @@ class Wrapper extends TermWrapper {
                 (w as Term as Literal).language,
                 (w as Term as Literal).value
             ],
-            ([key, value], dataset, factory) =>
-                new TermWrapper(factory.literal(value, key), dataset, factory)
+            ([key, value], factory) =>
+                factory.literal(value, key)
         )
     }
 }

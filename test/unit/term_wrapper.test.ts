@@ -8,12 +8,13 @@ import type { Term } from "@rdfjs/types"
 
 const rdf = `
 prefix : <https://example.org/>
+prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
 <x>
     :hasBlankNode _:0 ;
-    :hasDate "1969-01-01" ;
+    :hasDate "1969-01-01"^^xsd:date ;
     :hasLangString "lang string 1"@en ;
-    :hasNumber "1" ;
+    :hasNumber 1 ;
     :hasBoolean true ;
     :hasString "string 1" ;
     :hasIri <https://example.org> ;
@@ -200,7 +201,7 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.dataset.size, 22)
             // TODO: check for typed error singular no value
             assert.throws(() => parent.hasRecursive)
-            parent.hasRecursive = "x"
+            parent.hasRecursive = parent
             assert.equal(parent.hasRecursive.hasRecursive.hasRecursive.value, "x")
         })
 

@@ -1,10 +1,10 @@
 import { TermWrapper } from "./TermWrapper.js"
-import type { IValueMapping } from "./type/IValueMapping.js"
-import type { ITermMapping } from "./type/ITermMapping.js"
+import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
+import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import type { Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 
 export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
-    constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly valueMapping: IValueMapping<[TKey, TValue]>, private readonly termMapping: ITermMapping<[TKey, TValue]>) {
+    constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<[TKey, TValue]>, private readonly termFrom: ITermFromValueMapping<[TKey, TValue]>) {
     }
 
     clear(): void {
@@ -25,7 +25,7 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
                 this.subject.factory.quad(
                     this.subject as Quad_Subject,
                     p,
-                    this.termMapping(entry, this.subject.dataset, this.subject.factory) as Quad_Object))
+                    this.termFrom(entry, this.subject.factory) as Quad_Object))
 
             return true
         }
@@ -72,7 +72,7 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
 
     * entries(): MapIterator<[TKey, TValue]> {
         for (const quad of this.matches) {
-            yield this.valueMapping(new TermWrapper(quad.object, this.subject.dataset, this.subject.factory))
+            yield this.termAs(new TermWrapper(quad.object, this.subject.dataset, this.subject.factory))
         }
     }
 
@@ -109,6 +109,6 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
             this.subject.factory.quad(
                 this.subject as Quad_Subject,
                 p,
-                this.termMapping([k, v], this.subject.dataset, this.subject.factory) as Quad_Object))
+                this.termFrom([k, v], this.subject.factory) as Quad_Object))
     }
 }

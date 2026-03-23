@@ -1,6 +1,6 @@
 import type { Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
-import type { ITermMapping } from "./type/ITermMapping.js"
-import type { IValueMapping } from "./type/IValueMapping.js"
+import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
+import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
 import { AnyTermWithContext } from "./AnyTermWithContext.js"
@@ -10,7 +10,7 @@ export class TermWrapper extends AnyTermWithContext {
         return this.constructor.name
     }
 
-    protected singular<T>(p: string, valueMapping: IValueMapping<T>): T {
+    protected singular<T>(p: string, termAs: ITermAsValueMapping<T>): T {
         const predicate = this.factory.namedNode(p)
         const matches = this.dataset.match(this as Term, predicate)[Symbol.iterator]()
 
@@ -25,28 +25,28 @@ export class TermWrapper extends AnyTermWithContext {
             throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
         }
 
-        return valueMapping(new TermWrapper(first.object, this.dataset, this.factory))
+        return termAs(new TermWrapper(first.object, this.dataset, this.factory))
     }
 
-    protected singularNullable<T>(p: string, valueMapping: IValueMapping<T>): T | undefined {
+    protected singularNullable<T>(p: string, termAs: ITermAsValueMapping<T>): T | undefined {
         const predicate = this.factory.namedNode(p)
 
         for (const q of this.dataset.match(this as Term, predicate)) {
-            return valueMapping(new TermWrapper(q.object, this.dataset, this.factory))
+            return termAs(new TermWrapper(q.object, this.dataset, this.factory))
         }
 
         return
     }
 
-    protected overwrite<T>(p: string, value: T, nodeMapping: ITermMapping<T>): void {
+    protected overwrite<T>(p: string, value: T, termFrom: ITermFromValueMapping<T>): void {
         if (value === undefined) {
             throw new Error("value cannot be undefined")
         }
 
-        this.overwriteNullable(p, value, nodeMapping)
+        this.overwriteNullable(p, value, termFrom)
     }
 
-    protected overwriteNullable<T>(p: string, value: T | undefined, termMapping: ITermMapping<T>): void {
+    protected overwriteNullable<T>(p: string, value: T | undefined, termFrom: ITermFromValueMapping<T>): void {
         const predicate = this.factory.namedNode(p)
 
         for (const q of this.dataset.match(this as Term, predicate)) {
@@ -65,7 +65,7 @@ export class TermWrapper extends AnyTermWithContext {
         }
 
         // TODO: TermMapping undefined: the term mapping is not invoked if undefined
-        const o = termMapping(value, this.dataset, this.factory)
+        const o = termFrom(value, this.factory)
 
         if (o === undefined) {
             return // TODO: throw error?
@@ -79,12 +79,12 @@ export class TermWrapper extends AnyTermWithContext {
         this.dataset.add(q)
     }
 
-    protected objects<T>(p: string, valueMapping: IValueMapping<T>, termMapping: ITermMapping<T>): Set<T> {
-        return new WrappingSet(this, p, valueMapping, termMapping)
+    protected objects<T>(p: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): Set<T> {
+        return new WrappingSet(this, p, termAs, termFrom)
     }
 
-    protected map<TKey, TValue>(p: string, valueMapping: IValueMapping<[TKey, TValue]>, termMapping: ITermMapping<[TKey, TValue]>): Map<TKey, TValue> {
-        return new WrappingMap(this, p, valueMapping, termMapping)
+    protected map<TKey, TValue>(p: string, termAs: ITermAsValueMapping<[TKey, TValue]>, termFrom: ITermFromValueMapping<[TKey, TValue]>): Map<TKey, TValue> {
+        return new WrappingMap(this, p, termAs, termFrom)
     }
 
     private static isQuadSubject(term: Term): term is Quad_Subject {

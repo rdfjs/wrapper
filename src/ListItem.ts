@@ -1,30 +1,30 @@
 import { TermWrapper } from "./TermWrapper.js"
 import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
-import { ValueMapping } from "./mapping/ValueMapping.js"
-import { TermMapping } from "./mapping/TermMapping.js"
 import { RDF } from "./vocabulary/RDF.js"
-import type { IValueMapping } from "./type/IValueMapping"
-import type { ITermMapping } from "./type/ITermMapping.js"
+import type { ITermAsValueMapping } from "./type/ITermAsValueMapping"
+import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
+import { TermAs } from "./mapping/TermAs.js"
+import { TermFrom } from "./mapping/TermFrom.js"
 
 export class ListItem<T> extends TermWrapper {
-    constructor(term: Term, dataset: DatasetCore, factory: DataFactory, private readonly valueMapping: IValueMapping<T>, private readonly termMapping: ITermMapping<T>) {
+    constructor(term: Term, dataset: DatasetCore, factory: DataFactory, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
         super(term, dataset, factory)
     }
 
     public get firstRaw(): Term | undefined {
-        return this.singularNullable(RDF.first, ValueMapping.asIs)
+        return this.singularNullable(RDF.first, TermAs.term)
     }
 
     public set firstRaw(value: Term | undefined) {
-        this.overwriteNullable(RDF.first, value, TermMapping.asIs)
+        this.overwriteNullable(RDF.first, value, TermFrom.itself)
     }
 
     public get restRaw(): Term | undefined {
-        return this.singularNullable(RDF.rest, ValueMapping.asIs)
+        return this.singularNullable(RDF.rest, TermAs.term)
     }
 
     public set restRaw(value: Term | undefined) {
-        this.overwriteNullable(RDF.rest, value, TermMapping.asIs)
+        this.overwriteNullable(RDF.rest, value, TermFrom.itself)
     }
 
     public get isListItem(): boolean {
@@ -36,19 +36,19 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get first(): T {
-        return this.singular(RDF.first, this.valueMapping)
+        return this.singular(RDF.first, this.termAs)
     }
 
     public set first(value: T) {
-        this.overwrite(RDF.first, value, this.termMapping)
+        this.overwrite(RDF.first, value, this.termFrom)
     }
 
     public get rest(): ListItem<T> {
-        return this.singular(RDF.rest, w => new ListItem(w as Term, w.dataset, w.factory, this.valueMapping, this.termMapping))
+        return this.singular(RDF.rest, w => new ListItem(w as Term, w.dataset, w.factory, this.termAs, this.termFrom))
     }
 
     public set rest(value: ListItem<T>) {
-        this.overwrite(RDF.rest, value, TermMapping.identity)
+        this.overwrite(RDF.rest, value, TermFrom.instance)
     }
 
     public pop(): T {

@@ -1,7 +1,7 @@
 import { TermWrapper } from "./TermWrapper.js"
 import { ListItem } from "./ListItem.js"
-import { TermMapping } from "./mapping/TermMapping.js"
 import type { Term } from "@rdfjs/types"
+import { TermFrom } from "./mapping/TermFrom.js"
 
 export class Overwriter<T> extends TermWrapper {
     constructor(subject: TermWrapper, private readonly p: string) {
@@ -9,6 +9,6 @@ export class Overwriter<T> extends TermWrapper {
     }
 
     set listNode(object: ListItem<T>) {
-        this.overwrite(this.p, object, TermMapping.identity)
+        this.overwrite(this.p, object, TermFrom.instance)
     }
 }
