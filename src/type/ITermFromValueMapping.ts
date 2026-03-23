@@ -1,5 +1,5 @@
-import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
+import type { DataFactory, Term } from "@rdfjs/types"
 
 export interface ITermFromValueMapping<T> {
-    (value: T, dataset: DatasetCore, factory: DataFactory): Term
+    (value: T, factory: DataFactory): Term
 }
