@@ -13,6 +13,7 @@ export * from "./mapping/LiteralAs.js"
 export * from "./mapping/LiteralFrom.js"
 export * from "./mapping/TermFrom.js"
 export * from "./mapping/NamedNodeFrom.js"
+export * from "./mapping/NamedNodeAs.js"
 export * from "./mapping/BlankNodeFrom.js"
 
 export * from "./DatasetWrapper.js"
