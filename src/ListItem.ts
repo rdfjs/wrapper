@@ -1,7 +1,7 @@
 import { TermWrapper } from "./TermWrapper.js"
 import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
 import { RDF } from "./vocabulary/RDF.js"
-import type { ITermAsValueMapping } from "./type/ITermAsValueMapping"
+import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import { TermAs } from "./mapping/TermAs.js"
 import { TermFrom } from "./mapping/TermFrom.js"
