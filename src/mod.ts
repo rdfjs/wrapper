@@ -2,6 +2,7 @@ export type * from "./type/ITermAsValueMapping.js"
 export type * from "./type/ITermWrapperConstructor.js"
 export type * from "./type/ITermFromValueMapping.js"
 export type * from "./type/ILangString.js"
+export type * from "./type/IAnyTerm.js"
 
 export * from "./decorators/GetterArity.js"
 export * from "./decorators/SetterArity.js"
@@ -18,6 +19,8 @@ export * from "./mapping/BlankNodeFrom.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
+export * from "./AnyTerm.js"
+export * from "./AnyTermWithContext.js"
 
 export * from "./errors/WrapperError.js"
 export * from "./errors/TermError.js"
