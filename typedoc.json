@@ -1,3 +1,8 @@
 {
-    "out": "./_site"
+    "out": "./_site",
+    "highlightLanguages": [
+        "ts",
+        "javascript",
+        "turtle"
+    ]
 }
