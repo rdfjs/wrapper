@@ -4,5 +4,8 @@
         "ts",
         "javascript",
         "turtle"
+    ],
+    "plugin": [
+        "typedoc-plugin-mdn-links"
     ]
 }
