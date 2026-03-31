@@ -18,6 +18,15 @@ jobs:
           node-version-file: .nvmrc
       - run: npm i
       - run: npm audit --omit=dev --audit-level=moderate
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+      - run: npm i
+      - run: npx typedoc
   test:
     strategy:
       matrix:
@@ -34,11 +43,11 @@ jobs:
 
   summary:
     if: always()
-    needs: [audit, test]
+    needs: [audit, test, docs]
     runs-on: ubuntu-latest
     steps:
       - name: Summary
         run: |
-          if [[ "${{ needs.audit.result }}" != "success" ]] || [[ "${{ needs.test.result }}" != "success" ]]; then
+          if [[ "${{ needs.audit.result }}" != "success" ]] || [[ "${{ needs.test.result }}" != "success" ]] || [[ "${{ needs.docs.result }}" != "success" ]]; then
             exit 1
           fi
