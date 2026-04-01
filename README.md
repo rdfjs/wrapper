@@ -16,6 +16,8 @@ Additionally, standard mapping classes can be defined and reused in any number o
 
 A guide and demo for using this library in the context of Solid and Next.js is available [here](https://dev.solidproject.org/guides/solid_nextjs_wrapper_demo_application/).
 
+A script for generating mapping classes from SHACL shapes is available [here](https://github.com/theodi/shacl-shape-converter-typescript).
+
 ## How To?
 
 ### Publish the package
