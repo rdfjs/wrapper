@@ -19,23 +19,6 @@ A guide and demo for using this library in the context of Solid and Next.js is a
 A script for generating mapping classes from SHACL shapes is available [here](https://github.com/theodi/shacl-shape-converter-typescript).
 
 
-## Background
-
-RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/) specifications.
-
-Practically, to map RDF to objects, you need to:
-1. Write a class or use an existing class that extends TermWrapper
-1. Each class needs a [Term](https://rdf.js.org/data-model-spec/#term-interface), a [Dataset](https://rdf.js.org/dataset-spec/#dataset-interface), and a [DataFactory](https://rdf.js.org/data-model-spec/#datafactory-interface) to be instantiated
-1. Each class property will have an associated www.w3.org/TR/rdf11-schema/#ch_properties (a string, generally a URL, that is defined by an [ontology/vocabulary)](https://www.w3.org/TR/owl-rdf-based-semantics/)
-1. Each class property will have an associated arity (singular, singular nullable or set)
-1. Each class property depending on its type can have:
-    1. a corresponding value mapping to get values, that is translating RDF Terms to JavaScript [primitive values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#primitive_values) (string, number, boolean...)
-    1. a corresponding term mapping to set values, that is translating Javascript primitive values to RDF Terms
-    1. a corresponding mapping to wrap child objects as a TermWrapper
-    1. a corresponding mapping for sets of primitive values
-1. Each class mutates the underlying Dataset that is passed to it at instantiation time
-
-
 ## Wrapping RDF
 
 In order to wrap RDF, one needs an underlying data structure. Therefore, both `TermWrapper` and `DatasetWrapper` take an RDF/JS [Dataset](https://rdf.js.org/dataset-spec/#datasetcore-interface) and [Datafactory](https://rdf.js.org/data-model-spec/#datafactory-interface) as constructor parameters.
@@ -185,6 +168,23 @@ console.log(person1.mum.name)
 console.log(person2.mum.mum.name)
 // outputs "Joanne"
 ```
+
+
+## Background
+
+RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/) specifications.
+
+Practically, to map RDF to objects, you need to:
+1. Write a class or use an existing class that extends TermWrapper
+1. Each class needs a [Term](https://rdf.js.org/data-model-spec/#term-interface), a [Dataset](https://rdf.js.org/dataset-spec/#dataset-interface), and a [DataFactory](https://rdf.js.org/data-model-spec/#datafactory-interface) to be instantiated
+1. Each class property will have an associated www.w3.org/TR/rdf11-schema/#ch_properties (a string, generally a URL, that is defined by an [ontology/vocabulary)](https://www.w3.org/TR/owl-rdf-based-semantics/)
+1. Each class property will have an associated arity (singular, singular nullable or set)
+1. Each class property depending on its type can have:
+    1. a corresponding value mapping to get values, that is translating RDF Terms to JavaScript [primitive values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#primitive_values) (string, number, boolean...)
+    1. a corresponding term mapping to set values, that is translating Javascript primitive values to RDF Terms
+    1. a corresponding mapping to wrap child objects as a TermWrapper
+    1. a corresponding mapping for sets of primitive values
+1. Each class mutates the underlying Dataset that is passed to it at instantiation time
 
 
 ## How To?
