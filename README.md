@@ -34,10 +34,10 @@ Practically, to map RDF to objects, you need to:
 1. Each class property will have an associated RDF Property (a string, generally a URL, that is defined by an ontology/vocabulary)
 1. Each class property will have an associated arity (singular, singular nullable or set)
 1. Each class property depending on its type can have:
-    1. a corresponding ValueMapping to get values, that is translating RDF Terms to JavaScript [primitive values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#primitive_values) (string, number, boolean...)
-    1. a corresponding TermMapping to set values, that is translating Javascript primitive values to RDF Terms
-    1. a corresponding ObjectMapping to wrap child objects as a TermWrapper
-    1. a corresponding ValueMapping and TermMapping for sets of primitive values (both can be an ObjectMapping)
+    1. a corresponding value mapping to get values, that is translating RDF Terms to JavaScript [primitive values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#primitive_values) (string, number, boolean...)
+    1. a corresponding term mapping to set values, that is translating Javascript primitive values to RDF Terms
+    1. a corresponding mapping to wrap child objects as a TermWrapper
+    1. a corresponding mapping for sets of primitive values
 1. Each class mutates the underlying Dataset that is passed to it at instantiation time
 
 
@@ -55,15 +55,15 @@ A [term](https://www.w3.org/TR/rdf12-concepts/#section-terms) wrapper instantiat
 For example you can write a `Person` class with one `name` property:
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping } from "https://unpkg.com/@rdfjs/wrapper"
+import { TermWrapper, LiteralAs, LiteralFrom } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {
-		return this.singularNullable("https://example.org/name", ValueMapping.literalToString)
+		return this.singularNullable("https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		this.overwriteNullable("https://example.org/name", value, TermMapping.literalToString)
+		this.overwriteNullable("https://example.org/name", value, LiteralFrom.string)
 	}
 }
 ```
@@ -134,23 +134,23 @@ for (const person of people) {
 For example you can write a `Person` class with one `name` and one `mum` property:
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "https://unpkg.com/@rdfjs/wrapper"
+import { TermWrapper, LiteralAs, LiteralFrom, TermAs, TermFrom } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {
-		return this.singularNullable("https://example.org/name", ValueMapping.literalToString)
+		return this.singularNullable("https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		this.singularNullable("https://example.org/name", value, TermMapping.literalToString)
+		this.singularNullable("https://example.org/name", value, LiteralFrom.string)
 	}
 
 	get mum() {
-		return this.singularNullable("https://example.org/mum", ObjectMapping.as(Person))
+		return this.singularNullable("https://example.org/mum", TermAs.instance(Person))
 	}
 
 	set mum(value) {
-		this.overwriteNullable("https://example.org/mum", value, ObjectMapping.as(Person))
+		this.overwriteNullable("https://example.org/mum", value, TermFrom.instance)
 	}
 }
 ```
