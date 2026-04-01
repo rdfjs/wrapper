@@ -14,6 +14,7 @@ In other words, [RDF data](https://en.wikipedia.org/wiki/Resource_Description_Fr
 
 Additionally, standard mapping classes can be defined and reused in any number of context where they are relevant (see for example [@solid/object](https://github.com/solid/object)).
 
+A guide and demo for using this library in the context of Solid and Next.js is available [here](https://dev.solidproject.org/guides/solid_nextjs_wrapper_demo_application/).
 
 ## How To?
 
