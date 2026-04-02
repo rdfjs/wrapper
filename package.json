@@ -1,6 +1,6 @@
 {
   "name": "@rdfjs/wrapper",
-  "version": "0.31.0",
+  "version": "0.32.0",
   "description": "RDF/JS object mapping library",
   "main": "dist/mod.js",
   "type": "module",
@@ -36,9 +36,11 @@
   "devDependencies": {
     "@rdfjs/types": "^2",
     "@types/node": "^25",
-    "typescript": "^5",
+    "typescript": "^6",
     "@types/n3": "^1",
-    "n3": "^2"
+    "n3": "^2",
+    "typedoc": "^0.28.18",
+    "typedoc-plugin-mdn-links": "^5.1.1"
   },
   "engines": {
     "node": ">=24.0.0"

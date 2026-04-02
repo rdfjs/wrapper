@@ -3,7 +3,9 @@ import type { ITermWrapperConstructor } from "./type/ITermWrapperConstructor.js"
 
 import { RDF } from "./vocabulary/RDF.js"
 
-abstract class DatasetCoreBase implements DatasetCore {
+export class DatasetWrapper implements DatasetCore {
+    //#region DatasetCore
+
     public constructor(private readonly dataset: DatasetCore, protected readonly factory: DataFactory) {
     }
 
@@ -32,9 +34,11 @@ abstract class DatasetCoreBase implements DatasetCore {
     public match(subject?: Term, predicate?: Term, object?: Term, graph?: Term): DatasetCore {
         return this.dataset.match(subject, predicate, object, graph)
     }
-}
 
-export class DatasetWrapper extends DatasetCoreBase {
+    //#endregion
+
+    //#region Utilities
+
     protected* subjectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
         for (const q of this.matchSubjectsOf(termWrapper, this.factory.namedNode(predicate))) {
             yield q
@@ -64,6 +68,8 @@ export class DatasetWrapper extends DatasetCoreBase {
             yield new termWrapper(q.object, this, this.factory)
         }
     }
+
+    //#endregion
 
     get [Symbol.toStringTag]() {
         return this.constructor.name

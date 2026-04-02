@@ -1,0 +1,29 @@
+{
+    "out": "./_site",
+    "highlightLanguages": [
+        "ts",
+        "javascript",
+        "turtle"
+    ],
+    "plugin": [
+        "typedoc-plugin-mdn-links"
+    ],
+    "externalSymbolLinkMappings": {
+        "@rdfjs/types": {
+            "BlankNode": "https://rdf.js.org/data-model-spec/#blanknode-interface",
+            "DataFactory": "https://rdf.js.org/data-model-spec/#datafactory-interface",
+            "DatasetCore": "https://rdf.js.org/dataset-spec/#datasetcore-interface",
+            "DatasetCore.add": "https://rdf.js.org/data-model-spec/#datafactory-interface",
+            "DatasetCore.delete": "https://rdf.js.org/dataset-spec/#dom-datasetcore-delete",
+            "DatasetCore.match": "https://rdf.js.org/dataset-spec/#dom-datasetcore-match",
+            "DatasetCore.has": "https://rdf.js.org/dataset-spec/#dom-datasetcore-has",
+            "DatasetCore.size": "https://rdf.js.org/dataset-spec/#dom-datasetcore-size",
+            "DefaultGraph": "https://rdf.js.org/data-model-spec/#defaultgraph-interface",
+            "Literal": "https://rdf.js.org/data-model-spec/#literal-interface",
+            "NamedNode": "https://rdf.js.org/data-model-spec/#namednode-interface",
+            "Quad": "https://rdf.js.org/data-model-spec/#quad-interface",
+            "Term": "https://rdf.js.org/data-model-spec/#term-interface",
+            "Variable": "https://rdf.js.org/data-model-spec/#variable-interface"
+        }
+    }
+}

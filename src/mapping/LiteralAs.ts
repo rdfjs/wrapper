@@ -97,12 +97,12 @@ export namespace LiteralAs {
      * - [`Uint8Array.fromHex()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromHex)
      * - [`Uint8Array.fromBase64()`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Uint8Array/fromBase64)
      *
-     * @throws {@link ReferenceError} If the term is `undefined` or `null`.
-     * @throws {@link TypeError} If the term is not a {@link TermWrapper}.
+     * @throws {@link !ReferenceError ReferenceError} If the term is `undefined` or `null`.
+     * @throws {@link !TypeError TypeError} If the term is not a {@link TermWrapper}.
      * @throws {@link TermTypeError} If the term is not a literal.
      * @throws {@link TermTypeError} If the term is not a literal.
      * @throws {@link LiteralDatatypeError} If the term's datatype is not one of the supported datatypes.
-     * @throws {@link SyntaxError} If the term's lexical value cannot be converted.
+     * @throws {@link !SyntaxError SyntaxError} If the term's lexical value cannot be converted.
      *
      * @example Convert a hexadecimal value
      * The RDF
