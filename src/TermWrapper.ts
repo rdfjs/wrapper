@@ -4,10 +4,39 @@ import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import { WrappingSet } from "./WrappingSet.js"
 import { WrappingMap } from "./WrappingMap.js"
 import { AnyTermWithContext } from "./AnyTermWithContext.js"
+import { AnyTerm } from "./AnyTerm.js"
 
 export class TermWrapper extends AnyTermWithContext {
     get [Symbol.toStringTag]() {
         return this.constructor.name
+    }
+
+    toJSON() {
+        const result = {}
+
+        for (let instance = this; instance !== null; instance = Object.getPrototypeOf(instance)) {
+                if (instance.constructor.name === AnyTerm.name) {
+                    continue
+                }
+
+            for (const [propertyName, {value: propertyValue}] of Object.entries(Object.getOwnPropertyDescriptors(instance))) {
+                if (propertyName === "__proto__") {
+                    continue
+                }
+
+                if (propertyName === "constructor") {
+                    continue
+                }
+
+                if (propertyValue !== undefined) {
+                    continue
+                }
+
+                Reflect.set(result, propertyName, Reflect.get(this, propertyName))
+            }
+        }
+
+        return result
     }
 
     protected singular<T>(p: string, termAs: ITermAsValueMapping<T>): T {
@@ -18,11 +47,11 @@ export class TermWrapper extends AnyTermWithContext {
         const {value: first, done: none} = matches.next()
 
         if (none) {
-            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
+            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
         }
 
         if (!matches.next().done) {
-            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
+            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
         }
 
         return termAs(new TermWrapper(first.object, this.dataset, this.factory))
