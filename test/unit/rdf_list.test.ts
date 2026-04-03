@@ -1,12 +1,12 @@
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
-import { LiteralAs, LiteralFrom, TermAs, TermWrapper } from "@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, RequiredFrom, TermAs, TermWrapper } from "@rdfjs/wrapper"
 import assert from "node:assert"
 
 class Wrapper extends TermWrapper {
     public get list(): string[] {
-        return this.singular("p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
+        return RequiredFrom.subjectPredicate(this, "p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
     }
 }
 
