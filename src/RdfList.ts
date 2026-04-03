@@ -128,7 +128,7 @@ export class RdfList<T> implements Array<T> {
                 this.root = new Overwriter<T>(this.subject, this.predicate).listNode = newNode :
 
                 // replace rest of current last with new and return is because it's the new last
-                [...this.items].at(-1)!.rest = newNode
+                [...this.items].at(-1)!.rest = newNode;
 
             lastNode.first = item
             lastNode.restRaw = nil

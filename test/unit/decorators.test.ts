@@ -18,7 +18,7 @@ prefix : <https://example.org/>
     ], [
         :hasString "child string 3" ;
     ] .
-`
+`;
 
 await describe("Decorators", async () => {
     const dataset = datasetFromRdf(rdf)
