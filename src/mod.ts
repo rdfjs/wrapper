@@ -20,8 +20,6 @@ export * from "./mapping/BlankNodeFrom.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
-export * from "./AnyTerm.js"
-export * from "./AnyTermWithContext.js"
 
 export * from "./errors/WrapperError.js"
 export * from "./errors/TermError.js"

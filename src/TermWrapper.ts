@@ -1,39 +1,56 @@
-import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
-import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
-import { AnyTermWithContext } from "./AnyTermWithContext.js"
-import type { IArcTransformation } from "./type/IArcTransformation.js"
-import { ArcTransformation } from "./mapping/ArcTransformation.js"
+import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Term } from "@rdfjs/types"
+import type { IAnyTerm } from "./type/IAnyTerm.js"
 
-export class TermWrapper extends AnyTermWithContext {
+export class TermWrapper implements IAnyTerm {
+    private readonly original: Term
+
+    public constructor(term: string, dataset: DatasetCore, factory: DataFactory)
+    public constructor(term: Term, dataset: DatasetCore, factory: DataFactory)
+    public constructor(term: string | Term, public readonly dataset: DatasetCore, public readonly factory: DataFactory) {
+        this.original = typeof term === "string" ? factory.namedNode(term) : term
+    }
+
     get [Symbol.toStringTag]() {
         return this.constructor.name
     }
 
-    protected singular<T>(p: string, termAs: ITermAsValueMapping<T>): T {
-        return this.process(ArcTransformation.singular, p, undefined, termAs)
+    get termType(): Term["termType"] {
+        return this.original.termType
     }
 
-    protected singularNullable<T>(p: string, termAs: ITermAsValueMapping<T>): T | undefined {
-        return this.process(ArcTransformation.singularNullable, p, undefined, termAs)
+    get value(): string {
+        return this.original.value
     }
 
-    protected overwrite<T>(p: string, value: T, termFrom: ITermFromValueMapping<T>): void {
-        return this.process(ArcTransformation.overwrite, p, value, undefined, termFrom)
+    get language(): string {
+        return (this.original as Literal).language
     }
 
-    protected overwriteNullable<T>(p: string, value: T | undefined, termFrom: ITermFromValueMapping<T>): void {
-        return this.process(ArcTransformation.overwriteNullable, p, value, undefined, termFrom)
+    get direction(): Literal["direction"] {
+        return (this.original as Literal).direction
     }
 
-    protected objects<T>(p: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): Set<T> {
-        return this.process(ArcTransformation.objects, p, undefined, termAs, termFrom)
+    get datatype(): NamedNode {
+        return (this.original as Literal).datatype
     }
 
-    protected map<TKey, TValue>(p: string, termAs: ITermAsValueMapping<[TKey, TValue]>, termFrom: ITermFromValueMapping<[TKey, TValue]>): Map<TKey, TValue> {
-        return this.process(ArcTransformation.map, p, undefined, termAs, termFrom)
+    get subject(): Term {
+        return (this.original as BaseQuad).subject
     }
 
-    protected process<T>(transformation: IArcTransformation<T>, predicate: string, value?: T, termAs?: ITermAsValueMapping<T>, termFrom?: ITermFromValueMapping<T>): any {
-        return transformation(this, predicate, value, termAs, termFrom)
+    get predicate(): Term {
+        return (this.original as BaseQuad).predicate
+    }
+
+    get object(): Term {
+        return (this.original as BaseQuad).object
+    }
+
+    get graph(): Term {
+        return (this.original as BaseQuad).graph
+    }
+
+    equals(other: Term | null | undefined): boolean {
+        return this.original.equals(other)
     }
 }
