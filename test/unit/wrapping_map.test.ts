@@ -1,6 +1,6 @@
 import { describe, it } from "node:test"
-import { TermWrapper } from "@rdfjs/wrapper"
-import { DataFactory, Literal } from "n3"
+import { LiteralAs, LiteralFrom, TermWrapper } from "@rdfjs/wrapper"
+import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import assert from "node:assert"
 import type { Term } from "@rdfjs/types"
@@ -9,12 +9,8 @@ class Wrapper extends TermWrapper {
     public get dict(): Map<string, string> {
         return this.map(
             "p",
-            w => [
-                (w as Term as Literal).language,
-                (w as Term as Literal).value
-            ],
-            ([key, value], factory) =>
-                factory.literal(value, key)
+            LiteralAs.langTuple,
+            LiteralFrom.langTuple
         )
     }
 }

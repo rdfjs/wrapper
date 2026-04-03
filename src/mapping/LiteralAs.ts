@@ -1,4 +1,5 @@
 import { XSD } from "../vocabulary/XSD.js"
+import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
 import type { Term } from "@rdfjs/types"
 import { TermTypeError } from "../errors/TermTypeError.js"
@@ -167,6 +168,23 @@ export namespace LiteralAs {
         ensureDatatype(term, XSD.anyUri)
 
         return new URL(term.value)
+    }
+
+    export function langTuple(term: TermWrapper): [string, string] {
+        ensurePresent(term)
+        ensureType(term)
+        ensureLiteral(term)
+        ensureDatatype(term, RDF.langString)
+
+        return [term.language, term.value]
+    }
+
+    export function datatypeTuple(term: TermWrapper): [string, string] {
+        ensurePresent(term)
+        ensureType(term)
+        ensureLiteral(term)
+
+        return [term.datatype.value, term.value]
     }
 }
 
