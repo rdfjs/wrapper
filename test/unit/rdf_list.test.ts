@@ -311,7 +311,7 @@ await describe("RDF List", async () => {
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
-                return wrapper.list.unshift("o1");
+                return wrapper.list.unshift("o1")
             })
         })
 

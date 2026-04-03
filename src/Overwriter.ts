@@ -5,7 +5,7 @@ import { TermFrom } from "./mapping/TermFrom.js"
 
 export class Overwriter<T> extends TermWrapper {
     constructor(subject: TermWrapper, private readonly p: string) {
-        super(subject as Term, subject.dataset, subject.factory);
+        super(subject as Term, subject.dataset, subject.factory)
     }
 
     set listNode(object: ListItem<T>) {

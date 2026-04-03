@@ -100,7 +100,7 @@ namespace X {
         }
 
         * entries(): MapIterator<[RDF.Term, T]> {
-            let i = 0;
+            let i = 0
             for (const keyTerm of this.keyIndex) {
                 yield [keyTerm, this.valueIndex[i++]!]
             }
@@ -113,7 +113,7 @@ namespace X {
         }
 
         get(key: RDF.Term): T | undefined {
-            let i = 0;
+            let i = 0
             for (const keyTerm of this.keyIndex) {
                 if (keyTerm.equals(key)) {
                     return this.valueIndex[i]
@@ -138,7 +138,7 @@ namespace X {
                 this.keyIndex.add(key)
             }
 
-            let i = 0;
+            let i = 0
             for (const keyTerm of this.keyIndex) {
                 if (keyTerm.equals(key)) {
                     break
@@ -184,7 +184,7 @@ namespace X {
                         throw new Error("Static predicate and object required for value in subject position")
                     }
 
-                    break;
+                    break
 
                 case QuadPosition.predicate:
                     if (predicate !== undefined) {
@@ -195,7 +195,7 @@ namespace X {
                         throw new Error("Static subject and object required for value in predicate position")
                     }
 
-                    break;
+                    break
 
                 case QuadPosition.object:
                     if (object !== undefined) {
@@ -206,7 +206,7 @@ namespace X {
                         throw new Error("Static subject and predicate required for value in object position")
                     }
 
-                    break;
+                    break
 
                 case QuadPosition.graph:
                     if (graph !== undefined) {
