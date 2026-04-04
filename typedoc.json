@@ -20,6 +20,7 @@
             "DatasetCore.size": "https://rdf.js.org/dataset-spec/#dom-datasetcore-size",
             "DefaultGraph": "https://rdf.js.org/data-model-spec/#defaultgraph-interface",
             "Literal": "https://rdf.js.org/data-model-spec/#literal-interface",
+            "Literal.datatype": "https://rdf.js.org/data-model-spec/#dom-literal-datatype",
             "NamedNode": "https://rdf.js.org/data-model-spec/#namednode-interface",
             "Quad": "https://rdf.js.org/data-model-spec/#quad-interface",
             "Term": "https://rdf.js.org/data-model-spec/#term-interface",
