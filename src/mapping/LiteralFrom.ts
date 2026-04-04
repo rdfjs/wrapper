@@ -45,4 +45,12 @@ export namespace LiteralFrom {
     export function string(value: string, factory: DataFactory): Term {
         return factory.literal(value)
     }
+
+    export function langTuple([key, value]: [string, string], factory: DataFactory): Term {
+        return factory.literal(value, key)
+    }
+
+    export function datatypeTuple([key, value]: [string, string], factory: DataFactory): Term {
+        return factory.literal(value, factory.namedNode(key))
+    }
 }

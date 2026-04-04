@@ -1,17 +1,17 @@
 import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
 import type { TermWrapper } from "../TermWrapper.js"
 import { SetterArity } from "./SetterArity.js"
+import { OptionalAs } from "../mapping/OptionalAs.js"
+import { RequiredAs } from "../mapping/RequiredAs.js"
 
 export function setter(predicate: string, setterArity: SetterArity, termFrom: ITermFromValueMapping<any>): any {
     return function (target: any, context: ClassSetterDecoratorContext): any {
         return function (this: TermWrapper, value: any): void {
             switch (setterArity) {
                 case SetterArity.Singular:
-                    this.overwrite(predicate, value, termFrom)
-                    break
+                    return RequiredAs.object(this, predicate, value, termFrom)
                 case SetterArity.SingularNullable:
-                    this.overwriteNullable(predicate, value, termFrom)
-                    break
+                    return OptionalAs.object(this, predicate, value, termFrom)
             }
         }
     }

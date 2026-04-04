@@ -1,97 +1,56 @@
-import type { Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
-import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
-import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
-import { WrappingSet } from "./WrappingSet.js"
-import { WrappingMap } from "./WrappingMap.js"
-import { AnyTermWithContext } from "./AnyTermWithContext.js"
+import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Term } from "@rdfjs/types"
+import type { IAnyTerm } from "./type/IAnyTerm.js"
 
-export class TermWrapper extends AnyTermWithContext {
+export class TermWrapper implements IAnyTerm {
+    private readonly original: Term
+
+    public constructor(term: string, dataset: DatasetCore, factory: DataFactory)
+    public constructor(term: Term, dataset: DatasetCore, factory: DataFactory)
+    public constructor(term: string | Term, public readonly dataset: DatasetCore, public readonly factory: DataFactory) {
+        this.original = typeof term === "string" ? factory.namedNode(term) : term
+    }
+
     get [Symbol.toStringTag]() {
         return this.constructor.name
     }
 
-    protected singular<T>(p: string, termAs: ITermAsValueMapping<T>): T {
-        const predicate = this.factory.namedNode(p)
-        const matches = this.dataset.match(this as Term, predicate)[Symbol.iterator]()
-
-        // TODO: Expose standard errors
-        const {value: first, done: none} = matches.next()
-
-        if (none) {
-            throw new Error(`No value found for predicate ${p} on term ${this.value}`)
-        }
-
-        if (!matches.next().done) {
-            throw new Error(`More than one value for predicate ${p} on term ${this.value}`)
-        }
-
-        return termAs(new TermWrapper(first.object, this.dataset, this.factory))
+    get termType(): Term["termType"] {
+        return this.original.termType
     }
 
-    protected singularNullable<T>(p: string, termAs: ITermAsValueMapping<T>): T | undefined {
-        const predicate = this.factory.namedNode(p)
-
-        for (const q of this.dataset.match(this as Term, predicate)) {
-            return termAs(new TermWrapper(q.object, this.dataset, this.factory))
-        }
-
-        return
+    get value(): string {
+        return this.original.value
     }
 
-    protected overwrite<T>(p: string, value: T, termFrom: ITermFromValueMapping<T>): void {
-        if (value === undefined) {
-            throw new Error("value cannot be undefined")
-        }
-
-        this.overwriteNullable(p, value, termFrom)
+    get language(): string {
+        return (this.original as Literal).language
     }
 
-    protected overwriteNullable<T>(p: string, value: T | undefined, termFrom: ITermFromValueMapping<T>): void {
-        const predicate = this.factory.namedNode(p)
-
-        for (const q of this.dataset.match(this as Term, predicate)) {
-            this.dataset.delete(q)
-        }
-
-        // TODO: TermMapping undefined: Return after deleting quads if undefined
-        if (value === undefined) {
-            return
-        }
-
-        // TODO: Do we really need to test if this is a Quad Subject here?
-        // @Samu I imagine this is tested at instantiation time in the constructor if at all
-        if (!TermWrapper.isQuadSubject(this as Term)) {
-            return // TODO: throw error?
-        }
-
-        // TODO: TermMapping undefined: the term mapping is not invoked if undefined
-        const o = termFrom(value, this.factory)
-
-        if (o === undefined) {
-            return // TODO: throw error?
-        }
-
-        if (!TermWrapper.isQuadObject(o as Term)) {
-            return // TODO: throw error?
-        }
-
-        const q = this.factory.quad(this as Quad_Subject, predicate, o as Quad_Object)
-        this.dataset.add(q)
+    get direction(): Literal["direction"] {
+        return (this.original as Literal).direction
     }
 
-    protected objects<T>(p: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): Set<T> {
-        return new WrappingSet(this, p, termAs, termFrom)
+    get datatype(): NamedNode {
+        return (this.original as Literal).datatype
     }
 
-    protected map<TKey, TValue>(p: string, termAs: ITermAsValueMapping<[TKey, TValue]>, termFrom: ITermFromValueMapping<[TKey, TValue]>): Map<TKey, TValue> {
-        return new WrappingMap(this, p, termAs, termFrom)
+    get subject(): Term {
+        return (this.original as BaseQuad).subject
     }
 
-    private static isQuadSubject(term: Term): term is Quad_Subject {
-        return ["NamedNode", "BlankNode", "Quad", "Variable"].includes(term.termType)
+    get predicate(): Term {
+        return (this.original as BaseQuad).predicate
     }
 
-    private static isQuadObject(term: Term): term is Quad_Object {
-        return ["NamedNode", "Literal", "BlankNode", "Quad", "Variable"].includes(term.termType)
+    get object(): Term {
+        return (this.original as BaseQuad).object
+    }
+
+    get graph(): Term {
+        return (this.original as BaseQuad).graph
+    }
+
+    equals(other: Term | null | undefined): boolean {
+        return this.original.equals(other)
     }
 }
