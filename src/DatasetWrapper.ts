@@ -47,8 +47,8 @@ export class DatasetWrapper implements DatasetCore {
         return this.matchObjectsOf(termWrapper, undefined, this.factory.namedNode(predicate))
     }
 
-    protected instancesOf<T>(predicate: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
-        return this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(predicate))
+    protected instancesOf<T>(klass: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
+        return this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(klass))
     }
 
     protected* matchSubjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T> {
