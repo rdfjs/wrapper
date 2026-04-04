@@ -13,8 +13,8 @@ export class DatasetWrapper implements DatasetCore {
         return this.dataset.size
     }
 
-    public [Symbol.iterator](): Iterator<Quad> {
-        return this.dataset[Symbol.iterator]()
+    public* [Symbol.iterator](): Iterator<Quad> {
+        yield* this.dataset
     }
 
     public add(quad: Quad): this {
@@ -39,22 +39,16 @@ export class DatasetWrapper implements DatasetCore {
 
     //#region Utilities
 
-    protected* subjectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
-        for (const q of this.matchSubjectsOf(termWrapper, this.factory.namedNode(predicate))) {
-            yield q
-        }
+    protected subjectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
+        return this.matchSubjectsOf(termWrapper, this.factory.namedNode(predicate))
     }
 
-    protected* objectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
-        for (const q of this.matchObjectsOf(termWrapper, undefined, this.factory.namedNode(predicate))) {
-            yield q
-        }
+    protected objectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
+        return this.matchObjectsOf(termWrapper, undefined, this.factory.namedNode(predicate))
     }
 
-    protected* instancesOf<T>(predicate: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
-        for (const q of this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(predicate))) {
-            yield q
-        }
+    protected instancesOf<T>(predicate: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
+        return this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(predicate))
     }
 
     protected* matchSubjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T> {
