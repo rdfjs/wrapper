@@ -41,6 +41,7 @@ export namespace LiteralAs {
         ensurePresent(term)
         ensureType(term)
         ensureLiteral(term)
+        ensureDatatype(term, RDF.langString)
 
         // TODO: Direction
         return {lang: term.language, string: term.value}
