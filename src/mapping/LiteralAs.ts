@@ -1,10 +1,8 @@
 import { XSD } from "../vocabulary/XSD.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
-import type { Term } from "@rdfjs/types"
-import { TermTypeError } from "../errors/TermTypeError.js"
-import { LiteralDatatypeError } from "../errors/LiteralDatatypeError.js"
 import type { ILangString } from "../type/ILangString.js"
+import { ensureDatatype, ensureIs, ensurePresent, ensureTermType } from "../ensure.js"
 
 /**
  * A collection of {@link ITermAsValueMapping | mappers} that convert RDF literals to JavaScript primitives.
@@ -12,8 +10,8 @@ import type { ILangString } from "../type/ILangString.js"
 export namespace LiteralAs {
     export function bigint(term: TermWrapper): bigint {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, ...integerDatatypes)
 
         return BigInt(term.value)
@@ -21,8 +19,8 @@ export namespace LiteralAs {
 
     export function boolean(term: TermWrapper): boolean {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, XSD.boolean)
 
         return term.value === "true" || term.value === "1"
@@ -30,8 +28,8 @@ export namespace LiteralAs {
 
     export function date(term: TermWrapper): Date {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, ...dateDatatypes)
 
         return new Date(term.value)
@@ -39,8 +37,8 @@ export namespace LiteralAs {
 
     export function langString(term: TermWrapper): ILangString {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, RDF.langString)
 
         // TODO: Direction
@@ -49,8 +47,8 @@ export namespace LiteralAs {
 
     export function number(term: TermWrapper): number {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, ...numericDatatypes)
 
         if (term.value === "INF") {
@@ -70,14 +68,14 @@ export namespace LiteralAs {
 
     export function string(term: TermWrapper): string {
         ensurePresent(term)
-        ensureType(term)
+        ensureIs(term, TermWrapper)
 
         return term.value
     }
 
     export function symbol(term: TermWrapper): symbol {
         ensurePresent(term)
-        ensureType(term)
+        ensureIs(term, TermWrapper)
 
         return Symbol.for(term.value)
     }
@@ -146,8 +144,8 @@ export namespace LiteralAs {
      */
     export function uInt8Array(term: TermWrapper): Uint8Array {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, ...byteArrayDatatypes)
 
         switch (term.datatype.value) {
@@ -164,8 +162,8 @@ export namespace LiteralAs {
 
     export function url(term: TermWrapper): URL {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, XSD.anyUri)
 
         return new URL(term.value)
@@ -173,8 +171,8 @@ export namespace LiteralAs {
 
     export function langTuple(term: TermWrapper): [string, string] {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
         ensureDatatype(term, RDF.langString)
 
         return [term.language, term.value]
@@ -182,8 +180,8 @@ export namespace LiteralAs {
 
     export function datatypeTuple(term: TermWrapper): [string, string] {
         ensurePresent(term)
-        ensureType(term)
-        ensureLiteral(term)
+        ensureIs(term, TermWrapper)
+        ensureTermType(term, "Literal")
 
         return [term.datatype.value, term.value]
     }
@@ -220,27 +218,3 @@ const dateDatatypes: string[] = [
     XSD.date,
     XSD.dateTime,
 ]
-
-function ensurePresent(term: any) {
-    if (term === undefined || term === null) {
-        throw new ReferenceError("Term cannot be null or undefined")
-    }
-}
-
-function ensureType(term: any) {
-    if (!(term instanceof TermWrapper)) {
-        throw new TypeError("Term must be a TermWrapper")
-    }
-}
-
-function ensureLiteral(term: TermWrapper) {
-    if (term.termType !== "Literal") {
-        throw new TermTypeError(term as Term, "Literal")
-    }
-}
-
-function ensureDatatype(term: TermWrapper, ...datatypes: string[]) {
-    if (!datatypes.includes(term.datatype.value)) {
-        throw new LiteralDatatypeError(term as Term, datatypes)
-    }
-}
