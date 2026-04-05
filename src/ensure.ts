@@ -2,6 +2,8 @@ import type { Literal, Term } from "@rdfjs/types"
 import { TermTypeError } from "./errors/TermTypeError.js"
 import { LiteralDatatypeError } from "./errors/LiteralDatatypeError.js"
 import type { IAnyTerm } from "./type/IAnyTerm.js"
+import { RDF } from "./vocabulary/RDF.js"
+import { ListRootError } from "./errors/ListRootError.js"
 
 export function ensurePresent(object: any) {
     if (object !== undefined && object !== null) {
@@ -33,4 +35,16 @@ export function ensureDatatype(term: IAnyTerm, ...datatypes: string[]) {
     }
 
     throw new LiteralDatatypeError(term as Literal, datatypes)
+}
+
+export function ensureListRoot(term: IAnyTerm) {
+    if (term.termType === "NamedNode" && term.value === RDF.nil) {
+        return
+    }
+
+    if (term.termType === "BlankNode") {
+        return
+    }
+
+    throw new ListRootError(term as Term)
 }

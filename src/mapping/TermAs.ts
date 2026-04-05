@@ -4,7 +4,7 @@ import type { ITermWrapperConstructor } from "../type/ITermWrapperConstructor.js
 import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
 import { RdfList } from "../RdfList.js"
-import { ensureIs, ensurePresent } from "../ensure.js"
+import { ensureIs, ensureListRoot, ensurePresent } from "../ensure.js"
 
 /**
  * A collection of {@link ITermAsValueMapping | mappers} that convert RDF terms to JavaScript constructs.
@@ -27,6 +27,7 @@ export namespace TermAs {
         return (term: TermWrapper) => {
             ensurePresent(term)
             ensureIs(term, TermWrapper)
+            ensureListRoot(term)
 
             return new RdfList(term as Term, subject, predicate, termAs, termFrom)
         }
