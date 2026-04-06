@@ -7,7 +7,11 @@ import { RdfList } from "../RdfList.js"
 import { ensureIs, ensureListRoot, ensurePresent } from "../ensure.js"
 
 /**
- * A collection of {@link ITermAsValueMapping | mappers} that convert RDF terms to JavaScript constructs.
+ * A collection of {@link ITermAsValueMapping | mappers} that convert RDF/JS terms to JavaScript constructs.
+ *
+ * @see
+ * - {@link Term}
+ * - [Nodes in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#dfn-node)
  */
 export namespace TermAs {
     export function instance<T>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T> {

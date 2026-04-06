@@ -1,7 +1,14 @@
-import type { DataFactory, Term } from "@rdfjs/types"
+import type { DataFactory, Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import type { ILangString } from "../type/ILangString.js"
 
+/**
+ * A collection of {@link ITermFromValueMapping | mappers} that create RDF/JS literals from JavaScript primitives.
+ *
+ * @see
+ * - {@link Literal}
+ * - [Literals in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)
+ */
 export namespace LiteralFrom {
     export function anyUriString(value: string, factory: DataFactory): Term {
         return factory.literal(value, factory.namedNode(XSD.anyUri))

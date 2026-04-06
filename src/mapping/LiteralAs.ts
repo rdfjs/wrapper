@@ -1,3 +1,4 @@
+import type { Literal } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
@@ -5,7 +6,11 @@ import type { ILangString } from "../type/ILangString.js"
 import { ensureDatatype, ensureIs, ensurePresent, ensureTermType } from "../ensure.js"
 
 /**
- * A collection of {@link ITermAsValueMapping | mappers} that convert RDF literals to JavaScript primitives.
+ * A collection of {@link ITermAsValueMapping | mappers} that convert RDF/JS literals to JavaScript primitives.
+ *
+ * @see
+ * - {@link Literal}
+ * - [Literals in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)
  */
 export namespace LiteralAs {
     export function bigint(term: TermWrapper): bigint {
