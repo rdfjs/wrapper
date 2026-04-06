@@ -151,12 +151,12 @@ export namespace LiteralAs {
         switch (term.datatype.value) {
             case XSD.hexBinary:
                 // TODO: When Node 25 - return Uint8Array.fromHex(term.value)
-                return Uint8Array.from(Buffer.from(term.value, 'hex'))
+                return Uint8Array.from(Buffer.from(term.value, "hex"))
 
             default:
             case XSD.base64Binary:
                 // TODO: When Node 25 - return Uint8Array.fromBase64(term.value)
-                return Uint8Array.from(Buffer.from(term.value, 'base64'))
+                return Uint8Array.from(Buffer.from(term.value, "base64"))
         }
     }
 

@@ -6,7 +6,7 @@ export namespace TermFrom {
         return itself(value as Term, factory)
     }
 
-    export function itself(value: Term, __: DataFactory): Term {
+    export function itself(value: Term, _: DataFactory): Term {
         return value
     }
 }
