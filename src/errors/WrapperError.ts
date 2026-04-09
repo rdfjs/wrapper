@@ -13,4 +13,28 @@ export class WrapperError extends Error {
         this.name = this.constructor.name
         this.cause = cause
     }
+
+    //#region Ignore in documentation
+
+    /** @ignore */
+    static override captureStackTrace(targetObject: object, constructorOpt?: Function) {
+        super.captureStackTrace(targetObject, constructorOpt)
+    }
+
+    /** @ignore */
+    static override prepareStackTrace(err: Error, stackTraces: NodeJS.CallSite[]) {
+        super.prepareStackTrace(err, stackTraces)
+    }
+
+    /** @ignore */
+    static override get stackTraceLimit() {
+        return super.stackTraceLimit
+    }
+
+    /** @ignore */
+    static override set stackTraceLimit(value) {
+        super.stackTraceLimit = value
+    }
+
+    //#endregion
 }
