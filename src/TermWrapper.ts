@@ -1,5 +1,5 @@
 import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Term } from "@rdfjs/types"
-import type { IAnyTerm } from "./type/IAnyTerm.js"
+import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
 
 export class TermWrapper implements IAnyTerm {
     private readonly original: Term
