@@ -4,11 +4,6 @@ export type * from "./type/ITermFromValueMapping.js"
 export type * from "./type/ILangString.js"
 export type * from "./type/IAnyTerm.js"
 
-export * from "./decorators/GetterArity.js"
-export * from "./decorators/SetterArity.js"
-export * from "./decorators/getter.js"
-export * from "./decorators/setter.js"
-
 export * from "./mapping/TermAs.js"
 export * from "./mapping/LiteralAs.js"
 export * from "./mapping/LiteralFrom.js"
