@@ -1,6 +1,6 @@
 {
     "out": "./_site",
-    "customFooterHtml": "<script src=\"https://context7.com/widget.js\" data-library=\"/websites/rdf_js_wrapper\"></script>",
+    "customFooterHtml": "<script src='https://context7.com/widget.js' data-library='/websites/rdf_js_wrapper'></script>",
     "highlightLanguages": [
         "ts",
         "javascript",
