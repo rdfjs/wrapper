@@ -1,7 +1,7 @@
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
-import { LiteralAs, LiteralFrom, RequiredFrom, TermAs, TermWrapper } from "@rdfjs/wrapper"
+import { ListRootError, LiteralAs, LiteralFrom, RequiredFrom, TermAs, TermWrapper } from "@rdfjs/wrapper"
 import assert from "node:assert"
 
 class Wrapper extends TermWrapper {
@@ -13,7 +13,7 @@ class Wrapper extends TermWrapper {
 await describe("RDF List", async () => {
     await describe("not implemented", async () => {
         await it("copyWithin", async () => {
-            const rdf = `<s> <p> <o> .`
+            const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
@@ -22,7 +22,7 @@ await describe("RDF List", async () => {
         })
 
         await it("fill", async () => {
-            const rdf = `<s> <p> <o> .`
+            const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
@@ -31,7 +31,7 @@ await describe("RDF List", async () => {
         })
 
         await it("flat", async () => {
-            const rdf = `<s> <p> <o> .`
+            const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
@@ -40,7 +40,7 @@ await describe("RDF List", async () => {
         })
 
         await it("reverse", async () => {
-            const rdf = `<s> <p> <o> .`
+            const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
@@ -49,7 +49,7 @@ await describe("RDF List", async () => {
         })
 
         await it("sort", async () => {
-            const rdf = `<s> <p> <o> .`
+            const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
@@ -58,7 +58,7 @@ await describe("RDF List", async () => {
         })
 
         await it("splice", async () => {
-            const rdf = `<s> <p> <o> .`
+            const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
@@ -68,11 +68,11 @@ await describe("RDF List", async () => {
     })
 
     await describe("general", async () => {
-        await it("not list", async () => {
+        await it("not list throws", async () => {
             const rdf = `<s> <p> <o> .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
-            assert.deepStrictEqual([...wrapper.list], [])
+            assert.throws(() => wrapper.list, ListRootError)
         })
 
         await it("empty", async () => {
@@ -97,7 +97,7 @@ await describe("RDF List", async () => {
         })
 
         await it("[Symbol.unscopables]", async () => {
-            const rdf = `<s> <p> <o> .`
+            const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
 
             assert.deepStrictEqual(wrapper.list[Symbol.unscopables], [][Symbol.unscopables])
@@ -105,13 +105,6 @@ await describe("RDF List", async () => {
     })
 
     await describe("length", async () => {
-        await it("not list is zero", async () => {
-            const rdf = `<s> <p> <o> .`
-            const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-            assert.strictEqual(wrapper.list.length, 0)
-        })
-
         await it("empty is zero", async () => {
             const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
@@ -135,16 +128,6 @@ await describe("RDF List", async () => {
     })
 
     await describe("pop", async () => {
-        await it("not list undefined", async () => {
-            const rdf = `<s> <p> <o> .`
-            const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-            const actual = wrapper.list.pop()
-
-            assert.strictEqual(actual, undefined)
-            assert.deepStrictEqual([...wrapper.list], [])
-        })
-
         await it("empty undefined", async () => {
             const rdf = `<s> <p> () .`
             const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
