@@ -33,15 +33,15 @@ A [term](https://www.w3.org/TR/rdf12-concepts/#section-terms) wrapper instantiat
 For example you can write a `Person` class with one `name` property:
 
 ```javascript
-import { TermWrapper, LiteralAs, LiteralFrom } from "https://unpkg.com/@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, OptionalAs, OptionalFrom, TermWrapper } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {
-		return this.singularNullable("https://example.org/name", LiteralAs.string)
+		return OptionalFrom.subjectPredicate(this, "https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		this.overwriteNullable("https://example.org/name", value, LiteralFrom.string)
+		OptionalAs.object(this, "https://example.org/name", value, LiteralFrom.string)
 	}
 }
 ```
@@ -112,23 +112,23 @@ for (const person of people) {
 For example you can write a `Person` class with one `name` and one `mum` property:
 
 ```javascript
-import { TermWrapper, LiteralAs, LiteralFrom, TermAs, TermFrom } from "https://unpkg.com/@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, OptionalAs, OptionalFrom, TermAs, TermFrom, TermWrapper } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {
-		return this.singularNullable("https://example.org/name", LiteralAs.string)
+		return OptionalFrom.subjectPredicate(this, "https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		this.singularNullable("https://example.org/name", value, LiteralFrom.string)
+		OptionalAs.object(this, "https://example.org/name", value, LiteralFrom.string)
 	}
 
 	get mum() {
-		return this.singularNullable("https://example.org/mum", TermAs.instance(Person))
+		return OptionalFrom.subjectPredicate(this, "https://example.org/mum", TermAs.instance(Person))
 	}
 
 	set mum(value) {
-		this.overwriteNullable("https://example.org/mum", value, TermFrom.instance)
+		OptionalAs.object(this, "https://example.org/mum", value, TermFrom.instance)
 	}
 }
 ```
