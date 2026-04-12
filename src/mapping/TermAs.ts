@@ -15,12 +15,12 @@ import { ensureIs, ensureListRoot, ensurePresent } from "../ensure.js"
  * - [Nodes in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#dfn-node)
  */
 export namespace TermAs {
-    export function instance<T>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T> {
-        return (term: TermNode) => {
+    export function instance<T extends TermWrapper>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T & TermNode> {
+        return (term: TermNode<Term>) => {
             ensurePresent(term)
             ensureIs(term, TermWrapper)
 
-            return new constructor(term, term.dataset, term.factory)
+            return constructor.from(term, term.dataset, term.factory)
         }
     }
 

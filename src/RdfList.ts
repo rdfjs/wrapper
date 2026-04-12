@@ -210,4 +210,8 @@ export class RdfList<T> implements Array<T> {
     private get items(): Iterable<ListItem<T>> {
         return this.root.items()
     }
+
+    public static from<T>(root: Term, subject: TermNode, predicate: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): RdfList<T> {
+        return new RdfList(root, subject, predicate, termAs, termFrom);
+    }
 }
