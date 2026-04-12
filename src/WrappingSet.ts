@@ -2,10 +2,11 @@ import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import type { DatasetCore, Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import { TermWrapper } from "./TermWrapper.js"
+import type { TermNode } from "./TermWrapper.js"
 
 export class WrappingSet<T> implements Set<T> {
     // TODO: Direction
-    public constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
+    public constructor(private readonly subject: TermNode, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
     }
 
     add(value: T): this {
@@ -27,7 +28,7 @@ export class WrappingSet<T> implements Set<T> {
         const o = this.termFrom(value, this.subject.factory) // TODO: guards
         const p = this.subject.factory.namedNode(this.predicate)
 
-        for (const q of this.subject.dataset.match(this.subject as Term, p, o as Term)) {
+        for (const q of this.subject.dataset.match(this.subject, p, o as Term)) {
             this.subject.dataset.delete(q)
         }
 
@@ -64,7 +65,7 @@ export class WrappingSet<T> implements Set<T> {
 
     * values(): SetIterator<T> {
         for (const q of this.matches) {
-            yield this.termAs(new TermWrapper(q.object, this.subject.dataset, this.subject.factory))
+            yield this.termAs(TermWrapper.from(q.object, this.subject.dataset, this.subject.factory))
         }
     }
 
@@ -82,6 +83,6 @@ export class WrappingSet<T> implements Set<T> {
 
     private get matches(): DatasetCore {
         const p = this.subject.factory.namedNode(this.predicate)
-        return this.subject.dataset.match(this.subject as Term, p)
+        return this.subject.dataset.match(this.subject, p)
     }
 }

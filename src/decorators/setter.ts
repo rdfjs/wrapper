@@ -9,9 +9,9 @@ export function setter(predicate: string, setterArity: SetterArity, termFrom: IT
         return function (this: TermWrapper, value: any): void {
             switch (setterArity) {
                 case SetterArity.Singular:
-                    return RequiredAs.object(this, predicate, value, termFrom)
+                    return RequiredAs.object(this.node, predicate, value, termFrom)
                 case SetterArity.SingularNullable:
-                    return OptionalAs.object(this, predicate, value, termFrom)
+                    return OptionalAs.object(this.node, predicate, value, termFrom)
             }
         }
     }

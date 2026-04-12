@@ -20,34 +20,34 @@ await describe("LiteralAs", async () => {
         })
 
         await it("throws when not literal", async () => {
-            const wrapper = new TermWrapper(DataFactory.blankNode(), new Store(), DataFactory)
+            const wrapper = TermWrapper.from(DataFactory.blankNode(), new Store(), DataFactory)
 
             assert.throws(() => LiteralAs.uInt8Array(wrapper), TermTypeError)
         })
 
         await it("throws when datatype mismatch", async () => {
-            const wrapper = new TermWrapper(DataFactory.literal("", DataFactory.namedNode("d")), new Store(), DataFactory)
+            const wrapper = TermWrapper.from(DataFactory.literal("", DataFactory.namedNode("d")), new Store(), DataFactory)
 
             assert.throws(() => LiteralAs.uInt8Array(wrapper), LiteralDatatypeError)
         })
 
         // TODO: Enable when Node 25
         await it("throws when illegal base64", {skip: "Browser functionality with Uint8Array.fromBase64"}, async () => {
-            const wrapper = new TermWrapper(DataFactory.literal("X", DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#base64Binary")), new Store(), DataFactory)
+            const wrapper = TermWrapper.from(DataFactory.literal("X", DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#base64Binary")), new Store(), DataFactory)
 
             assert.throws(() => LiteralAs.uInt8Array(wrapper), SyntaxError)
         })
 
         // TODO: Enable when Node 25
         await it("throws when illegal hex", {skip: "Browser functionality with Uint8Array.fromHex"}, async () => {
-            const wrapper = new TermWrapper(DataFactory.literal("X", DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#hexBinary")), new Store(), DataFactory)
+            const wrapper = TermWrapper.from(DataFactory.literal("X", DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#hexBinary")), new Store(), DataFactory)
 
             assert.throws(() => LiteralAs.uInt8Array(wrapper), SyntaxError)
         })
 
         await it("converts base64", async () => {
             const encoded = "MDEyMzQ1Njc4OQ=="
-            const wrapper = new TermWrapper(DataFactory.literal(encoded, DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#base64Binary")), new Store(), DataFactory)
+            const wrapper = TermWrapper.from(DataFactory.literal(encoded, DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#base64Binary")), new Store(), DataFactory)
             const bytes = Uint8Array.from(Buffer.from(encoded, "base64"))
 
             assert.deepStrictEqual(LiteralAs.uInt8Array(wrapper), bytes)
@@ -55,7 +55,7 @@ await describe("LiteralAs", async () => {
 
         await it("converts hex", async () => {
             const encoded = "30313233343536373839"
-            const wrapper = new TermWrapper(DataFactory.literal(encoded, DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#hexBinary")), new Store(), DataFactory)
+            const wrapper = TermWrapper.from(DataFactory.literal(encoded, DataFactory.namedNode("http://www.w3.org/2001/XMLSchema#hexBinary")), new Store(), DataFactory)
             const bytes = Uint8Array.from(Buffer.from(encoded, "hex"))
 
             assert.deepStrictEqual(LiteralAs.uInt8Array(wrapper), bytes)

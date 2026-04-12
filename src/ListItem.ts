@@ -1,4 +1,5 @@
 import { TermWrapper } from "./TermWrapper.js"
+import type { TermNode } from "./TermWrapper.js"
 import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
 import { RDF } from "./vocabulary/RDF.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
@@ -16,19 +17,19 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get firstRaw(): Term | undefined {
-        return OptionalFrom.subjectPredicate(this, RDF.first, TermAs.term)
+        return OptionalFrom.subjectPredicate(this.node, RDF.first, TermAs.term)
     }
 
     public set firstRaw(value: Term | undefined) {
-        OptionalAs.object(this, RDF.first, value, TermFrom.itself)
+        OptionalAs.object(this.node, RDF.first, value, TermFrom.itself)
     }
 
     public get restRaw(): Term | undefined {
-        return OptionalFrom.subjectPredicate(this, RDF.rest, TermAs.term)
+        return OptionalFrom.subjectPredicate(this.node, RDF.rest, TermAs.term)
     }
 
     public set restRaw(value: Term | undefined) {
-        OptionalAs.object(this, RDF.rest, value, TermFrom.itself)
+        OptionalAs.object(this.node, RDF.rest, value, TermFrom.itself)
     }
 
     public get isListItem(): boolean {
@@ -40,19 +41,19 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get first(): T {
-        return RequiredFrom.subjectPredicate(this, RDF.first, this.termAs)
+        return RequiredFrom.subjectPredicate(this.node, RDF.first, this.termAs)
     }
 
     public set first(value: T) {
-        RequiredAs.object(this, RDF.first, value, this.termFrom)
+        RequiredAs.object(this.node, RDF.first, value, this.termFrom)
     }
 
     public get rest(): ListItem<T> {
-        return RequiredFrom.subjectPredicate(this, RDF.rest, (w: TermWrapper) => new ListItem(w as Term, w.dataset, w.factory, this.termAs, this.termFrom))
+        return RequiredFrom.subjectPredicate(this.node, RDF.rest, (w: TermNode) => new ListItem(w, w.dataset, w.factory, this.termAs, this.termFrom))
     }
 
     public set rest(value: ListItem<T>) {
-        RequiredAs.object(this, RDF.rest, value, TermFrom.instance)
+        RequiredAs.object(this.node, RDF.rest, value, TermFrom.instance)
     }
 
     public pop(): T {

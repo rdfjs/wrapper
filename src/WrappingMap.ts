@@ -1,10 +1,11 @@
 import { TermWrapper } from "./TermWrapper.js"
+import type { TermNode } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import type { Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 
 export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
-    constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<[TKey, TValue]>, private readonly termFrom: ITermFromValueMapping<[TKey, TValue]>) {
+    constructor(private readonly subject: TermNode, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<[TKey, TValue]>, private readonly termFrom: ITermFromValueMapping<[TKey, TValue]>) {
     }
 
     clear(): void {
@@ -72,7 +73,7 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
 
     * entries(): MapIterator<[TKey, TValue]> {
         for (const quad of this.matches) {
-            yield this.termAs(new TermWrapper(quad.object, this.subject.dataset, this.subject.factory))
+            yield this.termAs(TermWrapper.from(quad.object, this.subject.dataset, this.subject.factory))
         }
     }
 
@@ -99,7 +100,7 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
     private get matches(): Iterable<Quad> {
         const p = this.subject.factory.namedNode(this.predicate)
 
-        return this.subject.dataset.match(this.subject as Term, p)
+        return this.subject.dataset.match(this.subject, p)
     }
 
     private add(k: TKey, v: TValue) {

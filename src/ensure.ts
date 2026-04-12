@@ -1,7 +1,6 @@
 import type { Literal, Term } from "@rdfjs/types"
 import { TermTypeError } from "./errors/TermTypeError.js"
 import { LiteralDatatypeError } from "./errors/LiteralDatatypeError.js"
-import type { IAnyTerm } from "./type/IAnyTerm.js"
 import { RDF } from "./vocabulary/RDF.js"
 import { ListRootError } from "./errors/ListRootError.js"
 
@@ -21,23 +20,23 @@ export function ensureIs(object: any, type: Function | { [Symbol.hasInstance]():
     throw new TypeError(`Object must be a ${type}`)
 }
 
-export function ensureTermType(term: IAnyTerm, type: Term["termType"]) {
+export function ensureTermType(term: Term, type: Term["termType"]) {
     if (term.termType === type) {
         return
     }
 
-    throw new TermTypeError(term as Term, type)
+    throw new TermTypeError(term, type)
 }
 
-export function ensureDatatype(term: IAnyTerm, ...datatypes: string[]) {
-    if (datatypes.includes(term.datatype.value)) {
+export function ensureDatatype(term: Term, ...datatypes: string[]) {
+    if (term.termType === "Literal" && datatypes.includes(term.datatype.value)) {
         return
     }
 
     throw new LiteralDatatypeError(term as Literal, datatypes)
 }
 
-export function ensureListRoot(term: IAnyTerm) {
+export function ensureListRoot(term: Term) {
     if (term.termType === "NamedNode" && term.value === RDF.nil) {
         return
     }
@@ -46,5 +45,5 @@ export function ensureListRoot(term: IAnyTerm) {
         return
     }
 
-    throw new ListRootError(term as Term)
+    throw new ListRootError(term)
 }

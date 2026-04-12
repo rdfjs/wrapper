@@ -22,8 +22,8 @@ prefix : <https://example.org/>
 
 await describe("Decorators", async () => {
     const dataset = datasetFromRdf(rdf)
-    const parentDecorated = new ParentDecorated(DataFactory.namedNode("x"), dataset, DataFactory)
-    const newChild = new ChildDecorated(DataFactory.blankNode(), dataset, DataFactory)
+    const parentDecorated = ParentDecorated.from(DataFactory.namedNode("x"), dataset, DataFactory)
+    const newChild = ChildDecorated.from(DataFactory.blankNode(), dataset, DataFactory)
 
     await describe("Term Mappings", async () => {
         await it("get single literal to string", async () => {

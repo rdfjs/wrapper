@@ -6,7 +6,7 @@ import assert from "node:assert"
 
 class Wrapper extends TermWrapper {
     public get dict(): Map<string, string> {
-        return Mapping.languageDictionary(this, "p", LiteralAs.langTuple, LiteralFrom.langTuple)
+        return Mapping.languageDictionary(this.node, "p", LiteralAs.langTuple, LiteralFrom.langTuple)
     }
 }
 
@@ -14,14 +14,14 @@ await describe("Wrapping map", async () => {
     await describe("size", async () => {
         await it("get", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@hu, "o3"@he .`
-            const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
+            const wrapper = Wrapper.from("s", datasetFromRdf(rdf), DataFactory)
 
             assert.strictEqual(wrapper.dict.size, 3)
         })
 
         await it("set not supported", async () => {
             const rdf = `<s> <p> <o> .`
-            const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
+            const wrapper = Wrapper.from("s", datasetFromRdf(rdf), DataFactory)
 
             assert.throws(() => {
                 (wrapper.dict as any)["size"] = undefined!
@@ -32,7 +32,7 @@ await describe("Wrapping map", async () => {
     await describe("general", async () => {
         await it("get", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
-            const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
+            const wrapper = Wrapper.from("s", datasetFromRdf(rdf), DataFactory)
 
             assert.strictEqual(wrapper.dict.get("en"), "o1")
             assert.strictEqual(wrapper.dict.get("fr"), "o2")
@@ -41,7 +41,7 @@ await describe("Wrapping map", async () => {
         await it("clear", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             wrapper.dict.clear()
 
@@ -51,7 +51,7 @@ await describe("Wrapping map", async () => {
         await it("delete reports positive", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             assert.strictEqual(wrapper.dict.delete("en"), true)
         })
@@ -59,7 +59,7 @@ await describe("Wrapping map", async () => {
         await it("delete reports negative", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             assert.strictEqual(wrapper.dict.delete("XX"), false)
         })
@@ -67,7 +67,7 @@ await describe("Wrapping map", async () => {
         await it("delete deletes", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             wrapper.dict.delete("en")
 
@@ -77,7 +77,7 @@ await describe("Wrapping map", async () => {
         await it("delete reports negative", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             wrapper.dict.delete("XX")
 
@@ -88,7 +88,7 @@ await describe("Wrapping map", async () => {
         await it("forEach", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             const actual = {} as any
             wrapper.dict.forEach((value, key) => {
@@ -101,7 +101,7 @@ await describe("Wrapping map", async () => {
         await it("set", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             wrapper.dict.set("en", "ox")
 
@@ -111,7 +111,7 @@ await describe("Wrapping map", async () => {
         await it("keys", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             assert.deepStrictEqual([...wrapper.dict.keys()], ["en", "fr"])
         })
@@ -119,7 +119,7 @@ await describe("Wrapping map", async () => {
         await it("values", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             assert.deepStrictEqual([...wrapper.dict.values()], ["o1", "o2"])
         })
@@ -127,7 +127,7 @@ await describe("Wrapping map", async () => {
         await it("toStringTag", async () => {
             const rdf = `<s> <p> "o1"@en, "o2"@fr .`
             const dataset = datasetFromRdf(rdf)
-            const wrapper = new Wrapper("s", dataset, DataFactory)
+            const wrapper = Wrapper.from("s", dataset, DataFactory)
 
             assert.strictEqual(wrapper.dict.toString(), "[object WrappingMap]")
         })

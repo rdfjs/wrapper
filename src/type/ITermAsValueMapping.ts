@@ -1,4 +1,4 @@
-import type { TermWrapper } from "../TermWrapper.js"
+import type { TermNode } from "../TermWrapper.js"
 import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
 
 /**
@@ -67,5 +67,5 @@ import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
  * - [Nodes in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#dfn-node)
  */
 export interface ITermAsValueMapping<T> {
-    (term: TermWrapper): T
+    (term: TermNode): T
 }

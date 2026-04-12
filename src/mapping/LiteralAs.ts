@@ -1,7 +1,8 @@
-import type { Literal } from "@rdfjs/types"
+import type { Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
+import type { TermNode } from "../TermWrapper.js"
 import type { ILangString } from "../type/ILangString.js"
 import { ensureDatatype, ensureIs, ensurePresent, ensureTermType } from "../ensure.js"
 
@@ -13,7 +14,7 @@ import { ensureDatatype, ensureIs, ensurePresent, ensureTermType } from "../ensu
  * - [Literals in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)
  */
 export namespace LiteralAs {
-    export function bigint(term: TermWrapper): bigint {
+    export function bigint(term: TermNode): bigint {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -22,7 +23,7 @@ export namespace LiteralAs {
         return BigInt(term.value)
     }
 
-    export function boolean(term: TermWrapper): boolean {
+    export function boolean(term: TermNode): boolean {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -31,7 +32,7 @@ export namespace LiteralAs {
         return term.value === "true" || term.value === "1"
     }
 
-    export function date(term: TermWrapper): Date {
+    export function date(term: TermNode): Date {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -40,7 +41,7 @@ export namespace LiteralAs {
         return new Date(term.value)
     }
 
-    export function langString(term: TermWrapper): ILangString {
+    export function langString(term: TermNode): ILangString {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -50,7 +51,7 @@ export namespace LiteralAs {
         return {lang: term.language, string: term.value}
     }
 
-    export function number(term: TermWrapper): number {
+    export function number(term: TermNode): number {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -71,14 +72,14 @@ export namespace LiteralAs {
         return Number(term.value)
     }
 
-    export function string(term: TermWrapper): string {
+    export function string(term: TermNode): string {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
 
         return term.value
     }
 
-    export function symbol(term: TermWrapper): symbol {
+    export function symbol(term: TermNode): symbol {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
 
@@ -147,7 +148,7 @@ export namespace LiteralAs {
      * - [Hexadecimal](https://en.wikipedia.org/wiki/Hexadecimal)
      * - [Base64](https://en.wikipedia.org/wiki/Base64)
      */
-    export function uInt8Array(term: TermWrapper): Uint8Array {
+    export function uInt8Array(term: TermNode): Uint8Array {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -165,7 +166,7 @@ export namespace LiteralAs {
         }
     }
 
-    export function url(term: TermWrapper): URL {
+    export function url(term: TermNode): URL {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -174,7 +175,7 @@ export namespace LiteralAs {
         return new URL(term.value)
     }
 
-    export function langTuple(term: TermWrapper): [string, string] {
+    export function langTuple(term: TermNode): [string, string] {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
@@ -183,7 +184,7 @@ export namespace LiteralAs {
         return [term.language, term.value]
     }
 
-    export function datatypeTuple(term: TermWrapper): [string, string] {
+    export function datatypeTuple(term: TermNode): [string, string] {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")

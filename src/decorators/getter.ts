@@ -12,11 +12,11 @@ export function getter(predicate: string, getterArity: GetterArity, termAs: ITer
         return function (this: TermWrapper): any {
             switch (getterArity) {
                 case GetterArity.Singular:
-                    return RequiredFrom.subjectPredicate(this, predicate, termAs)
+                    return RequiredFrom.subjectPredicate(this.node, predicate, termAs)
                 case GetterArity.SingularNullable:
-                    return OptionalFrom.subjectPredicate(this, predicate, termAs)
+                    return OptionalFrom.subjectPredicate(this.node, predicate, termAs)
                 case GetterArity.Set:
-                    return SetFrom.subjectPredicate(this, predicate, termAs, termFrom)
+                    return SetFrom.subjectPredicate(this.node, predicate, termAs, termFrom)
             }
         }
     }

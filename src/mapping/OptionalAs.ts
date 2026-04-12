@@ -1,16 +1,16 @@
-import { TermWrapper } from "../TermWrapper.js"
+import type { TermNode } from "../TermWrapper.js"
 import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
 import type { Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 
 export namespace OptionalAs {
-    export function object<T>(anchor: TermWrapper, p: string, value: T | undefined, termFrom: ITermFromValueMapping<T>) {
+    export function object<T>(anchor: TermNode, p: string, value: T | undefined, termFrom: ITermFromValueMapping<T>) {
         if (termFrom === undefined) {
             throw new Error
         }
 
         const predicate = anchor.factory.namedNode(p)
 
-        for (const q of anchor.dataset.match(anchor as Term, predicate)) {
+        for (const q of anchor.dataset.match(anchor, predicate)) {
             anchor.dataset.delete(q)
         }
 
@@ -21,7 +21,7 @@ export namespace OptionalAs {
 
         // TODO: Do we really need to test if anchor is a Quad Subject here?
         // @Samu I imagine this is tested at instantiation time in the constructor if at all
-        if (!isQuadSubject(anchor as Term)) {
+        if (!isQuadSubject(anchor)) {
             return // TODO: throw error?
         }
 

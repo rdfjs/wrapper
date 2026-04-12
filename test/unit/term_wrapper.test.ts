@@ -36,7 +36,7 @@ prefix xsd: <http://www.w3.org/2001/XMLSchema#>
 
 await describe("Term Wrapper", async () => {
     const dataset = datasetFromRdf(rdf)
-    const parent = new Parent("x", dataset, DataFactory)
+    const parent = Parent.from("x", dataset, DataFactory)
 
     await describe("Value Mapping", async () => {
         await it("get blank node to string", async () => {
@@ -114,7 +114,7 @@ await describe("Term Wrapper", async () => {
         })
 
         await it("set wrapped term", async () => {
-            const newChild = new Child(DataFactory.blankNode(), dataset, DataFactory)
+            const newChild = Child.from(DataFactory.blankNode(), dataset, DataFactory)
             newChild.hasString = "child string 4"
             parent.hasChild = newChild
             assert.equal(parent.hasChild.hasString, "child string 4")
@@ -176,7 +176,7 @@ await describe("Term Wrapper", async () => {
         })
 
         await it("add to set of wrapped terms", async () => {
-            const newChild = new Child(DataFactory.blankNode(), dataset, DataFactory)
+            const newChild = Child.from(DataFactory.blankNode(), dataset, DataFactory)
             newChild.hasString = "child string 5"
             parent.hasChildSet.add(newChild)
             assert.equal(parent.hasChildSet.size, 3)

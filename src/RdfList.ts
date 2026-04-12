@@ -1,4 +1,5 @@
 import { TermWrapper } from "./TermWrapper.js"
+import type { TermNode } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import { IndexerInterceptor } from "./IndexerInterceptor.js"
@@ -10,7 +11,7 @@ import { Overwriter } from "./Overwriter.js"
 export class RdfList<T> implements Array<T> {
     private root: ListItem<T>
 
-    constructor(root: Term, private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
+    constructor(root: Term, private readonly subject: TermNode, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
         this.root = new ListItem(root, this.subject.dataset, this.subject.factory, termAs, termFrom)
 
         // TODO: Singleton interceptor?

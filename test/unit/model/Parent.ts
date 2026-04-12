@@ -19,108 +19,108 @@ import { Example } from "../vocabulary/Example.js"
 export class Parent extends TermWrapper {
     /* Value Mapping */
     public get hasBlankNode(): string {
-        return RequiredFrom.subjectPredicate(this, Example.hasBlankNode, LiteralAs.string)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasBlankNode, LiteralAs.string)
     }
 
     public get hasDate(): Date {
-        return RequiredFrom.subjectPredicate(this, Example.hasDate, LiteralAs.date)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasDate, LiteralAs.date)
     }
 
     public get hasLangString(): ILangString {
-        return RequiredFrom.subjectPredicate(this, Example.hasLangString, LiteralAs.langString)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasLangString, LiteralAs.langString)
     }
 
     public get hasNumber(): number {
-        return RequiredFrom.subjectPredicate(this, Example.hasNumber, LiteralAs.number)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasNumber, LiteralAs.number)
     }
 
     public get hasBoolean(): boolean {
-        return RequiredFrom.subjectPredicate(this, Example.hasBoolean, LiteralAs.boolean)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasBoolean, LiteralAs.boolean)
     }
 
     public get hasString(): string {
-        return RequiredFrom.subjectPredicate(this, Example.hasString, LiteralAs.string)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasString, LiteralAs.string)
     }
 
     public get hasIri(): string {
-        return RequiredFrom.subjectPredicate(this, Example.hasIri, LiteralAs.string)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasIri, LiteralAs.string)
     }
 
 
     /* Term Mapping */
     public set hasBlankNode(value: string) {
-        RequiredAs.object(this, Example.hasBlankNode, value, BlankNodeFrom.string)
+        RequiredAs.object(this.node, Example.hasBlankNode, value, BlankNodeFrom.string)
     }
 
     public set hasDate(value: Date) {
-        RequiredAs.object(this, Example.hasDate, value, LiteralFrom.date)
+        RequiredAs.object(this.node, Example.hasDate, value, LiteralFrom.date)
     }
 
     public set hasLangString(value: ILangString) {
-        RequiredAs.object(this, Example.hasLangString, value, LiteralFrom.langString)
+        RequiredAs.object(this.node, Example.hasLangString, value, LiteralFrom.langString)
     }
 
     public set hasNumber(value: number) {
-        RequiredAs.object(this, Example.hasNumber, value, LiteralFrom.double)
+        RequiredAs.object(this.node, Example.hasNumber, value, LiteralFrom.double)
     }
 
     public set hasBoolean(value: boolean) {
-        RequiredAs.object(this, Example.hasBoolean, value, LiteralFrom.boolean)
+        RequiredAs.object(this.node, Example.hasBoolean, value, LiteralFrom.boolean)
     }
 
     public set hasString(value: string) {
-        RequiredAs.object(this, Example.hasString, value, LiteralFrom.string)
+        RequiredAs.object(this.node, Example.hasString, value, LiteralFrom.string)
     }
 
     public set hasIri(value: string) {
-        RequiredAs.object(this, Example.hasIri, value, NamedNodeFrom.string)
+        RequiredAs.object(this.node, Example.hasIri, value, NamedNodeFrom.string)
     }
 
 
     /* Object Mapping */
     public get hasChild(): Child {
-        return RequiredFrom.subjectPredicate(this, Example.hasChild, TermAs.instance(Child))
+        return RequiredFrom.subjectPredicate(this.node, Example.hasChild, TermAs.instance(Child))
     }
 
     public set hasChild(value: Child) {
-        OptionalAs.object(this, Example.hasChild, value, TermFrom.instance)
+        OptionalAs.object(this.node, Example.hasChild, value, TermFrom.instance)
     }
 
 
     /* Arity Mapping */
     public get hasNoSingularString(): string {
-        return RequiredFrom.subjectPredicate(this, Example.hasNoSingularString, LiteralAs.string)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasNoSingularString, LiteralAs.string)
     }
 
     public get hasTooManySingularString(): string {
-        return RequiredFrom.subjectPredicate(this, Example.hasTooManySingularString, LiteralAs.string)
+        return RequiredFrom.subjectPredicate(this.node, Example.hasTooManySingularString, LiteralAs.string)
     }
 
     public get hasNullableString(): string | undefined {
-        return OptionalFrom.subjectPredicate(this, Example.hasNullableString, LiteralAs.string)
+        return OptionalFrom.subjectPredicate(this.node, Example.hasNullableString, LiteralAs.string)
     }
 
     public set hasNullableString(value: string | undefined) {
-        OptionalAs.object(this, Example.hasNullableString, value, LiteralFrom.string)
+        OptionalAs.object(this.node, Example.hasNullableString, value, LiteralFrom.string)
     }
 
 
     /* Set Mapping */
     public get hasChildSet(): Set<Child> {
-        return SetFrom.subjectPredicate(this, Example.hasChildSet, TermAs.instance(Child), TermFrom.instance)
+        return SetFrom.subjectPredicate(this.node, Example.hasChildSet, TermAs.instance(Child), TermFrom.instance)
     }
 
     public get hasLangStringSet(): Set<ILangString> {
-        return SetFrom.subjectPredicate(this, Example.hasLangStringSet, LiteralAs.langString, LiteralFrom.langString)
+        return SetFrom.subjectPredicate(this.node, Example.hasLangStringSet, LiteralAs.langString, LiteralFrom.langString)
     }
 
 
     /* Recursion Mapping */
     public get hasRecursive(): Parent {
-        return RequiredFrom.subjectPredicate(this, Example.hasRecursive, TermAs.instance(Parent))
+        return RequiredFrom.subjectPredicate(this.node, Example.hasRecursive, TermAs.instance(Parent))
     }
 
     public set hasRecursive(value: Parent | undefined) {
-        OptionalAs.object(this, Example.hasRecursive, value, TermFrom.instance)
+        OptionalAs.object(this.node, Example.hasRecursive, value, TermFrom.instance)
     }
 }

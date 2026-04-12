@@ -1,9 +1,10 @@
 import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Term } from "@rdfjs/types"
-import type { IAnyTerm } from "./type/IAnyTerm.js"
 
 type InferTerm<A> = A extends string ? NamedNode : A extends Term ? A : Term
 
-export class TermWrapper<T extends Term = Term> implements IAnyTerm {
+export type TermNode<T extends Term = Term> = TermWrapper<T> & T
+
+export class TermWrapper<T extends Term = Term> {
     private readonly original: T
 
     public constructor(term: T extends NamedNode ? (string | T) : T, public readonly dataset: DatasetCore, public readonly factory: DataFactory) {
@@ -65,5 +66,9 @@ export class TermWrapper<T extends Term = Term> implements IAnyTerm {
         this: This, dataset: DatasetCore, factory: DataFactory
     ): <A extends ConstructorParameters<This>[0]>(term: A) => InstanceType<This> & InferTerm<A> {
         return (term) => new (this as any)(term, dataset, factory) as any
+    }
+
+    get node(): TermNode<T> {
+        return this as any
     }
 }

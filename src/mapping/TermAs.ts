@@ -1,4 +1,5 @@
 import { TermWrapper } from "../TermWrapper.js"
+import type { TermNode } from "../TermWrapper.js"
 import type { Term } from "@rdfjs/types"
 import type { ITermWrapperConstructor } from "../type/ITermWrapperConstructor.js"
 import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
@@ -15,29 +16,29 @@ import { ensureIs, ensureListRoot, ensurePresent } from "../ensure.js"
  */
 export namespace TermAs {
     export function instance<T>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T> {
-        return (term: TermWrapper) => {
+        return (term: TermNode) => {
             ensurePresent(term)
             ensureIs(term, TermWrapper)
 
-            return new constructor(term as Term, term.dataset, term.factory)
+            return new constructor(term, term.dataset, term.factory)
         }
     }
 
-    export function is<T extends TermWrapper>(term: T): T {
+    export function is<T extends TermNode>(term: T): T {
         return term
     }
 
-    export function list<T>(subject: TermWrapper, predicate: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): ITermAsValueMapping<T[]> {
-        return (term: TermWrapper) => {
+    export function list<T>(subject: TermNode, predicate: string, termAs: ITermAsValueMapping<T>, termFrom: ITermFromValueMapping<T>): ITermAsValueMapping<T[]> {
+        return (term: TermNode) => {
             ensurePresent(term)
             ensureIs(term, TermWrapper)
             ensureListRoot(term)
 
-            return new RdfList(term as Term, subject, predicate, termAs, termFrom)
+            return new RdfList(term, subject, predicate, termAs, termFrom)
         }
     }
 
-    export function term(term: TermWrapper): Term {
-        return term as Term
+    export function term(term: TermNode): Term {
+        return term
     }
 }
