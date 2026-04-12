@@ -19,7 +19,7 @@ import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
  * ```ts
  * class Person extends TermWrapper {
  *   get name(): string {
- *     return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
+ *     return RequiredFrom.subjectPredicate(this.node, "name", LiteralAs.string)
  *   }
  * }
  *
@@ -54,13 +54,13 @@ import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
  * ```ts
  * class Book extends TermWrapper {
  *   get author(): Person {
- *     return RequiredFrom.subjectPredicate(this, "author", TermAs.instance(Person)) // Person is an ITermWrapperConstructor
+ *     return RequiredFrom.subjectPredicate(this.node, "author", TermAs.instance(Person)) // Person is an ITermWrapperConstructor
  *   }
  * }
  *
  * class Person extends TermWrapper {
  *   get name(): string {
- *     return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
+ *     return RequiredFrom.subjectPredicate(this.node, "name", LiteralAs.string)
  *   }
  * }
  * ```

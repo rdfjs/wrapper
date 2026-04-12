@@ -15,7 +15,7 @@ import type { Term } from "@rdfjs/types"
  * ```ts
  * class Class extends TermWrapper {
  *     public get property(): number {
- *         return RequiredFrom.subjectPredicate(this, "p", LiteralAs.number)
+ *         return RequiredFrom.subjectPredicate(this.node, "p", LiteralAs.number)
  *     }
  * }
  * ```
