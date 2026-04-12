@@ -28,8 +28,8 @@ export function ensureTermType(term: Term, type: Term["termType"]) {
     throw new TermTypeError(term, type)
 }
 
-export function ensureDatatype(term: Term, ...datatypes: string[]) {
-    if (term.termType === "Literal" && datatypes.includes(term.datatype.value)) {
+export function ensureDatatype(term: Literal, ...datatypes: string[]) {
+    if (datatypes.includes(term.datatype.value)) {
         return
     }
 

@@ -5,6 +5,7 @@ import { TermWrapper } from "../TermWrapper.js"
 import type { TermNode } from "../TermWrapper.js"
 import type { ILangString } from "../type/ILangString.js"
 import { ensureDatatype, ensureIs, ensurePresent, ensureTermType } from "../ensure.js"
+import { TermTypeError } from "../mod.js"
 
 /**
  * A collection of {@link ITermAsValueMapping | mappers} that convert RDF/JS literals to JavaScript primitives.
@@ -17,7 +18,9 @@ export namespace LiteralAs {
     export function bigint(term: TermNode): bigint {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, ...integerDatatypes)
 
         return BigInt(term.value)
@@ -26,7 +29,9 @@ export namespace LiteralAs {
     export function boolean(term: TermNode): boolean {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, XSD.boolean)
 
         return term.value === "true" || term.value === "1"
@@ -35,7 +40,9 @@ export namespace LiteralAs {
     export function date(term: TermNode): Date {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, ...dateDatatypes)
 
         return new Date(term.value)
@@ -44,7 +51,9 @@ export namespace LiteralAs {
     export function langString(term: TermNode): ILangString {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, RDF.langString)
 
         // TODO: Direction
@@ -54,7 +63,9 @@ export namespace LiteralAs {
     export function number(term: TermNode): number {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, ...numericDatatypes)
 
         if (term.value === "INF") {
@@ -151,7 +162,9 @@ export namespace LiteralAs {
     export function uInt8Array(term: TermNode): Uint8Array {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, ...byteArrayDatatypes)
 
         switch (term.datatype.value) {
@@ -169,7 +182,9 @@ export namespace LiteralAs {
     export function url(term: TermNode): URL {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, XSD.anyUri)
 
         return new URL(term.value)
@@ -178,7 +193,9 @@ export namespace LiteralAs {
     export function langTuple(term: TermNode): [string, string] {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
         ensureDatatype(term, RDF.langString)
 
         return [term.language, term.value]
@@ -187,7 +204,9 @@ export namespace LiteralAs {
     export function datatypeTuple(term: TermNode): [string, string] {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
-        ensureTermType(term, "Literal")
+        if (term.termType !== "Literal") {
+            throw new TermTypeError(term, "Literal")
+        }
 
         return [term.datatype.value, term.value]
     }

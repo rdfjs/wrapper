@@ -1,6 +1,9 @@
 import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Term } from "@rdfjs/types"
+import { OptionalFrom, LiteralAs, OptionalAs, LiteralFrom } from "./mod.js"
 
 type InferTerm<A> = A extends string ? NamedNode : A extends Term ? A : Term
+type IfLiteral<T extends Term, K extends keyof Literal> = T extends Literal ? T[K] : undefined
+type IfQuad<T extends Term, K extends keyof BaseQuad> = T extends BaseQuad ? T[K] : undefined
 
 export type TermNode<T extends Term = Term> = TermWrapper<T> & T
 
@@ -15,7 +18,7 @@ export class TermWrapper<T extends Term = Term> {
         return this.constructor.name
     }
 
-    get termType(): Term["termType"] {
+    get termType(): T["termType"] {
         return this.original.termType
     }
 
@@ -23,32 +26,32 @@ export class TermWrapper<T extends Term = Term> {
         return this.original.value
     }
 
-    get language(): string {
-        return (this.original as Literal).language
+    get language(): IfLiteral<T, "language"> {
+        return (this.original as any).language
     }
 
-    get direction(): Literal["direction"] {
-        return (this.original as Literal).direction
+    get direction(): IfLiteral<T, "direction"> {
+        return (this.original as any).direction
     }
 
-    get datatype(): NamedNode {
-        return (this.original as Literal).datatype
+    get datatype(): IfLiteral<T, "datatype"> {
+        return (this.original as any).datatype
     }
 
-    get subject(): Term {
-        return (this.original as BaseQuad).subject
+    get subject(): IfQuad<T, "subject"> {
+        return (this.original as any).subject
     }
 
-    get predicate(): Term {
-        return (this.original as BaseQuad).predicate
+    get predicate(): IfQuad<T, "predicate"> {
+        return (this.original as any).predicate
     }
 
-    get object(): Term {
-        return (this.original as BaseQuad).object
+    get object(): IfQuad<T, "object"> {
+        return (this.original as any).object
     }
 
-    get graph(): Term {
-        return (this.original as BaseQuad).graph
+    get graph(): IfQuad<T, "graph"> {
+        return (this.original as any).graph
     }
 
     equals(other: Term | null | undefined): boolean {

@@ -37,11 +37,11 @@ import { LiteralAs, LiteralFrom, OptionalAs, OptionalFrom, TermWrapper } from "h
 
 class Person extends TermWrapper {
 	get name() {
-		return OptionalFrom.subjectPredicate(this, "https://example.org/name", LiteralAs.string)
+		return OptionalFrom.subjectPredicate(this.node, "https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		OptionalAs.object(this, "https://example.org/name", value, LiteralFrom.string)
+		OptionalAs.object(this.node, "https://example.org/name", value, LiteralFrom.string)
 	}
 }
 ```
@@ -116,19 +116,19 @@ import { LiteralAs, LiteralFrom, OptionalAs, OptionalFrom, TermAs, TermFrom, Ter
 
 class Person extends TermWrapper {
 	get name() {
-		return OptionalFrom.subjectPredicate(this, "https://example.org/name", LiteralAs.string)
+		return OptionalFrom.subjectPredicate(this.node, "https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		OptionalAs.object(this, "https://example.org/name", value, LiteralFrom.string)
+		OptionalAs.object(this.node, "https://example.org/name", value, LiteralFrom.string)
 	}
 
 	get mum() {
-		return OptionalFrom.subjectPredicate(this, "https://example.org/mum", TermAs.instance(Person))
+		return OptionalFrom.subjectPredicate(this.node, "https://example.org/mum", TermAs.instance(Person))
 	}
 
 	set mum(value) {
-		OptionalAs.object(this, "https://example.org/mum", value, TermFrom.instance)
+		OptionalAs.object(this.node, "https://example.org/mum", value, TermFrom.instance)
 	}
 }
 ```
