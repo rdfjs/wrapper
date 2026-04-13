@@ -2,15 +2,25 @@ import type { DataFactory, DatasetCore, Quad, Quad_Graph, Term } from "@rdfjs/ty
 import { NamedGraphError } from "./errors/NamedGraphError.js"
 
 class NamedGraphDataset implements DatasetCore {
+    private graphViewCache: DatasetCore | undefined
+
     constructor(private readonly graph: Quad_Graph, private readonly dataset: DatasetCore, private readonly factory: DataFactory) {
     }
 
+    private get graphView(): DatasetCore {
+        return this.graphViewCache ??= this.dataset.match(undefined, undefined, undefined, this.graph)
+    }
+
+    private invalidateCache(): void {
+        this.graphViewCache = undefined
+    }
+
     get size(): number {
-        return this.dataset.match(undefined, undefined, undefined, this.graph).size
+        return this.graphView.size
     }
 
     *[Symbol.iterator](): Iterator<Quad> {
-        for (const quad of this.dataset.match(undefined, undefined, undefined, this.graph)) {
+        for (const quad of this.graphView) {
             yield this.factory.quad(quad.subject, quad.predicate, quad.object)
         }
     }
@@ -18,12 +28,14 @@ class NamedGraphDataset implements DatasetCore {
     add(quad: Quad): this {
         this.ensureDefaultGraph(quad)
         this.dataset.add(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        this.invalidateCache()
         return this
     }
 
     delete(quad: Quad): this {
         this.ensureDefaultGraph(quad)
         this.dataset.delete(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        this.invalidateCache()
         return this
     }
 
