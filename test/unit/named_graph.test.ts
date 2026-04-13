@@ -1,7 +1,7 @@
 import assert from "node:assert"
 import { describe, it } from "node:test"
 import { DataFactory, Store } from "n3"
-import { namedGraph, NamedGraphError } from "@rdfjs/wrapper"
+import { namedGraph, NamedGraphError, TermTypeError } from "@rdfjs/wrapper"
 
 const graph = DataFactory.namedNode("https://example.org/graph")
 const s = DataFactory.namedNode("https://example.org/s")
@@ -111,12 +111,12 @@ await describe("namedGraph", async () => {
         )
     })
 
-    await it("throws NamedGraphError when matching with a non-default graph", () => {
+    await it("throws TermTypeError when matching with a non-default graph", () => {
         const ds = namedGraph(graph, storeWithNamedGraph(), DataFactory)
 
         assert.throws(
             () => ds.match(undefined, undefined, undefined, DataFactory.namedNode("https://other.org/g")),
-            NamedGraphError,
+            TermTypeError,
         )
     })
 })

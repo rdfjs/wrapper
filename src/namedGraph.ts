@@ -1,6 +1,7 @@
 import type { DataFactory, DatasetCore, Quad, Quad_Graph, Term } from "@rdfjs/types"
 import { NamedGraphError } from "./errors/NamedGraphError.js"
 import { DatasetWrapper } from "./DatasetWrapper.js"
+import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
 
 class NamedGraphDataset extends DatasetWrapper {
     constructor(private readonly graph: Quad_Graph, dataset: DatasetCore, factory: DataFactory) {
@@ -18,34 +19,31 @@ class NamedGraphDataset extends DatasetWrapper {
     }
 
     override add(quad: Quad): this {
-        this.ensureDefaultGraph(quad)
+        ensureDefaultGraph(quad)
+
         super.add(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
         return this
     }
 
     override delete(quad: Quad): this {
-        this.ensureDefaultGraph(quad)
+        ensureDefaultGraph(quad)
+
         super.delete(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
         return this
     }
 
     override has(quad: Quad): boolean {
-        this.ensureDefaultGraph(quad)
+        ensureDefaultGraph(quad)
+
         return super.has(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
     }
 
     override match(subject?: Term, predicate?: Term, object?: Term, graph?: Term): DatasetCore {
-        if (graph && graph.termType !== "DefaultGraph") {
-            throw new NamedGraphError()
+        if (graph !== undefined) {
+            ensureTermType(graph, "DefaultGraph")
         }
 
         return new NamedGraphDataset(this.graph, super.match(subject, predicate, object, this.graph), this.factory)
-    }
-
-    private ensureDefaultGraph(quad: Quad): void {
-        if (quad.graph.termType !== "DefaultGraph") {
-            throw new NamedGraphError()
-        }
     }
 }
 
