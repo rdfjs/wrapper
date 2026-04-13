@@ -54,13 +54,13 @@ export class DatasetWrapper implements DatasetCore {
 
     protected* matchSubjectsOf<T extends TermWrapper>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T & Quad_Subject> {
         for (const q of this.match(undefined, predicate, object, graph)) {
-            yield termWrapper.from(q.subject, this, this.factory) as unknown as T & Quad_Subject
+            yield termWrapper.from(q.subject, this, this.factory)
         }
     }
 
     protected* matchObjectsOf<T extends TermWrapper>(termWrapper: ITermWrapperConstructor<T>, subject?: Term, predicate?: Term, graph?: Term): Iterable<T & Quad_Object> {
         for (const q of this.match(subject, predicate, undefined, graph)) {
-            yield termWrapper.from(q.object, this, this.factory) as unknown as T & Quad_Object
+            yield termWrapper.from(q.object, this, this.factory)
         }
     }
 

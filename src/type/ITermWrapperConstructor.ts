@@ -1,5 +1,5 @@
 import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
-import type { TermWrapper } from "../mod.js"
+import { TermWrapper } from "../mod.js"
 
 /**
  * Represents the constructor signature of term mapping classes that extend {@link TermWrapper}.
@@ -90,6 +90,6 @@ import type { TermWrapper } from "../mod.js"
  * - {@link DatasetWrapper.objectsOf}
  * - {@link TermAs.instance}
  */
-export type ITermWrapperConstructor<T extends TermWrapper = TermWrapper, K extends Term = Term> = {
-    from(term: K, dataset: DatasetCore, factory: DataFactory): T & K
-}
+export type ITermWrapperConstructor<T extends TermWrapper = TermWrapper> =
+    (new (term: Term, dataset: DatasetCore, factory: DataFactory) => T) &
+    Pick<typeof TermWrapper, 'from'>

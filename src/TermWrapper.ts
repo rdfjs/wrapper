@@ -1,9 +1,7 @@
-import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Term } from "@rdfjs/types"
+import type { DataFactory, DatasetCore, NamedNode, Term } from "@rdfjs/types"
 import { OptionalFrom, LiteralAs, OptionalAs, LiteralFrom } from "./mod.js"
 
 type InferTerm<A> = A extends string ? NamedNode : A extends Term ? A : Term
-type IfLiteral<T extends Term, K extends keyof Literal> = T extends Literal ? T[K] : undefined
-type IfQuad<T extends Term, K extends keyof BaseQuad> = T extends BaseQuad ? T[K] : undefined
 
 export type TermNode<T extends Term = Term> = TermWrapper<T> & T
 
@@ -26,34 +24,6 @@ export class TermWrapper<T extends Term = Term> {
         return this.original.value
     }
 
-    get language(): IfLiteral<T, "language"> {
-        return (this.original as any).language
-    }
-
-    get direction(): IfLiteral<T, "direction"> {
-        return (this.original as any).direction
-    }
-
-    get datatype(): IfLiteral<T, "datatype"> {
-        return (this.original as any).datatype
-    }
-
-    get subject(): IfQuad<T, "subject"> {
-        return (this.original as any).subject
-    }
-
-    get predicate(): IfQuad<T, "predicate"> {
-        return (this.original as any).predicate
-    }
-
-    get object(): IfQuad<T, "object"> {
-        return (this.original as any).object
-    }
-
-    get graph(): IfQuad<T, "graph"> {
-        return (this.original as any).graph
-    }
-
     equals(other: Term | null | undefined): boolean {
         return this.original.equals(other)
     }
@@ -74,4 +44,12 @@ export class TermWrapper<T extends Term = Term> {
     get node(): TermNode<T> {
         return this as any
     }
+}
+
+for (const prop of ['language', 'direction', 'datatype', 'subject', 'predicate', 'object', 'graph'] as const) {
+    Object.defineProperty(TermWrapper.prototype, prop, {
+        get(this: TermWrapper) { return (this as any).original[prop] },
+        enumerable: true,
+        configurable: true,
+    })
 }
