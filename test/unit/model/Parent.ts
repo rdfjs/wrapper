@@ -1,4 +1,4 @@
-import type { ILangString } from "@rdfjs/wrapper"
+import type { ILangString, TermNode } from "@rdfjs/wrapper"
 import {
     BlankNodeFrom,
     LiteralAs,
@@ -116,7 +116,7 @@ export class Parent extends TermWrapper {
 
 
     /* Recursion Mapping */
-    public get hasRecursive(): Parent {
+    public get hasRecursive(): Parent | undefined {
         return RequiredFrom.subjectPredicate(this.node, Example.hasRecursive, TermAs.instance(Parent))
     }
 

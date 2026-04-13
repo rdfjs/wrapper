@@ -20,7 +20,7 @@ export namespace TermAs {
             ensurePresent(term)
             ensureIs(term, TermWrapper)
 
-            return constructor.from(term, term.dataset, term.factory)
+            return constructor.from(term, term.dataset, term.factory) as T & TermNode
         }
     }
 
