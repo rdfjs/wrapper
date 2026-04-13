@@ -1,5 +1,4 @@
 import type { BaseQuad, BlankNode, DataFactory, DatasetCore, DefaultGraph, Literal, NamedNode, Term, Variable } from "@rdfjs/types"
-import { OptionalFrom, LiteralAs, OptionalAs, LiteralFrom } from "./mod.js"
 
 type ToInterface<A extends Term> =
     A extends { termType: "NamedNode" } ? NamedNode :
@@ -59,7 +58,7 @@ export class TermWrapper<T extends Term = Term> {
 for (const prop of ['language', 'direction', 'datatype', 'subject', 'predicate', 'object', 'graph'] as const) {
     Object.defineProperty(TermWrapper.prototype, prop, {
         get(this: TermWrapper) { return (this as any).original[prop] },
-        enumerable: true,
+        enumerable: false,
         configurable: true,
     })
 }

@@ -1,5 +1,5 @@
 import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
-import { TermWrapper } from "../mod.js"
+import { TermWrapper } from "../TermWrapper.js"
 
 /**
  * Represents the constructor signature of term mapping classes that extend {@link TermWrapper}.

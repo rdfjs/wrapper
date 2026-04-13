@@ -1,11 +1,11 @@
-import type { Literal, Term } from "@rdfjs/types"
+import type { Literal } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
 import type { TermNode } from "../TermWrapper.js"
 import type { ILangString } from "../type/ILangString.js"
-import { ensureDatatype, ensureIs, ensurePresent, ensureTermType } from "../ensure.js"
-import { TermTypeError } from "../mod.js"
+import { ensureDatatype, ensureIs, ensurePresent } from "../ensure.js"
+import { TermTypeError } from "../errors/TermTypeError.js"
 
 /**
  * A collection of {@link ITermAsValueMapping | mappers} that convert RDF/JS literals to JavaScript primitives.

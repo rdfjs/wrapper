@@ -117,7 +117,7 @@ export class Parent extends TermWrapper {
 
     /* Recursion Mapping */
     public get hasRecursive(): Parent | undefined {
-        return RequiredFrom.subjectPredicate(this.node, Example.hasRecursive, TermAs.instance(Parent))
+        return OptionalFrom.subjectPredicate(this.node, Example.hasRecursive, TermAs.instance(Parent))
     }
 
     public set hasRecursive(value: Parent | undefined) {
