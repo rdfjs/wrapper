@@ -55,6 +55,6 @@ export function ensureDefaultGraph(quad: Quad): asserts quad is Quad & { graph: 
         return
     }
 
-    throw new NamedGraphError()
+    throw new NamedGraphError(quad)
 }
 
