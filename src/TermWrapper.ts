@@ -31,7 +31,7 @@ import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
  * We can work with this data in JavaScript and TypeScript as follows:
  * ```ts
  * const dataset: DatasetCore // which has the RDF above loaded
- * const instance = new SomeClass("http://example.com/", dataset, DataFactory)
+ * const instance = new SomeClass("http://example.com/someSubject", dataset, DataFactory)
  *
  * const value = instance.someProperty // contains "some value"
  *
