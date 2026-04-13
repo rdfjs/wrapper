@@ -3,14 +3,14 @@ import { describe, it } from "node:test"
 import { DataFactory, Store } from "n3"
 import { namedGraph, NamedGraphError } from "@rdfjs/wrapper"
 
-const graph = "https://example.org/graph"
+const graph = DataFactory.namedNode("https://example.org/graph")
 const s = DataFactory.namedNode("https://example.org/s")
 const p = DataFactory.namedNode("https://example.org/p")
 const o = DataFactory.literal("value")
 
 function storeWithNamedGraph(): Store {
     const store = new Store()
-    store.addQuad(DataFactory.quad(s, p, o, DataFactory.namedNode(graph)))
+    store.addQuad(DataFactory.quad(s, p, o, graph))
     store.addQuad(DataFactory.quad(s, p, DataFactory.literal("default")))
     return store
 }
@@ -24,14 +24,6 @@ await describe("namedGraph", async () => {
         assert.equal(quads[0]!.subject.value, s.value)
         assert.equal(quads[0]!.predicate.value, p.value)
         assert.equal(quads[0]!.object.value, "value")
-        assert.equal(quads[0]!.graph.termType, "DefaultGraph")
-    })
-
-    await it("accepts a Term as the graph parameter", () => {
-        const ds = namedGraph(DataFactory.namedNode(graph), storeWithNamedGraph(), DataFactory)
-        const quads = Array.from(ds)
-
-        assert.equal(quads.length, 1)
         assert.equal(quads[0]!.graph.termType, "DefaultGraph")
     })
 
@@ -58,7 +50,7 @@ await describe("namedGraph", async () => {
         ds.add(DataFactory.quad(s, p, newObj))
 
         assert.equal(ds.size, 2)
-        assert.equal(store.has(DataFactory.quad(s, p, newObj, DataFactory.namedNode(graph))), true)
+        assert.equal(store.has(DataFactory.quad(s, p, newObj, graph)), true)
     })
 
     await it("delete removes from the named graph of the underlying dataset", () => {
@@ -68,14 +60,14 @@ await describe("namedGraph", async () => {
         ds.delete(DataFactory.quad(s, p, o))
 
         assert.equal(ds.size, 0)
-        assert.equal(store.has(DataFactory.quad(s, p, o, DataFactory.namedNode(graph))), false)
+        assert.equal(store.has(DataFactory.quad(s, p, o, graph)), false)
     })
 
     await it("match filters by subject/predicate/object within the named graph", () => {
         const store = new Store()
         const p2 = DataFactory.namedNode("https://example.org/p2")
-        store.addQuad(DataFactory.quad(s, p, o, DataFactory.namedNode(graph)))
-        store.addQuad(DataFactory.quad(s, p2, DataFactory.literal("other"), DataFactory.namedNode(graph)))
+        store.addQuad(DataFactory.quad(s, p, o, graph))
+        store.addQuad(DataFactory.quad(s, p2, DataFactory.literal("other"), graph))
 
         const ds = namedGraph(graph, store, DataFactory)
         const matched = Array.from(ds.match(undefined, p2))

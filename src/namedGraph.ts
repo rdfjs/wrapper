@@ -2,10 +2,7 @@ import type { DataFactory, DatasetCore, Quad, Quad_Graph, Term } from "@rdfjs/ty
 import { NamedGraphError } from "./errors/NamedGraphError.js"
 
 class NamedGraphDataset implements DatasetCore {
-    private readonly graph: Quad_Graph
-
-    constructor(graph: Term | string, private readonly dataset: DatasetCore, private readonly factory: DataFactory) {
-        this.graph = typeof graph === "string" ? factory.namedNode(graph) : graph as Quad_Graph
+    constructor(private readonly graph: Quad_Graph, private readonly dataset: DatasetCore, private readonly factory: DataFactory) {
     }
 
     get size(): number {
@@ -58,19 +55,19 @@ class NamedGraphDataset implements DatasetCore {
  * underlying dataset. Any attempt to use a non-default graph on the returned dataset throws a
  * {@link NamedGraphError}.
  *
- * @param graph - The named graph to project, either as a {@link Term} or a string IRI.
+ * @param graph - The graph to project as a {@link Quad_Graph}.
  * @param dataset - The underlying dataset containing quads in one or more named graphs.
  * @param factory - A {@link DataFactory} used to construct quads.
  * @returns A {@link DatasetCore} view scoped to the specified named graph.
  *
  * @example
  * ```ts
- * const view = namedGraph("https://example.org/graph1", dataset, DataFactory)
+ * const view = namedGraph(DataFactory.namedNode("https://example.org/graph1"), dataset, DataFactory)
  * for (const quad of view) {
  *     console.log(quad.graph.termType) // "DefaultGraph"
  * }
  * ```
  */
-export function namedGraph(graph: Term | string, dataset: DatasetCore, factory: DataFactory): DatasetCore {
+export function namedGraph(graph: Quad_Graph, dataset: DatasetCore, factory: DataFactory): DatasetCore {
     return new NamedGraphDataset(graph, dataset, factory)
 }

@@ -187,7 +187,7 @@ import { namedGraph, DatasetWrapper } from "@rdfjs/wrapper"
 // <ex:person2> <ex:name> "Bob" <ex:graph1> .
 // <ex:person1> <ex:name> "Charlie" .                  (default graph)
 
-const graphView = namedGraph("https://example.org/graph1", dataset, DataFactory)
+const graphView = namedGraph(DataFactory.namedNode("https://example.org/graph1"), dataset, DataFactory)
 
 // graphView behaves as a DatasetCore containing only default graph quads:
 // <ex:person1> <ex:name> "Alice" .
