@@ -180,7 +180,7 @@ RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/
 The `namedGraph` function creates a `DatasetCore` view over a single named graph, projecting its contents into the default graph. This lets you use any existing `TermWrapper` or `DatasetWrapper` classes unchanged, scoped to a specific graph.
 
 ```javascript
-import { namedGraph, DatasetWrapper, TermWrapper, LiteralAs, OptionalFrom } from "@rdfjs/wrapper"
+import { namedGraph, DatasetWrapper } from "@rdfjs/wrapper"
 
 // Given a dataset with quads in a named graph:
 // <ex:person1> <ex:name> "Alice" <ex:graph1> .
