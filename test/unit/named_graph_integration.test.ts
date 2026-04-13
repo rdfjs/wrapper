@@ -3,7 +3,6 @@ import { describe, it } from "node:test"
 import { DataFactory, Store } from "n3"
 import { namedGraph } from "@rdfjs/wrapper"
 import { Parent } from "./model/Parent.js"
-import { Child } from "./model/Child.js"
 import { ParentDataset } from "./model/ParentDataset.js"
 import { Example } from "./vocabulary/Example.js"
 
