@@ -98,7 +98,7 @@ export namespace LiteralAs {
     }
 
     /**
-     * {@link ITermAsValueMapping | Maps} a binary literal to a typed array.
+     * {@link ITermAsValueMapping Maps} a binary literal to a typed array.
      *
      * @param {TermWrapper} term - The term containing hexadecimal or Base64 encoded binary data.
      * @return An array of 8-bit unsigned integers decoded from the term's value according to its datatype.
@@ -116,8 +116,7 @@ export namespace LiteralAs {
      *
      * @throws {@link !ReferenceError ReferenceError} If the term is `undefined` or `null`.
      * @throws {@link !TypeError TypeError} If the term is not a {@link TermWrapper}.
-     * @throws {@link TermTypeError} If the term is not a literal.
-     * @throws {@link TermTypeError} If the term is not a literal.
+     * @throws {@link TermTypeError} If the term is not a {@link Literal}.
      * @throws {@link LiteralDatatypeError} If the term's datatype is not one of the supported datatypes.
      * @throws {@link !SyntaxError SyntaxError} If the term's lexical value cannot be converted.
      *
@@ -131,7 +130,7 @@ export namespace LiteralAs {
      * ```ts
      * class Class extends TermWrapper {
      *     public get property(): Uint8Array {
-     *         return this.singular("p", TermAs.uInt8Array)
+     *         return RequiredFrom.subjectPredicate(this, "p", LiteralAs.uInt8Array)
      *     }
      * }
      * ```
@@ -148,7 +147,7 @@ export namespace LiteralAs {
      * ```ts
      * class Class extends TermWrapper {
      *     public get property(): Uint8Array {
-     *         return this.singular("p", TermAs.uInt8Array)
+     *         return RequiredFrom.subjectPredicate(this, "p", LiteralAs.uInt8Array)
      *     }
      * }
      * ```

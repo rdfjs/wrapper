@@ -22,10 +22,19 @@
             "DefaultGraph": "https://rdf.js.org/data-model-spec/#defaultgraph-interface",
             "Literal": "https://rdf.js.org/data-model-spec/#literal-interface",
             "Literal.datatype": "https://rdf.js.org/data-model-spec/#dom-literal-datatype",
+            "Literal.direction": "https://rdf.js.org/data-model-spec/#dom-literal-direction",
+            "Literal.language": "https://rdf.js.org/data-model-spec/#dom-literal-language",
             "NamedNode": "https://rdf.js.org/data-model-spec/#namednode-interface",
             "Quad": "https://rdf.js.org/data-model-spec/#quad-interface",
+            "Quad.graph": "https://rdf.js.org/data-model-spec/#dom-quad-graph",
+            "Quad.object": "https://rdf.js.org/data-model-spec/#dom-quad-object",
+            "Quad.predicate": "https://rdf.js.org/data-model-spec/#dom-quad-predicate",
+            "Quad.subject": "https://rdf.js.org/data-model-spec/#dom-quad-subject",
             "Term": "https://rdf.js.org/data-model-spec/#term-interface",
-            "Variable": "https://rdf.js.org/data-model-spec/#variable-interface"
+            "termType": "https://rdf.js.org/data-model-spec/#dom-term-termtype",
+            "Variable": "https://rdf.js.org/data-model-spec/#variable-interface",
+            "value": "https://rdf.js.org/data-model-spec/#dom-term-value",
+            "equals": "https://rdf.js.org/data-model-spec/#dom-term-equals"
         }
     }
 }

@@ -8,7 +8,7 @@ import { RdfList } from "../RdfList.js"
 import { ensureIs, ensureListRoot, ensurePresent } from "../ensure.js"
 
 /**
- * A collection of {@link ITermAsValueMapping | mappers} that convert RDF/JS terms to JavaScript constructs.
+ * A collection of {@link ITermAsValueMapping mappers} that convert RDF/JS terms to JavaScript constructs.
  *
  * @see
  * - {@link Term}
