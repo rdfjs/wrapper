@@ -1,43 +1,45 @@
 import type { DataFactory, DatasetCore, Quad, Quad_Graph, Term } from "@rdfjs/types"
 import { NamedGraphError } from "./errors/NamedGraphError.js"
+import { DatasetWrapper } from "./DatasetWrapper.js"
 
-class NamedGraphDataset implements DatasetCore {
-    constructor(private readonly graph: Quad_Graph, private readonly dataset: DatasetCore, private readonly factory: DataFactory) {
+class NamedGraphDataset extends DatasetWrapper {
+    constructor(private readonly graph: Quad_Graph, dataset: DatasetCore, factory: DataFactory) {
+        super(dataset, factory)
     }
 
-    get size(): number {
-        return this.dataset.match(undefined, undefined, undefined, this.graph).size
+    override get size(): number {
+        return super.match(undefined, undefined, undefined, this.graph).size
     }
 
-    *[Symbol.iterator](): Iterator<Quad> {
-        for (const quad of this.dataset.match(undefined, undefined, undefined, this.graph)) {
+    override* [Symbol.iterator](): Iterator<Quad> {
+        for (const quad of super.match(undefined, undefined, undefined, this.graph)) {
             yield this.factory.quad(quad.subject, quad.predicate, quad.object)
         }
     }
 
-    add(quad: Quad): this {
+    override add(quad: Quad): this {
         this.ensureDefaultGraph(quad)
-        this.dataset.add(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        super.add(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
         return this
     }
 
-    delete(quad: Quad): this {
+    override delete(quad: Quad): this {
         this.ensureDefaultGraph(quad)
-        this.dataset.delete(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        super.delete(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
         return this
     }
 
-    has(quad: Quad): boolean {
+    override has(quad: Quad): boolean {
         this.ensureDefaultGraph(quad)
-        return this.dataset.has(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        return super.has(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
     }
 
-    match(subject?: Term, predicate?: Term, object?: Term, graph?: Term): DatasetCore {
+    override match(subject?: Term, predicate?: Term, object?: Term, graph?: Term): DatasetCore {
         if (graph && graph.termType !== "DefaultGraph") {
             throw new NamedGraphError()
         }
 
-        return new NamedGraphDataset(this.graph, this.dataset.match(subject, predicate, object, this.graph), this.factory)
+        return new NamedGraphDataset(this.graph, super.match(subject, predicate, object, this.graph), this.factory)
     }
 
     private ensureDefaultGraph(quad: Quad): void {
