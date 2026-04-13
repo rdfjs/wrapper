@@ -1,6 +1,6 @@
 import { TermWrapper } from "../TermWrapper.js"
 import type { TermNode } from "../TermWrapper.js"
-import type { Term } from "@rdfjs/types"
+
 import type { ITermWrapperConstructor } from "../type/ITermWrapperConstructor.js"
 import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
@@ -16,7 +16,7 @@ import { ensureIs, ensureListRoot, ensurePresent } from "../ensure.js"
  */
 export namespace TermAs {
     export function instance<T extends TermWrapper>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T & TermNode> {
-        return (term: TermNode<Term>) => {
+        return (term: TermNode) => {
             ensurePresent(term)
             ensureIs(term, TermWrapper)
 
@@ -36,9 +36,5 @@ export namespace TermAs {
 
             return new RdfList(term, subject, predicate, termAs, termFrom)
         }
-    }
-
-    export function term(term: TermNode): Term {
-        return term
     }
 }

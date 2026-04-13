@@ -17,7 +17,7 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get firstRaw(): Term | undefined {
-        return OptionalFrom.subjectPredicate(this.node, RDF.first, TermAs.term)
+        return OptionalFrom.subjectPredicate(this.node, RDF.first, TermAs.is)
     }
 
     public set firstRaw(value: Term | undefined) {
@@ -25,7 +25,7 @@ export class ListItem<T> extends TermWrapper {
     }
 
     public get restRaw(): Term | undefined {
-        return OptionalFrom.subjectPredicate(this.node, RDF.rest, TermAs.term)
+        return OptionalFrom.subjectPredicate(this.node, RDF.rest, TermAs.is)
     }
 
     public set restRaw(value: Term | undefined) {
