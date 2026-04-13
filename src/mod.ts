@@ -25,3 +25,6 @@ export * from "./errors/TermError.js"
 export * from "./errors/TermTypeError.js"
 export * from "./errors/LiteralDatatypeError.js"
 export * from "./errors/ListRootError.js"
+export * from "./errors/NamedGraphError.js"
+
+export * from "./namedGraph.js"
