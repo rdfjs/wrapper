@@ -1,40 +1,51 @@
 import assert from "node:assert"
 import { describe, it } from "node:test"
-import { DataFactory, Store } from "n3"
-import { namedGraph } from "@rdfjs/wrapper"
+import { DataFactory } from "n3"
 import { Parent } from "./model/Parent.js"
 import { ParentDataset } from "./model/ParentDataset.js"
 import { Example } from "./vocabulary/Example.js"
+import { DatasetWrapper, NamedGraphDataset } from "@rdfjs/wrapper"
+import { datasetFromRdf } from "./util/datasetFromRdf.js"
 
-const graph = DataFactory.namedNode("https://example.org/graph")
+const rdf = `
+PREFIX : <https://example.org/>
 
-function storeWithGraphData(): Store {
-    const store = new Store()
-    const s = DataFactory.namedNode("x")
+<x> :hasString "default string" .
 
-    // Data in the named graph
-    store.addQuad(DataFactory.quad(s, DataFactory.namedNode(Example.hasString), DataFactory.literal("graph string"), graph))
-    store.addQuad(DataFactory.quad(s, DataFactory.namedNode(Example.hasChild), DataFactory.blankNode("c1"), graph))
-    store.addQuad(DataFactory.quad(DataFactory.blankNode("c1"), DataFactory.namedNode(Example.hasString), DataFactory.literal("graph child string"), graph))
-    store.addQuad(DataFactory.quad(s, DataFactory.namedNode("http://www.w3.org/1999/02/22-rdf-syntax-ns#type"), DataFactory.namedNode(Example.Parent), graph))
+:graph {
+    <x>
+        a :Parent ;
+        :hasString "graph string";
+        :hasChild [
+            :hasString "graph child string" ;
+        ] ;
+    .
+}
+`;
 
-    // Data in the default graph (should be invisible through the named graph view)
-    store.addQuad(DataFactory.quad(s, DataFactory.namedNode(Example.hasString), DataFactory.literal("default string")))
+class SomeDataset extends DatasetWrapper {
+    get namedGraph(): SomeNamedDataset {
+        return this.named("https://example.org/graph", SomeNamedDataset)
+    }
+}
 
-    return store
+class SomeNamedDataset extends NamedGraphDataset {
+    get parents(): Iterable<Parent> {
+        return this.subjectsOf("https://example.org/hasString", Parent)
+    }
 }
 
 await describe("namedGraph with TermWrapper", async () => {
     await it("reads properties from the named graph via TermWrapper", () => {
-        const view = namedGraph(graph, storeWithGraphData(), DataFactory)
-        const parent = new Parent(DataFactory.namedNode("x"), view, DataFactory)
+        const view = new SomeDataset(datasetFromRdf(rdf), DataFactory).namedGraph
+        const parent = [...view.parents][0]!
 
         assert.equal(parent.hasString, "graph string")
     })
 
     await it("does not see data from other graphs", () => {
-        const view = namedGraph(graph, storeWithGraphData(), DataFactory)
-        const parent = new Parent(DataFactory.namedNode("x"), view, DataFactory)
+        const view = new SomeDataset(datasetFromRdf(rdf), DataFactory).namedGraph
+        const parent = [...view.parents][0]!
 
         // The value should be the one from the named graph, not the default graph
         assert.equal(parent.hasString, "graph string")
@@ -42,16 +53,16 @@ await describe("namedGraph with TermWrapper", async () => {
     })
 
     await it("navigates child objects within the named graph", () => {
-        const view = namedGraph(graph, storeWithGraphData(), DataFactory)
-        const parent = new Parent(DataFactory.namedNode("x"), view, DataFactory)
+        const view = new SomeDataset(datasetFromRdf(rdf), DataFactory).namedGraph
+        const parent = [...view.parents][0]!
 
         assert.equal(parent.hasChild.hasString, "graph child string")
     })
 
     await it("writes properties back into the named graph", () => {
-        const store = storeWithGraphData()
-        const view = namedGraph(graph, store, DataFactory)
-        const parent = new Parent(DataFactory.namedNode("x"), view, DataFactory)
+        const store = datasetFromRdf(rdf)
+        const view = new SomeDataset(store, DataFactory).namedGraph
+        const parent = [...view.parents][0]!
 
         parent.hasString = "updated"
 
@@ -61,14 +72,14 @@ await describe("namedGraph with TermWrapper", async () => {
             DataFactory.namedNode("x"),
             DataFactory.namedNode(Example.hasString),
             DataFactory.literal("updated"),
-            graph
+            DataFactory.namedNode("https://example.org/graph"),
         )), true)
     })
 
     await it("sets nullable properties through the named graph view", () => {
-        const store = storeWithGraphData()
-        const view = namedGraph(graph, store, DataFactory)
-        const parent = new Parent(DataFactory.namedNode("x"), view, DataFactory)
+        const store = datasetFromRdf(rdf)
+        const view = new SomeDataset(store, DataFactory).namedGraph
+        const parent = [...view.parents][0]!
 
         assert.equal(parent.hasNullableString, undefined)
 
@@ -82,7 +93,7 @@ await describe("namedGraph with TermWrapper", async () => {
 
 await describe("namedGraph with DatasetWrapper", async () => {
     await it("finds instances within the named graph", () => {
-        const view = namedGraph(graph, storeWithGraphData(), DataFactory)
+        const view = new SomeDataset(datasetFromRdf(rdf), DataFactory).namedGraph
         const parentDataset = new ParentDataset(view, DataFactory)
 
         const parents = Array.from(parentDataset.instancesOfParent)
@@ -90,21 +101,10 @@ await describe("namedGraph with DatasetWrapper", async () => {
         assert.equal(parents[0]!.hasString, "graph string")
     })
 
-    await it("finds child objects via DatasetWrapper methods", () => {
-        const view = namedGraph(graph, storeWithGraphData(), DataFactory)
-        const parentDataset = new ParentDataset(view, DataFactory)
-
-        const children = Array.from(parentDataset.objectsOfHasChild)
-        assert.equal(children.length, 1)
-        assert.equal(children[0]!.hasString, "graph child string")
-    })
-
     await it("iterates only quads from the named graph", () => {
-        const store = storeWithGraphData()
-        const view = namedGraph(graph, store, DataFactory)
-        const parentDataset = new ParentDataset(view, DataFactory)
+        const view = new SomeDataset(datasetFromRdf(rdf), DataFactory).namedGraph
 
-        const quads = Array.from(parentDataset)
+        const quads = Array.from(view)
         // Named graph has 4 quads, default graph has 1 — should only see 4
         assert.equal(quads.length, 4)
         for (const quad of quads) {

@@ -1,5 +1,6 @@
 export type * from "./type/ITermAsValueMapping.js"
 export type * from "./type/ITermWrapperConstructor.js"
+export type * from "./type/INamedGraphDatasetConstructor.js"
 export type * from "./type/ITermFromValueMapping.js"
 export type * from "./type/ILangString.js"
 
@@ -19,6 +20,7 @@ export * from "./mapping/RequiredAs.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
+export * from "./NamedGraphDataset.js"
 
 export * from "./errors/WrapperError.js"
 export * from "./errors/TermError.js"
@@ -27,5 +29,3 @@ export * from "./errors/LiteralDatatypeError.js"
 export * from "./errors/ListRootError.js"
 export * from "./errors/QuadError.js"
 export * from "./errors/NamedGraphError.js"
-
-export * from "./namedGraph.js"
