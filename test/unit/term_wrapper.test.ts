@@ -199,8 +199,8 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.dataset.size, 22)
             parent.hasRecursive = undefined
             assert.equal(parent.dataset.size, 21)
-            // TODO: check for typed error singular no value
-            assert.throws(() => parent.hasRecursive)
+            // hasRecursive now returns undefined when missing (OptionalFrom)
+            assert.equal(parent.hasRecursive, undefined)
             parent.hasRecursive = parent
             assert.equal(parent!.hasRecursive!.hasRecursive!.hasRecursive!.value, "x")
         })
