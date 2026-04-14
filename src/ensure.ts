@@ -1,9 +1,10 @@
-import type { Literal, Term } from "@rdfjs/types"
+import type { DefaultGraph, Literal, Quad, Term } from "@rdfjs/types"
 import { TermTypeError } from "./errors/TermTypeError.js"
 import { LiteralDatatypeError } from "./errors/LiteralDatatypeError.js"
 import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
 import { RDF } from "./vocabulary/RDF.js"
 import { ListRootError } from "./errors/ListRootError.js"
+import { NamedGraphError } from "./errors/NamedGraphError.js"
 
 export function ensurePresent(object: any) {
     if (object !== undefined && object !== null) {
@@ -21,7 +22,7 @@ export function ensureIs(object: any, type: Function | { [Symbol.hasInstance]():
     throw new TypeError(`Object must be a ${type}`)
 }
 
-export function ensureTermType(term: IRdfJsTerm, type: Term["termType"]) {
+export function ensureTermType(term: { termType: Term["termType"] }, type: Term["termType"]) {
     if (term.termType === type) {
         return
     }
@@ -48,3 +49,12 @@ export function ensureListRoot(term: IRdfJsTerm) {
 
     throw new ListRootError(term as Term)
 }
+
+export function ensureDefaultGraph(quad: Quad): asserts quad is Quad & { graph: DefaultGraph } {
+    if (quad.graph.termType === "DefaultGraph") {
+        return
+    }
+
+    throw new NamedGraphError(quad)
+}
+
