@@ -8,33 +8,27 @@ export class NamedGraphDataset extends DatasetWrapper {
     }
 
     override get size(): number {
-        return super.match(undefined, undefined, undefined, this.graph).size
+        return this.subGraph.size
     }
 
     override* [Symbol.iterator](): Iterator<Quad> {
-        for (const quad of super.match(undefined, undefined, undefined, this.graph)) {
-            yield this.factory.quad(quad.subject, quad.predicate, quad.object)
+        for (const quad of this.subGraph) {
+            yield this.asDefault(quad)
         }
     }
 
     override add(quad: Quad): this {
-        ensureDefaultGraph(quad)
-
-        super.add(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        super.add(this.asNamed(quad))
         return this
     }
 
     override delete(quad: Quad): this {
-        ensureDefaultGraph(quad)
-
-        super.delete(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        super.delete(this.asNamed(quad))
         return this
     }
 
     override has(quad: Quad): boolean {
-        ensureDefaultGraph(quad)
-
-        return super.has(this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph))
+        return super.has(this.asNamed(quad))
     }
 
     override match(subject?: Term, predicate?: Term, object?: Term, graph?: Term): DatasetCore {
@@ -43,5 +37,19 @@ export class NamedGraphDataset extends DatasetWrapper {
         }
 
         return new NamedGraphDataset(this.graph, super.match(subject, predicate, object, this.graph), this.factory)
+    }
+
+    private get subGraph(): DatasetCore {
+        return super.match(undefined, undefined, undefined, this.graph);
+    }
+
+    private asNamed(quad: Quad): Quad {
+        ensureDefaultGraph(quad)
+
+        return this.factory.quad(quad.subject, quad.predicate, quad.object, this.graph)
+    }
+
+    private asDefault(quad: Quad): Quad {
+        return this.factory.quad(quad.subject, quad.predicate, quad.object);
     }
 }
