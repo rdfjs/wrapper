@@ -22,12 +22,11 @@ import type { DataFactory, Term } from "@rdfjs/types"
  * @returns A term that represents the converted value.
  *
  * @example Using a built-in mapping
- * It is expected that in most cases the easiest way to convert between RDF terms and native values is by referencing
- *     one of the existing mapping functions like {@link LiteralAs.number}:
+ * It is expected that in most cases the easiest way to convert between RDF terms and native values is by referencing one of the existing mapping functions like {@link LiteralFrom.double}:
  * ```ts
  * class Person extends TermWrapper {
  *   set age(value: number) {
- *     return RequiredAs.object(this. "age", LiteralFrom.number) // 2nd param is the mapping
+ *     RequiredAs.object(this, "age", LiteralFrom.double) // 3rd param is the mapping
  *   }
  * }
  * ```
@@ -37,7 +36,7 @@ import type { DataFactory, Term } from "@rdfjs/types"
  * ```ts
  * class Person extends TermWrapper {
  *   set age(value: number) {
- *     return RequiredAs.object(this. "age", (value, factory) => factory.literal(value.toString(), factory.namedNode(XSD.double))) // 2nd param is the mapping
+ *     RequiredAs.object(this, "age", (value, factory) => factory.literal(value.toString(), factory.namedNode(XSD.double))) // 3rd param is the mapping
  *   }
  * }
  * ```
@@ -57,8 +56,7 @@ import type { DataFactory, Term } from "@rdfjs/types"
  * ```
  *
  * @example Mapping as TypeScript typed constant
- * Authoring mappings as typed TypoedScript constants helps by compile-time checking that a lambda adheres to the
- * interface.
+ * Authoring mappings as typed TypeScript constants helps by compile-time checking that a lambda adheres to the interface.
  * ```ts
  * const termValue: ITermFromValueMapping<string> = (value, factory) => factory.literal(value)
  * ```
