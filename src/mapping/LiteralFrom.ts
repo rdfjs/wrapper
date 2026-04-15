@@ -39,6 +39,10 @@ export namespace LiteralFrom {
         return factory.literal(value.toString(), factory.namedNode(XSD.double))
     }
 
+    export function integer(value: number, factory: DataFactory): Term {
+        return factory.literal(value.toString(), factory.namedNode(XSD.integer))
+    }
+
     export function hex(value: Uint8Array, factory: DataFactory): Term {
         // TODO: Sort typing
         return factory.literal((value as any).toHex(), factory.namedNode(XSD.hexBinary))
