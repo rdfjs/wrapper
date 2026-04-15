@@ -174,6 +174,58 @@ console.log(person2.mum.mum.name)
 
 RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/) specifications.
 
+
+### Named Graphs
+
+The `namedGraph` function creates a `DatasetCore` view over a single named graph, projecting its contents into the default graph. This lets you use any existing `TermWrapper` or `DatasetWrapper` classes unchanged, scoped to a specific graph.
+
+```javascript
+import { namedGraph, DatasetWrapper } from "@rdfjs/wrapper"
+
+// Given a dataset with quads in a named graph:
+// <ex:person1> <ex:name> "Alice" <ex:graph1> .
+// <ex:person2> <ex:name> "Bob" <ex:graph1> .
+// <ex:person1> <ex:name> "Charlie" .                  (default graph)
+
+const graphView = namedGraph(DataFactory.namedNode("https://example.org/graph1"), dataset, DataFactory)
+
+// graphView behaves as a DatasetCore containing only default graph quads:
+// <ex:person1> <ex:name> "Alice" .
+// <ex:person2> <ex:name> "Bob" .
+
+// Wrap it with your existing classes:
+class People extends DatasetWrapper {
+    get all() {
+        return this.subjectsOf("https://example.org/name", Person)
+    }
+}
+
+const people = new People(graphView, DataFactory)
+for (const person of people.all) {
+    console.log(person.name)
+}
+// outputs "Alice", "Bob"  (Charlie is excluded — different graph)
+```
+
+Writes through the view are mapped back to the named graph in the underlying dataset:
+
+```javascript
+// Adding a quad through the view stores it in the named graph
+graphView.add(DataFactory.quad(s, p, o))
+// Equivalent to: dataset.add(DataFactory.quad(s, p, o, DataFactory.namedNode("https://example.org/graph1")))
+```
+
+Any attempt to use a non-default graph on the returned `DatasetCore` throws a `NamedGraphError`:
+
+```javascript
+// These all throw NamedGraphError:
+graphView.add(DataFactory.quad(s, p, o, DataFactory.namedNode("https://other.org/g")))
+graphView.match(undefined, undefined, undefined, DataFactory.namedNode("https://other.org/g"))
+```
+
+
+## Background
+
 Practically, to map RDF to objects, you need to:
 1. Write a class or use an existing class that extends TermWrapper
 1. Each class needs a [Term](https://rdf.js.org/data-model-spec/#term-interface), a [Dataset](https://rdf.js.org/dataset-spec/#dataset-interface), and a [DataFactory](https://rdf.js.org/data-model-spec/#datafactory-interface) to be instantiated
