@@ -168,7 +168,7 @@ export namespace LiteralAs {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
-        ensureDatatype(term, XSD.anyUri)
+        ensureDatatype(term, XSD.anyURI)
 
         return new URL(term.value)
     }

@@ -11,7 +11,7 @@ import type { ILangString } from "../type/ILangString.js"
  */
 export namespace LiteralFrom {
     export function anyUriString(value: string, factory: DataFactory): Term {
-        return factory.literal(value, factory.namedNode(XSD.anyUri))
+        return factory.literal(value, factory.namedNode(XSD.anyURI))
     }
 
     export function anyUriUrl(value: URL, factory: DataFactory): Term {
