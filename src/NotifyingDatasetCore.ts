@@ -1,8 +1,12 @@
 import type { BaseQuad, DatasetCore, DatasetCoreFactory, Quad, Term } from "@rdfjs/types";
+import { listeners } from "cluster";
+
+export type ChangeEvent = 'add' | 'delete'
+export type Listener<InQuad extends BaseQuad = Quad> = (event: ChangeEvent, quad: InQuad) => void
 
 export interface NotifyingDatasetCore<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> extends DatasetCore<OutQuad, InQuad> {
-    on(event: 'add' | 'delete', listener: (quad: InQuad) => void): void;
-    off(event: 'add' | 'delete', listener: (quad: InQuad) => void): void;
+    on(listener: Listener<InQuad>): void;
+    off(listener: Listener<InQuad>): void;
     match(subject?: Term | null, predicate?: Term | null, object?: Term | null, graph?: Term | null): NotifyingDatasetCore<OutQuad, InQuad>;
 }
 
@@ -18,32 +22,36 @@ export interface NotifyingDatasetCoreFactory<OutQuad extends BaseQuad = Quad, In
     dataset(quads?: Iterable<InQuad>): D;
 }
 
+export class EE<Args extends any[]> {
+    public readonly listeners: Set<(...args: Args) => void> = new Set();
+
+    on(listener: (...args: Args) => void): void {
+        this.listeners.add(listener);
+    }
+
+    off(listener: (...args: Args) => void): void {
+        this.listeners.delete(listener);
+    }
+
+    emit(...args: Args): void {
+        for (const listener of this.listeners) {
+            listener(...args);
+        }
+    }
+}
+
 export class NotifyingDatasetCoreWrapper<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> implements NotifyingDatasetCore<OutQuad, InQuad> {
-    private callbacks: Map<'add' | 'delete', Array<(quad: InQuad) => void>> = new Map([
-        ['add', []],
-        ['delete', []],
-    ]);
+    private ee = new EE<[ChangeEvent, InQuad]>();
 
     constructor(private readonly dataset: DatasetCore<OutQuad, InQuad>) {
     }
 
-    on(event: 'add' | 'delete', listener: (quad: InQuad) => void): void {
-        if (event === 'add' || event === 'delete') {
-            this.callbacks.get(event)!.push(listener);
-        } else {
-            throw new Error(`Unsupported event type: ${event}`);
-        }
+    on(listener: Listener<InQuad>): void {
+        this.ee.on(listener);
     }
 
-    off(event: 'add' | 'delete', listener: (quad: InQuad) => void): void {
-        if (event === 'add' || event === 'delete') {
-            const listeners = this.callbacks.get(event);
-            if (listeners) {
-                this.callbacks.set(event, listeners.filter(cb => cb !== listener));
-            }
-        } else {
-            throw new Error(`Unsupported event type: ${event}`);
-        }
+    off(listener: Listener<InQuad>): void {
+        this.ee.off(listener);
     }
 
     get size(): number {
@@ -56,13 +64,13 @@ export class NotifyingDatasetCoreWrapper<OutQuad extends BaseQuad = Quad, InQuad
 
     add(quad: InQuad): this {
         this.dataset.add(quad);
-        this.callbacks.get('add')!.forEach(cb => cb(quad));
+        this.ee.emit('add', quad);
         return this;
     }
 
     delete(quad: InQuad): this {
         this.dataset.delete(quad);
-        this.callbacks.get('delete')!.forEach(cb => cb(quad));
+        this.ee.emit('delete', quad);
         return this;
     }
 

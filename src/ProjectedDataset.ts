@@ -1,32 +1,39 @@
-import type { DataFactory, DatasetCore, DatasetFactory, Quad, Quad_Graph, Term } from "@rdfjs/types"
-import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
-import { NotifyingDatasetCore, NotifyingDatasetCoreFactory } from "./NotifyingDatasetCore.js";
-import { LazyMaterializedNotifyingDatasetCore } from "./LazyMaterializedNotifyingDatasetCore.js";
+import type { DataFactory, DatasetCore, Quad, Quad_Graph, Term } from "@rdfjs/types"
+import { ensureDefaultGraph } from "./ensure.js"
+import { ChangeEvent, EE, NotifyingDatasetCore, NotifyingDatasetCoreFactory } from "./NotifyingDatasetCore.js"
+import { LazyMaterializedNotifyingDatasetCore } from "./LazyMaterializedNotifyingDatasetCore.js"
 
+/**
+ * A {@link NotifyingDatasetCore} whose quads are always exposed in the
+ * default graph. Returned by {@link ProjectedDatasetCoreWrapper.match}.
+ */
 export interface ProjectedDatasetCore extends NotifyingDatasetCore {
-    match(subject?: Term, predicate?: Term, object?: Term): ProjectedDatasetCore;
+    match(subject?: Term | null, predicate?: Term | null, object?: Term | null): ProjectedDatasetCore;
 }
 
 /**
- * A {@link DefaultDatasetCore} view over an underlying {@link DatasetCore} that
+ * A {@link NotifyingDatasetCore} view over an underlying dataset that
  * projects quads from one or more named graphs onto the default graph.
  *
- * - Reads come from the configured set of read graphs. If `readGraphs` is
+ * - Reads come from the configured set of `readGraphs`. If `readGraphs` is
  *   `undefined`, quads from every graph (default and named) are read and the
  *   same triple appearing in multiple graphs is yielded only once.
- * - Writes ({@link ProjectedDataset.add}, {@link ProjectedDataset.delete}) are
- *   mapped onto the configured `writeGraph` in the underlying dataset. Any
- *   attempt to add/delete/has a quad whose graph is not the default graph
- *   throws a {@link NamedGraphError}.
- * - {@link ProjectedDataset.match} only accepts the default graph (or no
- *   graph) as the graph argument; otherwise a {@link TermTypeError} is thrown.
+ * - Writes ({@link ProjectedDatasetCoreWrapper.add},
+ *   {@link ProjectedDatasetCoreWrapper.delete}) are mapped onto the configured
+ *   `writeGraph` in the underlying dataset. Any attempt to add/delete/has a
+ *   quad whose graph is not the default graph throws a `NamedGraphError`.
+ * - {@link ProjectedDatasetCoreWrapper.match} ignores any graph argument and
+ *   always returns quads in the default graph.
+ * - `add` and `delete` listeners attached via
+ *   {@link ProjectedDatasetCoreWrapper.on} are invoked with default-graph
+ *   quads, and only when the projected view actually changes (a triple
+ *   appearing in several read graphs is reported as added once and as
+ *   deleted only once the last copy is removed).
  */
 export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore {
-    private listeners: Map<'add' | 'delete', Array<(quad: Quad) => void>> = new Map([
-        ['add', []],
-        ['delete', []],
-    ]);
+    private readonly ee = new EE<[ChangeEvent, Quad]>()
 
+    private _dataset: DatasetCore | null = null
 
     public constructor(
         private readonly writeGraph: Quad_Graph,
@@ -37,8 +44,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore {
     ) {
     }
 
-    private _dataset: DatasetCore | null = null;
-
+    /** Lazily-materialized snapshot of the projected view. */
     private get dataset(): DatasetCore {
         if (this._dataset === null) {
             this._dataset = this.match()
@@ -54,123 +60,113 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore {
         return this.dataset[Symbol.iterator]()
     }
 
+    /**
+     * Adds `quad` to the underlying dataset, rewriting its graph to
+     * `writeGraph`. Throws if `quad` is not in the default graph.
+     */
     public add(quad: Quad): this {
         ensureDefaultGraph(quad)
         this.source.add(this.factory.quad(quad.subject, quad.predicate, quad.object, this.writeGraph))
         return this
     }
 
+    /**
+     * Removes `quad` from the underlying dataset, rewriting its graph to
+     * `writeGraph`. Throws if `quad` is not in the default graph.
+     */
     public delete(quad: Quad): this {
         ensureDefaultGraph(quad)
         this.source.delete(this.factory.quad(quad.subject, quad.predicate, quad.object, this.writeGraph))
         return this
     }
 
+    /**
+     * Returns whether the projected view contains `quad`. Throws if `quad`
+     * is not in the default graph.
+     */
     public has(quad: Quad): boolean {
         ensureDefaultGraph(quad)
         return this.dataset.has(this.factory.quad(quad.subject, quad.predicate, quad.object))
     }
 
-    public match(subject?: Term, predicate?: Term, object?: Term): ProjectedDatasetCore {
-        return new LazyMaterializedNotifyingDatasetCore<Quad>(this.matchInSourceAsDefault(subject, predicate, object), this.datasetFactory)
+    /**
+     * Returns a {@link ProjectedDatasetCore} containing the matching quads
+     * projected onto the default graph.
+     */
+    public match(subject?: Term | null, predicate?: Term | null, object?: Term | null): ProjectedDatasetCore {
+        return new LazyMaterializedNotifyingDatasetCore<Quad>(
+            this.matchInSourceAsDefault(subject, predicate, object),
+            this.datasetFactory,
+        )
     }
 
-    private *matchInSource(subject?: Term, predicate?: Term, object?: Term): Iterable<Quad> {
+    /** Yields source quads matching the pattern across every read graph. */
+    private *matchInSource(subject?: Term | null, predicate?: Term | null, object?: Term | null): Iterable<Quad> {
         if (this.readGraphs === undefined) {
-            return this.source.match(subject, predicate, object)
+            yield* this.source.match(subject, predicate, object)
+            return
         }
         for (const g of this.readGraphs) {
             yield* this.source.match(subject, predicate, object, g)
         }
     }
 
-    private *matchInSourceAsDefault(subject?: Term, predicate?: Term, object?: Term): Iterable<Quad> {
+    /** Like {@link matchInSource}, but rewrites every quad's graph to the default graph. */
+    private *matchInSourceAsDefault(subject?: Term | null, predicate?: Term | null, object?: Term | null): Iterable<Quad> {
         for (const q of this.matchInSource(subject, predicate, object)) {
             yield this.factory.quad(q.subject, q.predicate, q.object)
         }
     }
 
-    public on(name: 'add' | 'delete', listener: (quad: Quad) => void): void {
-        const listeners = this.listeners.get(name)!
+    /** Returns true when `graph` is one of the projection's read graphs. */
+    private isReadGraph(graph: Quad_Graph): boolean {
+        return this.readGraphs === undefined || this.readGraphs.some(g => g.equals(graph))
+    }
 
-        if (listeners.length === 0) {
-            if (name === 'add') {
-                this.source.on('add', this.onAdd)
-            } else {
-                this.source.on('delete', this.onDelete)
+    /**
+     * Returns true when the same triple as `quad` is present in the source in
+     * any read graph other than `quad.graph`. Used to determine whether an
+     * `add`/`delete` event in one read graph actually changes the projected
+     * view (which collapses all read graphs onto the default graph).
+     */
+    private existsInOtherReadGraph(quad: Quad): boolean {
+        if (this.readGraphs === undefined) {
+            for (const { graph } of this.source.match(quad.subject, quad.predicate, quad.object)) {
+                if (!graph.equals(quad.graph)) {
+                    return true
+                }
             }
+            return false
         }
 
-        if (!listeners.includes(listener)) {
-            listeners.push(listener)
+        for (const graph of this.readGraphs) {
+            if (graph.equals(quad.graph)) {
+                continue
+            }
+            if (this.source.has(this.factory.quad(quad.subject, quad.predicate, quad.object, graph))) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private readonly cb = (event: ChangeEvent, quad: Quad): void => {
+        if (this.isReadGraph(quad.graph) && !this.existsInOtherReadGraph(quad)) {
+            this.ee.emit(event, this.factory.quad(quad.subject, quad.predicate, quad.object))
         }
     }
 
-    public off(name: 'add' | 'delete', listener: (quad: Quad) => void): void {
-        const listeners = this.listeners.get(name)!
-        listeners.splice(listeners.indexOf(listener), 1)
-
-        if (listeners.length === 0) {
-            if (name === 'add') {
-                this.source.off('add', this.onAdd)
-            } else {
-                this.source.off('delete', this.onDelete)
-            }
+    public on(listener: (event: ChangeEvent, quad: Quad) => void): void {
+        if (this.ee.listeners.size === 0) {
+            this.source.on(this.cb)
         }
+        this.ee.on(listener)
     }
 
-    private onAdd(quad: Quad): void {
-        const listeners = this.listeners.get('add')
-
-        // First make sure the addition is taking place on one of the graphs we are projecting from
-        if (listeners && (this.readGraphs === undefined || this.readGraphs.some(g => g.equals(quad.graph)))) {
-            const dfQuad = this.factory.quad(quad.subject, quad.predicate, quad.object)
-
-            // Now make sure that the quad didn't already exist in the projected view via a different graph
-            if (this.readGraphs === undefined) {
-                for (const { graph } of this.source.match(quad.subject, quad.predicate, quad.object)) {
-                    if (!graph.equals(quad.graph)) {
-                        return
-                    }
-                }
-            } else {
-                for (const graph of this.readGraphs) {
-                    if (!graph.equals(quad.graph) && this.source.has(this.factory.quad(quad.subject, quad.predicate, quad.object, graph))) {
-                        return
-                    }
-                }
-            }
-
-            listeners.forEach(cb => cb(dfQuad))
-        }
-    }
-
-    private onDelete(quad: Quad): void {
-        const listeners = this.listeners.get('delete')
-
-        if (listeners && (this.readGraphs === undefined || this.readGraphs.some(g => g.equals(quad.graph)))) {
-            const dfQuad = this.factory.quad(quad.subject, quad.predicate, quad.object)
-
-            // Now make sure that the quad doesn't still exist in the projected view via a different graph
-            if (this.readGraphs === undefined) {
-                for (const { graph } of this.source.match(quad.subject, quad.predicate, quad.object)) {
-                    if (!graph.equals(quad.graph)) {
-                        return
-                    }
-                }
-            } else {
-                for (const graph of this.readGraphs) {
-                    if (!graph.equals(quad.graph) && this.source.has(this.factory.quad(quad.subject, quad.predicate, quad.object, graph))) {
-                        return
-                    }
-                }
-            }
-
-            // Make sure the quad has actually been deleted from the projected view
-            // it is possible that this may not be the case if the quad exists in multiple read graphs
-            if (!this.dataset.has(dfQuad)) {
-                listeners.forEach(cb => cb(dfQuad))
-            }
+    public off(listener: (event: ChangeEvent, quad: Quad) => void): void {
+        this.ee.off(listener)
+        if (this.ee.listeners.size === 0) {
+            this.source.off(this.cb)
         }
     }
 }
