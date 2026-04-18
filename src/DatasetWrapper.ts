@@ -5,6 +5,8 @@ import type { IGraphScopedDatasetConstructor } from "./type/IGraphScopedDatasetC
 
 import { RDF } from "./vocabulary/RDF.js"
 import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
+import { off } from "node:cluster"
+import { ensureNotifyingDatasetCore, NotifyingDatasetCore } from "./NotifyingDatasetCore.js"
 
 const defaultGraph: Term = Object.freeze({
     termType: "DefaultGraph",
@@ -12,19 +14,21 @@ const defaultGraph: Term = Object.freeze({
     equals: (other: Term | null | undefined) => other?.termType === "DefaultGraph" && other.value === ""
 });
 
-export interface DefaultDatasetCore extends DatasetCore {
-    match(subject?: Term, predicate?: Term, object?: Term): DefaultDatasetCore
+export interface DefaultDatasetCore extends DatasetCore, NotifyingDatasetCore {
+    match(subject?: Term, predicate?: Term, object?: Term): DefaultDatasetCore;
 }
 
 export class DatasetWrapper implements DefaultDatasetCore {
     //#region DatasetCore
 
+    private readonly dataset: NotifyingDatasetCore
+
     public constructor(
-        private readonly dataset: DatasetCore,
+        dataset: DatasetCore,
         protected readonly factory: DataFactory,
         protected readonly datasetFactory: DatasetFactory,
-        
     ) {
+        this.dataset = ensureNotifyingDatasetCore(dataset)
     }
 
     public get size(): number {
@@ -56,6 +60,14 @@ export class DatasetWrapper implements DefaultDatasetCore {
 
     public match(subject?: Term, predicate?: Term, object?: Term): DefaultDatasetCore {
         return this.dataset.match(subject, predicate, object, defaultGraph)
+    }
+
+    public on(...args: Parameters<NotifyingDatasetCore["on"]>): void {
+        this.dataset.on(...args)
+    }
+
+    public off(...args: Parameters<NotifyingDatasetCore["off"]>): void {
+        this.dataset.off(...args)
     }
 
     //#endregion

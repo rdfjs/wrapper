@@ -1,6 +1,11 @@
 import type { DataFactory, DatasetCore, DatasetFactory, Quad, Quad_Graph, Term } from "@rdfjs/types"
-import type { DefaultDatasetCore } from "./DatasetWrapper.js"
 import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
+import { NotifyingDatasetCore } from "./NotifyingDatasetCore.js";
+import { LazyMaterialize } from "./LazyMaterialize.js";
+
+export interface ProjectedDatasetCore extends NotifyingDatasetCore {
+    match(subject?: Term, predicate?: Term, object?: Term): ProjectedDatasetCore;
+}
 
 /**
  * A {@link DefaultDatasetCore} view over an underlying {@link DatasetCore} that
@@ -16,11 +21,11 @@ import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
  * - {@link ProjectedDataset.match} only accepts the default graph (or no
  *   graph) as the graph argument; otherwise a {@link TermTypeError} is thrown.
  */
-export class ProjectedDataset implements DefaultDatasetCore {
+export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore {
     public constructor(
         private readonly writeGraph: Quad_Graph,
         private readonly readGraphs: ReadonlyArray<Quad_Graph> | undefined,
-        private readonly source: DatasetCore,
+        private readonly source: NotifyingDatasetCore,
         private readonly factory: DataFactory,
         private readonly datasetFactory: DatasetFactory,
     ) {
@@ -45,18 +50,12 @@ export class ProjectedDataset implements DefaultDatasetCore {
 
     public add(quad: Quad): this {
         ensureDefaultGraph(quad)
-        if (this._dataset) {
-            this._dataset.add(quad)
-        }
         this.source.add(this.factory.quad(quad.subject, quad.predicate, quad.object, this.writeGraph))
         return this
     }
 
     public delete(quad: Quad): this {
         ensureDefaultGraph(quad)
-        if (this._dataset) {
-            this._dataset.delete(quad)
-        }
         this.source.delete(this.factory.quad(quad.subject, quad.predicate, quad.object, this.writeGraph))
         return this
     }
@@ -66,7 +65,7 @@ export class ProjectedDataset implements DefaultDatasetCore {
         return this.dataset.has(this.factory.quad(quad.subject, quad.predicate, quad.object))
     }
 
-    public match(subject?: Term, predicate?: Term, object?: Term): DefaultDatasetCore {
+    public match(subject?: Term, predicate?: Term, object?: Term): ProjectedDatasetCore {
         return new LazyMaterialize(this.matchInSourceAsDefault(subject, predicate, object), this.datasetFactory)
     }
 
@@ -86,61 +85,4 @@ export class ProjectedDataset implements DefaultDatasetCore {
     }
 }
 
-export class LazyMaterialize implements DatasetCore {
-    private materialized: DatasetCore | null = null
 
-    public constructor(private readonly source: Iterable<Quad>, private readonly datasetFactory: DatasetFactory) {
-    }
-
-    private get dataset(): DatasetCore {
-        if (this.materialized === null) {
-            this.materialized = this.datasetFactory.dataset()
-            for (const q of this.source) {
-                this.materialized.add(q)
-            }
-        }
-        return this.materialized
-    }
-
-    [Symbol.iterator](): Iterator<Quad> {
-        if (this.materialized) {
-            return this.materialized[Symbol.iterator]()
-        }
-        return this.source[Symbol.iterator]()
-    }
-
-    get size(): number {
-        if (this.materialized) {
-            return this.materialized.size
-        }
-        let count = 0
-        for (const _ of this.source) count++
-        return count
-    }
-
-    add(quad: Quad): this {
-        this.dataset.add(quad)
-        return this
-    }
-
-    delete(quad: Quad): this {
-        this.dataset.delete(quad)
-        return this
-    }
-
-    has(quad: Quad): boolean {
-        if (this.materialized) {
-            return this.materialized.has(quad)
-        }
-        for (const q of this.source) {
-            if (q.equals(quad)) {
-                return true
-            }
-        }
-        return false
-    }
-
-    match(subject?: Term, predicate?: Term, object?: Term): DefaultDatasetCore {
-        return this.dataset.match(subject, predicate, object)
-    }
-}
