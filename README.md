@@ -169,6 +169,102 @@ console.log(person2.mum.mum.name)
 // outputs "Joanne"
 ```
 
+### Managing Language Tags
+
+RDF includes a special attribute for string literals called a [language tag](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal). Language tags let developers provide string values for many different translations. This library provides `LanguagePreferences` to declaratively control which translations are read and written.
+
+A language preference is an ordered list of [IETF language tags](https://en.wikipedia.org/wiki/IETF_language_tag) plus the special tags `@none` (matches strings without a language tag) and `@other` (matches any language not explicitly listed).
+
+- **Read** operations return the value matching the highest-priority preference.
+- **Write** operations use the first non-`@other` preference as the language tag.
+
+#### Singular properties
+
+```javascript
+import { LanguagePreferences, RequiredFrom, RequiredAs, TermWrapper } from "@rdfjs/wrapper"
+
+class Hospital extends TermWrapper {
+	languages = new LanguagePreferences("es", "ko", "@none")
+
+	get label() {
+		return RequiredFrom.subjectPredicateByLanguage(this, "http://www.w3.org/2000/01/rdf-schema#label", this.languages)
+	}
+
+	set label(value) {
+		RequiredAs.objectByLanguage(this, "http://www.w3.org/2000/01/rdf-schema#label", value, this.languages)
+	}
+}
+```
+
+Assuming the following RDF has been loaded in a dataset `dataset`:
+
+```turtle
+PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+
+<hospital>
+	rdfs:label "Hospital" ;
+	rdfs:label "Hôpital"@fr ;
+	rdfs:label "병원"@ko .
+```
+
+Class usage:
+
+```javascript
+const hospital = new Hospital("hospital", dataset, DataFactory)
+
+// No Spanish label, so falls through to Korean
+console.log(hospital.label)
+// outputs "병원"
+
+// Writing adds a Spanish label (first preference)
+hospital.label = "Hospital Español"
+console.log(hospital.label)
+// outputs "Hospital Español"
+```
+
+#### Set properties
+
+```javascript
+import { LanguagePreferences, SetFrom, TermWrapper } from "@rdfjs/wrapper"
+
+class Hospital extends TermWrapper {
+	languages = new LanguagePreferences("fr", "ko", "@none")
+
+	get descriptions() {
+		return SetFrom.subjectPredicateByLanguage(this, "http://www.w3.org/2000/01/rdf-schema#description", this.languages)
+	}
+}
+```
+
+```javascript
+const hospital = new Hospital("hospital", dataset, DataFactory)
+
+// Returns French descriptions (highest-priority match)
+console.log(hospital.descriptions.size)
+// outputs 2
+
+for (const desc of hospital.descriptions) {
+	console.log(desc)
+}
+// outputs "Guérit les malades"
+// outputs "A des médecins"
+```
+
+#### Inspecting all translations
+
+The `languagesOf` function returns all language-tagged string values for a predicate, grouped by language tag:
+
+```javascript
+import { languagesOf } from "@rdfjs/wrapper"
+
+const langs = languagesOf(hospital, "http://www.w3.org/2000/01/rdf-schema#label")
+// Map { "@none" => ["Hospital"], "fr" => ["Hôpital"], "ko" => ["병원"] }
+```
+
+#### Optional properties
+
+`OptionalFrom.subjectPredicateByLanguage` and `OptionalAs.objectByLanguage` work the same way but return `undefined` when no match is found and remove all language-tagged quads when set to `undefined`.
+
 
 ## Background
 

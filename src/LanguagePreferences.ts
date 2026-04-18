@@ -12,7 +12,7 @@ import { XSD } from "./vocabulary/XSD.js"
  *
  * Valid preference values include:
  * - Any {@link https://en.wikipedia.org/wiki/IETF_language_tag | IETF language tag} (e.g., `"en"`, `"fr"`, `"ko"`)
- * - `"@none"` — matches literals with `rdf:langString` datatype but no language tag
+ * - `"@none"` — matches string literals that have no language tag (plain `xsd:string` or `rdf:langString` without a tag)
  * - `"@other"` — matches any language not explicitly listed in the preferences
  *
  * For read operations, literals are searched in preference order and the first
