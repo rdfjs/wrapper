@@ -1,9 +1,21 @@
-import type { BaseQuad, DatasetCore, Quad, Term } from "@rdfjs/types";
+import type { BaseQuad, DatasetCore, DatasetCoreFactory, Quad, Term } from "@rdfjs/types";
 
 export interface NotifyingDatasetCore<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> extends DatasetCore<OutQuad, InQuad> {
     on(event: 'add' | 'delete', listener: (quad: InQuad) => void): void;
     off(event: 'add' | 'delete', listener: (quad: InQuad) => void): void;
     match(subject?: Term | null, predicate?: Term | null, object?: Term | null, graph?: Term | null): NotifyingDatasetCore<OutQuad, InQuad>;
+}
+
+export interface IterableDatasetCoreFactory<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad, D extends DatasetCore<OutQuad, InQuad> = DatasetCore<OutQuad, InQuad>>
+    extends DatasetCoreFactory<OutQuad, InQuad, D> {
+
+        dataset(quads?: Iterable<InQuad>): D;
+}
+
+export interface NotifyingDatasetCoreFactory<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad, D extends DatasetCore<OutQuad, InQuad> = NotifyingDatasetCore<OutQuad, InQuad>>
+    extends IterableDatasetCoreFactory<OutQuad, InQuad, D> {
+
+    dataset(quads?: Iterable<InQuad>): D;
 }
 
 export class NotifyingDatasetCoreWrapper<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> implements NotifyingDatasetCore<OutQuad, InQuad> {
@@ -38,8 +50,8 @@ export class NotifyingDatasetCoreWrapper<OutQuad extends BaseQuad = Quad, InQuad
         return this.dataset.size;
     }
 
-    public *[Symbol.iterator](): Iterator<OutQuad> {
-        yield* this.dataset;
+    public [Symbol.iterator](): Iterator<OutQuad> {
+        return this.dataset[Symbol.iterator]();
     }
 
     add(quad: InQuad): this {

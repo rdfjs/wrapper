@@ -1,5 +1,4 @@
-import type { Quad, DatasetCoreFactory, Term, DatasetCore, BaseQuad } from "@rdfjs/types";
-import type { DefaultDatasetCore } from "./DatasetWrapper.js";
+import type { BaseQuad, Quad, Term } from "@rdfjs/types";
 import { IterableDatasetCoreFactory, NotifyingDatasetCore } from "./NotifyingDatasetCore.js";
 
 /**
@@ -37,27 +36,6 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
 
     }
 
-    private init(ds: NotifyingDatasetCore<IQuad, IQuad>): void {
-        const onAdd = (q: IQuad): void => { ds.add(q); };
-        const onDelete = (q: IQuad): void => { ds.delete(q); };
-        this.onAdd = onAdd;
-        this.onDelete = onDelete;
-        ds.on('add', onAdd);
-        ds.on('delete', onDelete);
-
-        // Register a best-effort finalizer. The cleanup closure only
-        // references `ds` and the local handlers - never `this` -
-        // so the wrapper remains eligible for garbage collection.
-        lazyMaterializedFinalizers.register(
-            this,
-            () => {
-                ds.off('add', onAdd);
-                ds.off('delete', onDelete);
-            },
-            this.finalizerToken,
-        );
-    }
-
     private get dataset(): NotifyingDatasetCore<IQuad, IQuad> {
         if (this.materialized === undefined) {
             // Capture `ds` locally so the listener closures do not close over `this`.
@@ -67,7 +45,24 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
                 ds.add(q);
             }
             this.materialized = ds;
-            this.init(ds);
+            const onAdd = (q: IQuad): void => { ds.add(q); };
+            const onDelete = (q: IQuad): void => { ds.delete(q); };
+            this.onAdd = onAdd;
+            this.onDelete = onDelete;
+            ds.on('add', onAdd);
+            ds.on('delete', onDelete);
+
+            // Register a best-effort finalizer. The cleanup closure only
+            // references `ds` and the local handlers - never `this` -
+            // so the wrapper remains eligible for garbage collection.
+            lazyMaterializedFinalizers.register(
+                this,
+                () => {
+                    ds.off('add', onAdd);
+                    ds.off('delete', onDelete);
+                },
+                this.finalizerToken,
+            );
         }
         return this.materialized;
     }
@@ -101,21 +96,11 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
         this.materialized = undefined;
     }
 
-    public *[Symbol.iterator](): Iterator<IQuad> {
-        // If already materialized, delegate to the dataset's iterator.
+    [Symbol.iterator](): Iterator<IQuad> {
         if (this.materialized) {
             return this.materialized[Symbol.iterator]();
         }
-
-        const materialized = this.datasetFactory.dataset();
-        for (const q of this.source) {
-            if (!materialized.has(q)) {
-                yield q;
-                materialized.add(q);
-            }
-        }
-
-        this.init(materialized);
+        return this.source[Symbol.iterator]();
     }
 
     get size(): number {
