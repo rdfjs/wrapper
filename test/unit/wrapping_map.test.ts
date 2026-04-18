@@ -1,12 +1,12 @@
 import { describe, it } from "node:test"
-import { LiteralAs, LiteralFrom, Mapping, TermWrapper } from "@rdfjs/wrapper"
+import { Mapping, TermWrapper } from "@rdfjs/wrapper"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import assert from "node:assert"
 
 class Wrapper extends TermWrapper {
     public get dict(): Map<string, string> {
-        return Mapping.languageDictionary(this, "p", LiteralAs.langTuple, LiteralFrom.langTuple)
+        return Mapping.languageDictionary(this, "p")
     }
 }
 
