@@ -4,7 +4,7 @@ import { DataFactory } from "n3"
 import { Parent } from "./model/Parent.js"
 import { ParentDataset } from "./model/ParentDataset.js"
 import { Example } from "./vocabulary/Example.js"
-import { DatasetWrapper, NamedGraphDataset } from "@rdfjs/wrapper"
+import { DatasetWrapper, GraphScopedDataset } from "@rdfjs/wrapper"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 
 const rdf = `
@@ -25,11 +25,11 @@ PREFIX : <https://example.org/>
 
 class SomeDataset extends DatasetWrapper {
     get namedGraph(): SomeNamedDataset {
-        return this.named("https://example.org/graph", SomeNamedDataset)
+        return this.scoped("https://example.org/graph", ["https://example.org/graph"], SomeNamedDataset)
     }
 }
 
-class SomeNamedDataset extends NamedGraphDataset {
+class SomeNamedDataset extends GraphScopedDataset {
     get parents(): Iterable<Parent> {
         return this.subjectsOf("https://example.org/hasString", Parent)
     }

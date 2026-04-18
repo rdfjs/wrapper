@@ -1,7 +1,7 @@
 import assert from "node:assert"
 import { describe, it } from "node:test"
 import { DataFactory, Store } from "n3"
-import { DatasetWrapper, NamedGraphDataset, NamedGraphError, TermTypeError } from "@rdfjs/wrapper"
+import { DatasetWrapper, GraphScopedDataset, NamedGraphError, TermTypeError } from "@rdfjs/wrapper"
 
 const graph = DataFactory.namedNode("https://example.org/graph")
 const s = DataFactory.namedNode("https://example.org/s")
@@ -16,8 +16,8 @@ function storeWithNamedGraph(): Store {
 }
 
 class SomeDataset extends DatasetWrapper {
-    get namedGraph(): NamedGraphDataset {
-        return this.named(graph, NamedGraphDataset)
+    get namedGraph(): GraphScopedDataset {
+        return this.scoped(graph, [graph], GraphScopedDataset)
     }
 }
 
