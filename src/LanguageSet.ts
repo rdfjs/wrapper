@@ -10,7 +10,7 @@ import { isStringLiteralQuad } from "./isStringLiteralQuad.js"
  * - Reading (iteration, `has`, `size`) returns only values matching the highest-priority language preference that has at least one match.
  * - Adding values creates literals tagged with the {@link LanguagePreferences.writeLanguage | write language}.
  * - Deleting values removes quads from the currently visible (best-matching) language.
- * - Clearing removes all `rdf:langString` quads for the predicate regardless of language.
+ * - Clearing removes all string-literal quads for the predicate, including both `rdf:langString` and `xsd:string`, regardless of language.
  */
 export class LanguageSet implements Set<string> {
     constructor(
@@ -37,21 +37,20 @@ export class LanguageSet implements Set<string> {
     }
 
     delete(value: string): boolean {
-        const p = this.subject.factory.namedNode(this.predicate)
-
-        for (const literal of this.bestMatchLiterals) {
-            if (literal.value === value) {
-                const q = this.subject.factory.quad(
-                    this.subject as Quad_Subject,
-                    p,
-                    literal
-                )
-                this.subject.dataset.delete(q)
-                return true
-            }
+        const matchingLiterals = this.bestMatchLiterals.filter((literal) => literal.value === value)
+        if (matchingLiterals.length === 0) {
+            return false
         }
 
-        return false
+        const matchingQuads = Array.from(this.allLangStringQuads).filter(
+            (q) => q.object.termType === "Literal" && matchingLiterals.some((literal) => literal.equals(q.object))
+        )
+
+        for (const q of matchingQuads) {
+            this.subject.dataset.delete(q)
+        }
+
+        return matchingQuads.length > 0
     }
 
     forEach(cb: (item: string, index: string, set: Set<string>) => void, thisArg?: any): void {

@@ -11,7 +11,7 @@ import { isStringLiteralQuad } from "./isStringLiteralQuad.js"
  *
  * Valid preference values include:
  * - Any {@link https://en.wikipedia.org/wiki/IETF_language_tag | IETF language tag} (e.g., `"en"`, `"fr"`, `"ko"`)
- * - `"@none"` — matches string literals that have no language tag (plain `xsd:string` or `rdf:langString` without a tag)
+ * - `"@none"` — matches string literals that have no language tag (plain `xsd:string`)
  * - `"@other"` — matches any language not explicitly listed in the preferences
  *
  * For read operations, literals are searched in preference order and the first

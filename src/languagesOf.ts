@@ -3,12 +3,13 @@ import { TermWrapper } from "./TermWrapper.js"
 import { isStringLiteralQuad } from "./isStringLiteralQuad.js"
 
 /**
- * Returns a snapshot of all language-tagged string values for a given predicate,
+ * Returns a snapshot of all string-literal values for a given predicate,
  * grouped by language tag.
  *
  * @remarks
- * Only considers literals with datatype `rdf:langString`. Literals without a
- * language tag are grouped under the key `"@none"`.
+ * Considers literals with datatype `rdf:langString` (language-tagged strings)
+ * as well as plain `xsd:string` literals. Literals without a language tag
+ * (i.e. `xsd:string`) are grouped under the key `"@none"`.
  *
  * The returned map is a snapshot and is not backed by the dataset. Modifications
  * to the map will not affect the underlying RDF data.
@@ -20,7 +21,7 @@ import { isStringLiteralQuad } from "./isStringLiteralQuad.js"
  * @example
  * Given the following RDF data:
  * ```turtle
- * <x> rdfs:label "Hospital"^^rdf:langString ;
+ * <x> rdfs:label "Hospital" ;
  *     rdfs:label "Hôpital"@fr ;
  *     rdfs:label "병원"@ko .
  * ```

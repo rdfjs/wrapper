@@ -34,7 +34,7 @@ export namespace RequiredFrom {
      * @param p - The predicate IRI.
      * @param preferences - The language preferences to use for selection.
      * @returns The string value of the best-matching literal.
-     * @throws If no `rdf:langString` literal matches any of the preferences.
+     * @throws If no `rdf:langString` or `xsd:string` literal matches any of the preferences.
      */
     export function subjectPredicateByLanguage(anchor: TermWrapper, p: string, preferences: LanguagePreferences): string {
         const best = OptionalFrom.subjectPredicateByLanguage(anchor, p, preferences)

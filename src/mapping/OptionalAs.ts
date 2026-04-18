@@ -43,16 +43,17 @@ export namespace OptionalAs {
     }
 
     /**
-     * Writes an optional string value as a language-tagged literal, using the write language from the given preferences.
+     * Writes an optional string value as a string literal, using the write language from the given preferences when present.
      *
      * @remarks
      * When `value` is defined, only quads matching the {@link LanguagePreferences.writeLanguage | write language} are
-     * replaced, preserving other translations. When `value` is `undefined`, all `rdf:langString` quads for the
-     * predicate are removed.
+     * replaced, preserving other translations. Matching literals with datatype `rdf:langString` or `xsd:string` are
+     * considered replaceable for that write language. When `value` is `undefined`, all string literals for the
+     * predicate are removed, including both `rdf:langString` and `xsd:string` literals.
      *
      * @param anchor - The subject term wrapper.
      * @param p - The predicate IRI.
-     * @param value - The string value to write, or `undefined` to remove.
+     * @param value - The string value to write, or `undefined` to remove both language-tagged and plain string literals for the predicate.
      * @param preferences - The language preferences to use for the write language.
      */
     export function objectByLanguage(anchor: TermWrapper, p: string, value: string | undefined, preferences: LanguagePreferences) {

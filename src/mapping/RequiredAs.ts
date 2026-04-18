@@ -13,7 +13,8 @@ export namespace RequiredAs {
     }
 
     /**
-     * Writes a required string value as a language-tagged literal, using the write language from the given preferences.
+     * Writes a required string value using the write language from the given preferences, as either a
+     * language-tagged literal or an untagged string literal when the resolved write language is empty.
      *
      * @param anchor - The subject term wrapper.
      * @param p - The predicate IRI.

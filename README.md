@@ -263,7 +263,9 @@ const langs = languagesOf(hospital, "http://www.w3.org/2000/01/rdf-schema#label"
 
 #### Optional properties
 
-`OptionalFrom.subjectPredicateByLanguage` and `OptionalAs.objectByLanguage` work the same way but return `undefined` when no match is found and remove all language-tagged quads when set to `undefined`.
+`OptionalFrom.subjectPredicateByLanguage` and `OptionalAs.objectByLanguage` both return `undefined` when no match is found.
+
+When set to `undefined`, `OptionalFrom.subjectPredicateByLanguage` removes language-tagged quads for that predicate. `OptionalAs.objectByLanguage` is broader: it removes both language-tagged literals and plain string literals (for example `@none` / `xsd:string` values). Take care when clearing an `OptionalAs.objectByLanguage` value, as this can also remove untagged string values.
 
 
 ## Background
