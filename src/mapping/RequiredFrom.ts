@@ -1,3 +1,4 @@
+import { OptionalFrom } from "./OptionalFrom.js"
 import { TermWrapper } from "../TermWrapper.js"
 import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
 import type { Term } from "@rdfjs/types"
@@ -36,14 +37,12 @@ export namespace RequiredFrom {
      * @throws If no `rdf:langString` literal matches any of the preferences.
      */
     export function subjectPredicateByLanguage(anchor: TermWrapper, p: string, preferences: LanguagePreferences): string {
-        const predicate = anchor.factory.namedNode(p)
-        const matches = anchor.dataset.match(anchor as Term, predicate)
-        const best = preferences.selectBest(matches)
+        const best = OptionalFrom.subjectPredicateByLanguage(anchor, p, preferences)
 
         if (best === undefined) {
             throw new Error(`No value found for predicate ${p} on term ${anchor.value} matching language preferences`)
         }
 
-        return best.value
+        return best
     }
 }

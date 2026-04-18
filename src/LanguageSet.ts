@@ -1,8 +1,7 @@
 import type { Literal, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import { TermWrapper } from "./TermWrapper.js"
 import type { LanguagePreferences } from "./LanguagePreferences.js"
-import { RDF } from "./vocabulary/RDF.js"
-import { XSD } from "./vocabulary/XSD.js"
+import { isStringLiteralQuad } from "./isStringLiteralQuad.js"
 
 /**
  * A {@link Set} of strings backed by language-tagged RDF literals in a dataset, filtered by {@link LanguagePreferences}.
@@ -30,13 +29,9 @@ export class LanguageSet implements Set<string> {
     }
 
     clear(): void {
-        const p = this.subject.factory.namedNode(this.predicate)
-        for (const q of this.subject.dataset.match(this.subject as Term, p)) {
-            if (q.object.termType === "Literal") {
-                const dt = (q.object as Literal).datatype.value
-                if (dt === RDF.langString || dt === XSD.string) {
-                    this.subject.dataset.delete(q)
-                }
+        for (const q of this.allLangStringQuads) {
+            if (isStringLiteralQuad(q)) {
+                this.subject.dataset.delete(q)
             }
         }
     }
@@ -49,7 +44,7 @@ export class LanguageSet implements Set<string> {
                 const q = this.subject.factory.quad(
                     this.subject as Quad_Subject,
                     p,
-                    literal as Quad_Object
+                    literal
                 )
                 this.subject.dataset.delete(q)
                 return true
@@ -103,7 +98,7 @@ export class LanguageSet implements Set<string> {
     }
 
     private get bestMatchLiterals(): Literal[] {
-        return this.preferences.filterBest(this.allLangStringQuads)
+        return [...this.preferences.filterBest(this.allLangStringQuads)]
     }
 
     private get allLangStringQuads() {
@@ -114,8 +109,8 @@ export class LanguageSet implements Set<string> {
     private createLangLiteral(value: string): Quad_Object {
         const language = this.preferences.writeLanguage
         if (language === "") {
-            return this.subject.factory.literal(value) as Quad_Object
+            return this.subject.factory.literal(value)
         }
-        return this.subject.factory.literal(value, language) as Quad_Object
+        return this.subject.factory.literal(value, language)
     }
 }

@@ -1,7 +1,6 @@
-import type { Literal, Term } from "@rdfjs/types"
+import type { Term } from "@rdfjs/types"
 import { TermWrapper } from "./TermWrapper.js"
-import { RDF } from "./vocabulary/RDF.js"
-import { XSD } from "./vocabulary/XSD.js"
+import { isStringLiteralQuad } from "./isStringLiteralQuad.js"
 
 /**
  * Returns a snapshot of all language-tagged string values for a given predicate,
@@ -36,12 +35,9 @@ export function languagesOf(anchor: TermWrapper, p: string): Map<string, string[
     const result = new Map<string, string[]>()
 
     for (const q of anchor.dataset.match(anchor as Term, predicate)) {
-        if (q.object.termType !== "Literal") continue
+        if (!isStringLiteralQuad(q)) continue
 
-        const literal = q.object as Literal
-        const dt = literal.datatype.value
-        if (dt !== RDF.langString && dt !== XSD.string) continue
-
+        const literal = q.object
         const lang = literal.language || "@none"
         const values = result.get(lang)
         if (values !== undefined) {

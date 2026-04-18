@@ -1,9 +1,8 @@
 import { TermWrapper } from "../TermWrapper.js"
 import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
-import type { Literal, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import type { LanguagePreferences } from "../LanguagePreferences.js"
-import { RDF } from "../vocabulary/RDF.js"
-import { XSD } from "../vocabulary/XSD.js"
+import { isStringLiteralQuad } from "../isStringLiteralQuad.js"
 
 export namespace OptionalAs {
     export function object<T>(anchor: TermWrapper, p: string, value: T | undefined, termFrom: ITermFromValueMapping<T>) {
@@ -60,16 +59,13 @@ export namespace OptionalAs {
         const predicate = anchor.factory.namedNode(p)
         const writeLanguage = preferences.writeLanguage
 
+        for (const q of anchor.dataset.match(anchor as Term, predicate)) {
+            if (!isStringLiteralQuad(q)) continue
+            if (value !== undefined && !preferences.matchesPreference(q.object.language, writeLanguage || "@none")) continue
+            anchor.dataset.delete(q)
+        }
+
         if (value === undefined) {
-            // Remove all string/langString quads for this predicate
-            for (const q of anchor.dataset.match(anchor as Term, predicate)) {
-                if (q.object.termType === "Literal") {
-                    const dt = (q.object as Literal).datatype.value
-                    if (dt === RDF.langString || dt === XSD.string) {
-                        anchor.dataset.delete(q)
-                    }
-                }
-            }
             return
         }
 
@@ -77,24 +73,9 @@ export namespace OptionalAs {
             return
         }
 
-        // Remove only quads matching the write language
-        for (const q of anchor.dataset.match(anchor as Term, predicate)) {
-            if (q.object.termType === "Literal") {
-                const literal = q.object as Literal
-                const dt = literal.datatype.value
-                if ((dt === RDF.langString || dt === XSD.string) && preferences.matchesPreference(literal.language, writeLanguage || "@none")) {
-                    anchor.dataset.delete(q)
-                }
-            }
-        }
-
         const o = writeLanguage
             ? anchor.factory.literal(value, writeLanguage)
             : anchor.factory.literal(value)
-
-        if (!isQuadObject(o as Term)) {
-            return
-        }
 
         const q = anchor.factory.quad(anchor as Quad_Subject, predicate, o as Quad_Object)
         anchor.dataset.add(q)

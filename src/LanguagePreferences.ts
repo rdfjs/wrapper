@@ -1,6 +1,5 @@
 import type { Literal, Quad } from "@rdfjs/types"
-import { RDF } from "./vocabulary/RDF.js"
-import { XSD } from "./vocabulary/XSD.js"
+import { isStringLiteralQuad } from "./isStringLiteralQuad.js"
 
 /**
  * Represents an ordered list of language preferences for reading and writing
@@ -77,10 +76,10 @@ export class LanguagePreferences {
         }
         if (preferenceTag === "@other") {
             return !this.tags.some(t =>
-                t !== "@other" && this.matchesLanguage(literalLanguage, t)
+                t !== "@other" && this.matchesPreference(literalLanguage, t)
             )
         }
-        return this.matchesLanguage(literalLanguage, preferenceTag)
+        return literalLanguage.toLowerCase() === preferenceTag.toLowerCase()
     }
 
     /**
@@ -94,67 +93,36 @@ export class LanguagePreferences {
      * @returns The best-matching literal, or `undefined` if no match is found.
      */
     selectBest(quads: Iterable<Quad>): Literal | undefined {
-        const stringQuads = this.collectStringQuads(quads)
-
-        for (const tag of this.tags) {
-            for (const quad of stringQuads) {
-                const literal = quad.object as Literal
-                if (this.matchesPreference(literal.language, tag)) {
-                    return literal
-                }
-            }
-        }
-
-        return undefined
+        return this.filterBest(quads).next().value
     }
 
     /**
-     * From an iterable of quads, returns all literals whose language tag matches
+     * From an iterable of quads, yields all literals whose language tag matches
      * the highest-priority preference that has at least one match.
      *
      * Considers language-tagged literals (`rdf:langString`) and plain string
      * literals (`xsd:string`). The `@none` preference matches plain strings.
      *
      * @param quads - The quads to search through.
-     * @returns An array of matching literals (may be empty).
+     * @returns An iterable of matching literals (may be empty).
      */
-    filterBest(quads: Iterable<Quad>): Literal[] {
-        const stringQuads = this.collectStringQuads(quads)
+    * filterBest(quads: Iterable<Quad>): IterableIterator<Literal> {
+        const stringLiterals = [...this.collectStringLiterals(quads)]
 
         for (const tag of this.tags) {
-            const results: Literal[] = []
-            for (const quad of stringQuads) {
-                const literal = quad.object as Literal
-                if (this.matchesPreference(literal.language, tag)) {
-                    results.push(literal)
-                }
-            }
-            if (results.length > 0) {
-                return results
+            const matches = stringLiterals.filter(l => this.matchesPreference(l.language, tag))
+            if (matches.length > 0) {
+                yield* matches
+                return
             }
         }
-
-        return []
     }
 
-    private collectStringQuads(quads: Iterable<Quad>): Quad[] {
-        const result: Quad[] = []
+    private * collectStringLiterals(quads: Iterable<Quad>): Iterable<Literal> {
         for (const quad of quads) {
-            const obj = quad.object
-            if (obj.termType === "Literal") {
-                const dt = (obj as Literal).datatype.value
-                if (dt === RDF.langString || dt === XSD.string) {
-                    result.push(quad)
-                }
+            if (isStringLiteralQuad(quad)) {
+                yield quad.object
             }
         }
-        return result
-    }
-
-    private matchesLanguage(literalLanguage: string, tag: string): boolean {
-        if (tag === "@none") {
-            return literalLanguage === ""
-        }
-        return literalLanguage.toLowerCase() === tag.toLowerCase()
     }
 }
