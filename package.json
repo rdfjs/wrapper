@@ -17,7 +17,7 @@
   },
   "scripts": {
     "start": "npm test",
-    "build:test": "tsc && tsc -p test",
+    "build:test": "rm -rf **/dist && tsc && tsc -p test",
     "test": "npm run build:test && node --experimental-test-coverage --test \"**/*.test.js\""
   },
   "keywords": [
