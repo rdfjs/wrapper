@@ -1,6 +1,25 @@
 import type { Quad, DatasetCoreFactory, Term, DatasetCore, BaseQuad } from "@rdfjs/types";
 import type { DefaultDatasetCore } from "./DatasetWrapper.js";
-import { IterableDatasetCoreFactory, NotifyingDatasetCore } from "./NotifyingDatasetCore.js";
+import { ChangeEvent, IterableDatasetCoreFactory, NotifyingDatasetCore } from "./NotifyingDatasetCore.js";
+import { Triple } from "./ProjectedDataset.js";
+
+interface IPattern<OutQuad extends BaseQuad = Quad> {
+    subject?: OutQuad['subject'] | undefined,
+    predicate?: OutQuad['predicate'] | undefined,
+    object?: OutQuad['object'] | undefined,
+    graph?: OutQuad['graph'] | undefined,
+};
+
+interface Pattern<OutQuad extends BaseQuad = Quad> {
+    pattern: IPattern<OutQuad>;
+}
+
+interface IterableSource<OutQuad extends BaseQuad = Quad> {
+    match: (subject?: OutQuad['subject'], predicate?: OutQuad['predicate'], object?: OutQuad['object'], graph?: OutQuad['graph']) => Iterable<OutQuad>;
+    add: (quad: OutQuad) => void;
+    delete: (quad: OutQuad) => void;
+    has: (quad: OutQuad) => boolean;
+}
 
 /**
  * Best-effort cleanup registry. When a wrapper instance is garbage
@@ -21,10 +40,11 @@ const lazyMaterializedFinalizers = new FinalizationRegistry<() => void>(cleanup 
     }
 });
 
-export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implements NotifyingDatasetCore<IQuad, IQuad>, Disposable {
+// Lazily materialized dataset, which keeps in sync with source
+export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implements NotifyingDatasetCore<IQuad, IQuad>, Pattern<IQuad>, Disposable {
     private materialized?: NotifyingDatasetCore<IQuad, IQuad> | undefined;
-    private onAdd?: ((quad: IQuad) => void) | undefined;
-    private onDelete?: ((quad: IQuad) => void) | undefined;
+    private cb?: ((event: ChangeEvent, q: IQuad) => void) | undefined;
+
     /**
      * Token used to unregister this instance from the finalization
      * registry when listeners are detached deterministically via
@@ -33,27 +53,25 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
      */
     private readonly finalizerToken: object = {};
 
-    public constructor(private readonly source: Iterable<IQuad>, private readonly datasetFactory: IterableDatasetCoreFactory<IQuad, IQuad, NotifyingDatasetCore<IQuad, IQuad>>) {
+    public constructor(
+        private readonly source: IterableSource<IQuad>,
+        public readonly pattern: IPattern<IQuad>,
+        private readonly datasetFactory: IterableDatasetCoreFactory<IQuad, IQuad, NotifyingDatasetCore<IQuad, IQuad>>,
+    ) {
 
     }
 
     private init(ds: NotifyingDatasetCore<IQuad, IQuad>): void {
-        const onAdd = (q: IQuad): void => { ds.add(q); };
-        const onDelete = (q: IQuad): void => { ds.delete(q); };
-        this.onAdd = onAdd;
-        this.onDelete = onDelete;
-        ds.on('add', onAdd);
-        ds.on('delete', onDelete);
+        const cb = (event: ChangeEvent, q: IQuad): void => { ds[event](q); };
+        this.cb = cb;
+        ds.on(cb);
 
         // Register a best-effort finalizer. The cleanup closure only
         // references `ds` and the local handlers - never `this` -
         // so the wrapper remains eligible for garbage collection.
         lazyMaterializedFinalizers.register(
             this,
-            () => {
-                ds.off('add', onAdd);
-                ds.off('delete', onDelete);
-            },
+            () => ds.off(cb),
             this.finalizerToken,
         );
     }
@@ -63,7 +81,7 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
             // Capture `ds` locally so the listener closures do not close over `this`.
             // This avoids creating a strong self-reference cycle through the listener list.
             const ds = this.datasetFactory.dataset();
-            for (const q of this.source) {
+            for (const q of this.source.match(this.pattern.subject, this.pattern.predicate, this.pattern.object, this.pattern.graph)) {
                 ds.add(q);
             }
             this.materialized = ds;
@@ -88,16 +106,12 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
      */
     [Symbol.dispose](): void {
         if (this.materialized) {
-            if (this.onAdd) {
-                this.materialized.off('add', this.onAdd);
-            }
-            if (this.onDelete) {
-                this.materialized.off('delete', this.onDelete);
+            if (this.cb) {
+                this.materialized.off(this.cb);
             }
             lazyMaterializedFinalizers.unregister(this.finalizerToken);
         }
-        this.onAdd = undefined;
-        this.onDelete = undefined;
+        this.cb = undefined;
         this.materialized = undefined;
     }
 
@@ -108,7 +122,7 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
         }
 
         const materialized = this.datasetFactory.dataset();
-        for (const q of this.source) {
+        for (const q of this.source.match(this.pattern.subject, this.pattern.predicate, this.pattern.object, this.pattern.graph)) {
             if (!materialized.has(q)) {
                 yield q;
                 materialized.add(q);
@@ -123,12 +137,15 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
     }
 
     add(quad: IQuad): this {
-        this.dataset.add(quad);
+        // Add to the source dataset, which will trigger the listener to add to the materialized dataset if it exists.
+        // This ensures all mutations are funneled through the source and observed in the materialized dataset.
+        this.source.add(quad);
         return this;
     }
 
     delete(quad: IQuad): this {
-        this.dataset.delete(quad);
+        // Delete from the source dataset, which will trigger the listener to delete from the materialized dataset if it exists.
+        this.source.delete(quad);
         return this;
     }
 
@@ -136,16 +153,25 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
         if (this.materialized) {
             return this.materialized.has(quad);
         }
-        for (const q of this.source) {
-            if (q.equals(quad)) {
-                return true;
-            }
-        }
-        return false;
+        return this.source.has(quad);
     }
 
-    match(subject?: Term, predicate?: Term, object?: Term): NotifyingDatasetCore<IQuad, IQuad> {
-        return this.dataset.match(subject, predicate, object);
+    match(subject?: IQuad['subject'], predicate?: IQuad['predicate'], object?: IQuad['object'], graph?: IQuad['graph']): NotifyingDatasetCore<IQuad, IQuad> {
+        let pattern: IPattern<IQuad> = { subject, predicate, object, graph };
+
+        for (const key of ['subject', 'predicate', 'object', 'graph'] as const) {
+            if (pattern[key] !== undefined && this.pattern[key] !== undefined && !pattern[key].equals(this.pattern[key])) {
+                // Pattern and argument conflict; return an empty dataset.
+                return EMTY_DATASET;
+            }
+            pattern[key] ??= this.pattern[key];
+        }
+
+        return new LazyMatchNotifyingDatasetCore<IQuad>(
+            this.source,
+            pattern,
+            this.datasetFactory,
+        );
     }
 
     on(...args: Parameters<NotifyingDatasetCore<IQuad, IQuad>["on"]>): void {
@@ -156,3 +182,37 @@ export class LazyMaterializedNotifyingDatasetCore<IQuad extends BaseQuad = Quad>
         this.dataset.off(...args);
     }
 }
+
+export class EmptyDataset<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> implements NotifyingDatasetCore<OutQuad, InQuad> {
+    size = 0;
+
+    has(): boolean {
+        return false;
+    }
+
+    add(): this {
+        throw new Error("Cannot add to an empty dataset");
+    }
+
+    delete(): this {
+        throw new Error("Cannot delete from an empty dataset");
+    }
+
+    match(): EmptyDataset<OutQuad, InQuad> {
+        return this;
+    }
+
+    *[Symbol.iterator](): Iterator<never> {
+        // No quads to iterate over
+    }
+
+    on(): void {
+        // No-op, as there will never be any events
+    }
+
+    off(): void {
+        // No-op, as there will never be any events
+    }
+}
+
+const EMTY_DATASET = new EmptyDataset();

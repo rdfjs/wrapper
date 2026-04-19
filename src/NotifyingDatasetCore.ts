@@ -1,5 +1,6 @@
 import type { BaseQuad, DatasetCore, DatasetCoreFactory, Quad, Term } from "@rdfjs/types";
 import { listeners } from "cluster";
+import { EventEmitter } from "./EventEmitter.js";
 
 export type ChangeEvent = 'add' | 'delete'
 export type Listener<InQuad extends BaseQuad = Quad> = (event: ChangeEvent, quad: InQuad) => void
@@ -7,7 +8,7 @@ export type Listener<InQuad extends BaseQuad = Quad> = (event: ChangeEvent, quad
 export interface NotifyingDatasetCore<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> extends DatasetCore<OutQuad, InQuad> {
     on(listener: Listener<InQuad>): void;
     off(listener: Listener<InQuad>): void;
-    match(subject?: Term | null, predicate?: Term | null, object?: Term | null, graph?: Term | null): NotifyingDatasetCore<OutQuad, InQuad>;
+    match(...args: Parameters<DatasetCore<OutQuad, InQuad>["match"]>): NotifyingDatasetCore<OutQuad, InQuad>;
 }
 
 export interface IterableDatasetCoreFactory<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad, D extends DatasetCore<OutQuad, InQuad> = DatasetCore<OutQuad, InQuad>>
@@ -22,26 +23,8 @@ export interface NotifyingDatasetCoreFactory<OutQuad extends BaseQuad = Quad, In
     dataset(quads?: Iterable<InQuad>): D;
 }
 
-export class EE<Args extends any[]> {
-    public readonly listeners: Set<(...args: Args) => void> = new Set();
-
-    on(listener: (...args: Args) => void): void {
-        this.listeners.add(listener);
-    }
-
-    off(listener: (...args: Args) => void): void {
-        this.listeners.delete(listener);
-    }
-
-    emit(...args: Args): void {
-        for (const listener of this.listeners) {
-            listener(...args);
-        }
-    }
-}
-
 export class NotifyingDatasetCoreWrapper<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> implements NotifyingDatasetCore<OutQuad, InQuad> {
-    private ee = new EE<[ChangeEvent, InQuad]>();
+    private ee = new EventEmitter<[ChangeEvent, InQuad]>();
 
     constructor(private readonly dataset: DatasetCore<OutQuad, InQuad>) {
     }
