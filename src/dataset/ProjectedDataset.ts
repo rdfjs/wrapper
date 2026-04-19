@@ -5,7 +5,6 @@ import { EventEmitter } from "../EventEmitter.js";
 import { LazyMatchNotifyingDatasetCore } from "./LazyMaterialize.js";
 import { ChangeEvent, Listener, NotifyingDatasetCore, NotifyingDatasetCoreFactory } from "./NotifyingDatasetCore.js";
 import { Triple, BaseTriple } from "../type/ITriple.js";
-import { TermTypeError } from "../errors/TermTypeError.js";
 
 /**
  * A {@link NotifyingDatasetCore} whose quads are always exposed in the
