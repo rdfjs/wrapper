@@ -8,7 +8,6 @@ import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
 import { ensureNotifyingDatasetCore, NotifyingDatasetCore, NotifyingDatasetCoreFactory } from "./dataset/NotifyingDatasetCore.js"
 import { Triple } from "./type/ITriple.js"
 import { defaultGraph } from "./dataset/terms.js"
-import { TermTypeError } from "./errors/TermTypeError.js"
 
 /**
  * The view of an underlying RDF/JS dataset that {@link DatasetWrapper}
