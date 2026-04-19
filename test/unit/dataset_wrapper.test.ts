@@ -1,3 +1,4 @@
+import { dataFactory } from "./util/dataFactory.js"
 import assert from "node:assert"
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
@@ -31,7 +32,7 @@ prefix : <https://example.org/>
 
 
 await describe("Dataset Wrappers", async () => {
-    const parentDataset = new ParentDataset(datasetFromRdf(rdf), DataFactory, n3StoreFactory)
+    const parentDataset = new ParentDataset(datasetFromRdf(rdf), dataFactory, n3StoreFactory)
 
     await it("get instances of Parent as Parent", async () => {
         assert.equal(Array.from(parentDataset.instancesOfParent).length, 1)

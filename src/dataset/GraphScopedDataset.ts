@@ -19,7 +19,7 @@ export class GraphScopedDataset extends DatasetWrapper {
         writeGraph: Quad_Graph,
         readGraphs: ReadonlyArray<Quad_Graph> | undefined,
         dataset: NotifyingDatasetCore<Quad, Quad>,
-        factory: DataFactory,
+        factory: DataFactory<Triple, Triple>,
         datasetFactory: NotifyingDatasetCoreFactory<Quad, Quad, NotifyingDatasetCore<Triple, Triple>>,
     ) {
         super(new ProjectedDatasetCoreWrapper(writeGraph, readGraphs, dataset, factory, datasetFactory), factory, datasetFactory)

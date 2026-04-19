@@ -1,5 +1,7 @@
 import { TermWrapper } from "./TermWrapper.js"
-import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
+import type { DataFactory, Term } from "@rdfjs/types"
+import type { Triple } from "./type/ITriple.js"
+import type { DefaultDatasetCore } from "./DatasetWrapper.js"
 import { RDF } from "./vocabulary/RDF.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
@@ -11,7 +13,7 @@ import { OptionalAs } from "./mapping/OptionalAs.js"
 import { RequiredAs } from "./mapping/RequiredAs.js"
 
 export class ListItem<T> extends TermWrapper {
-    constructor(term: Term, dataset: DatasetCore, factory: DataFactory, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
+    constructor(term: Term, dataset: DefaultDatasetCore, factory: DataFactory<Triple, Triple>, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
         super(term, dataset, factory)
     }
 

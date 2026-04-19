@@ -13,6 +13,6 @@ export type IGraphScopedDatasetConstructor<T extends GraphScopedDataset> = new (
     writeGraph: Quad_Graph,
     readGraphs: ReadonlyArray<Quad_Graph> | undefined,
     dataset: NotifyingDatasetCore<Quad, Quad>,
-    factory: DataFactory,
+    factory: DataFactory<Triple, Triple>,
     datasetFactory: NotifyingDatasetCoreFactory<Quad, Quad, NotifyingDatasetCore<Triple, Triple>>,
 ) => T

@@ -17,18 +17,18 @@ import { TermTypeError } from "./errors/TermTypeError.js"
  * {@link match} ignores the graph dimension entirely; if a non-default-graph
  * argument is passed it throws a {@link TermTypeError}.
  */
-export interface DefaultDatasetCore extends DatasetCore, NotifyingDatasetCore {
-    match(subject?: Term, predicate?: Term, object?: Term, graph?: DefaultGraph): DefaultDatasetCore;
+export interface DefaultDatasetCore extends DatasetCore<Triple, Triple>, NotifyingDatasetCore<Triple, Triple> {
+    match(subject: Triple['subject'] | undefined, predicate: Triple['predicate'] | undefined, object: Triple['object'] | undefined, graph: DefaultGraph): DefaultDatasetCore;
 }
 
 /** Factory type used by {@link DatasetWrapper} to materialize match results. */
 export type DefaultDatasetCoreFactory =
-    NotifyingDatasetCoreFactory<Quad, Quad, NotifyingDatasetCore<Triple, Triple>>
+    NotifyingDatasetCoreFactory<Quad, Quad, DefaultDatasetCore>
 
 export class DatasetWrapper implements DefaultDatasetCore {
     //#region DatasetCore
 
-    private readonly dataset: NotifyingDatasetCore
+    private readonly dataset: NotifyingDatasetCore<Triple, Triple>
 
     /**
      * The factory used to materialize lazy match results. Subclasses receive
@@ -41,11 +41,11 @@ export class DatasetWrapper implements DefaultDatasetCore {
     protected readonly datasetFactory: DefaultDatasetCoreFactory
 
     public constructor(
-        dataset: DatasetCore,
-        protected readonly factory: DataFactory,
+        dataset: DatasetCore<Triple, Triple>,
+        protected readonly factory: DataFactory<Triple, Triple>,
         datasetFactory: DefaultDatasetCoreFactory,
     ) {
-        this.dataset = ensureNotifyingDatasetCore(dataset)
+        this.dataset = ensureNotifyingDatasetCore<Triple, Triple>(dataset)
         this.datasetFactory = datasetFactory
     }
 
@@ -55,7 +55,7 @@ export class DatasetWrapper implements DefaultDatasetCore {
         return this.match(undefined, undefined, undefined, defaultGraph).size
     }
 
-    public [Symbol.iterator](): Iterator<Quad> {
+    public [Symbol.iterator](): Iterator<Triple> {
         return this.match(undefined, undefined, undefined, defaultGraph)[Symbol.iterator]()
     }
 
@@ -78,14 +78,14 @@ export class DatasetWrapper implements DefaultDatasetCore {
 
     public match(subject: Triple['subject'] | undefined, predicate: Triple['predicate'] | undefined, object: Triple['object'] | undefined, graph: DefaultGraph): DefaultDatasetCore {
         ensureTermType(graph, "DefaultGraph")
-        return this.dataset.match(subject, predicate, object, defaultGraph) as DefaultDatasetCore
+        return this.dataset.match(subject, predicate, object, defaultGraph)
     }
 
-    public on(...args: Parameters<NotifyingDatasetCore["on"]>): void {
-        this.dataset.on(...args)
+    public on(listener: Parameters<DefaultDatasetCore["on"]>[0]): void {
+        this.dataset.on(listener)
     }
 
-    public off(...args: Parameters<NotifyingDatasetCore["off"]>): void {
+    public off(...args: Parameters<DefaultDatasetCore["off"]>): void {
         this.dataset.off(...args)
     }
 

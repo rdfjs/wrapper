@@ -1,6 +1,7 @@
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
-import type { DatasetCore, Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { DatasetCore, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { Triple } from "./type/ITriple.js"
 import { TermWrapper } from "./TermWrapper.js"
 
 export class WrappingSet<T> implements Set<T> {
@@ -27,7 +28,7 @@ export class WrappingSet<T> implements Set<T> {
         const o = this.termFrom(value, this.subject.factory) // TODO: guards
         const p = this.subject.factory.namedNode(this.predicate)
 
-        for (const q of this.subject.dataset.match(this.subject as Term, p, o as Term, this.subject.factory.defaultGraph())) {
+        for (const q of this.subject.dataset.match(this.subject as Quad_Subject, p, o as Quad_Object, this.subject.factory.defaultGraph())) {
             this.subject.dataset.delete(q)
         }
 
@@ -72,7 +73,7 @@ export class WrappingSet<T> implements Set<T> {
         return this.constructor.name
     }
 
-    private quad(value: T): Quad {
+    private quad(value: T): Triple {
         const s = this.subject as Quad_Subject // TODO: guard
         const p = this.subject.factory.namedNode(this.predicate)
         const o = this.termFrom(value, this.subject.factory) as Quad_Object // TODO: guards
@@ -80,8 +81,8 @@ export class WrappingSet<T> implements Set<T> {
         return q
     }
 
-    private get matches(): DatasetCore {
+    private get matches(): DatasetCore<Triple, Triple> {
         const p = this.subject.factory.namedNode(this.predicate)
-        return this.subject.dataset.match(this.subject as Term, p, undefined, this.subject.factory.defaultGraph())
+        return this.subject.dataset.match(this.subject as Quad_Subject, p, undefined, this.subject.factory.defaultGraph())
     }
 }

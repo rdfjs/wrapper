@@ -1,4 +1,6 @@
-import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
+import type { DataFactory, Term } from "@rdfjs/types"
+import type { DefaultDatasetCore } from "../DatasetWrapper.js"
+import type { Triple } from "./ITriple.js"
 
 /**
  * Represents the constructor signature of term mapping classes that extend {@link TermWrapper}.
@@ -89,4 +91,4 @@ import type { DataFactory, DatasetCore, Term } from "@rdfjs/types"
  * - {@link DatasetWrapper.objectsOf}
  * - {@link TermAs.instance}
  */
-export type ITermWrapperConstructor<T> = new (term: Term, dataset: DatasetCore, factory: DataFactory) => T
+export type ITermWrapperConstructor<T> = new (term: Term, dataset: DefaultDatasetCore, factory: DataFactory<Triple, Triple>) => T

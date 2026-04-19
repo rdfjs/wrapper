@@ -1,6 +1,8 @@
+import { dataFactory } from "./util/dataFactory.js"
 import assert from "node:assert"
 import { describe, it } from "node:test"
 import { DataFactory, Store, type Triple as N3Triple } from "n3"
+import type { DatasetCore } from "@rdfjs/types"
 import {
     DatasetWrapper,
     defaultGraph,
@@ -12,6 +14,8 @@ import {
 import { Parent } from "./model/Parent.js"
 import { Example } from "./vocabulary/Example.js"
 import { n3StoreFactory } from "./util/n3StoreFactory.js"
+
+const asTripleStore = <T extends Store>(store: T): T & DatasetCore<Triple, Triple> => store as unknown as T & DatasetCore<Triple, Triple>
 
 const graph = DataFactory.namedNode("https://example.org/graph")
 const otherGraph = DataFactory.namedNode("https://example.org/other")
@@ -37,7 +41,7 @@ class SomeDataset extends DatasetWrapper {
 
 await describe("GraphScopedDataset (union)", async () => {
     await it("iterates quads from all graphs projected to the default graph", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         const quads = Array.from(view)
 
@@ -55,20 +59,20 @@ await describe("GraphScopedDataset (union)", async () => {
         store.addQuad(DataFactory.quad(s, p, oDefault, graph))
         store.addQuad(DataFactory.quad(s, p, oDefault, otherGraph))
 
-        const view = new SomeDataset(store, DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(store), dataFactory, n3StoreFactory).unionView
 
         assert.equal(view.size, 1)
         assert.equal(Array.from(view).length, 1)
     })
 
     await it("size reflects unique triples across all graphs", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         assert.equal(view.size, 3)
     })
 
     await it("has finds triples regardless of source graph", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         assert.equal(view.has(DataFactory.quad<Triple, N3Triple & Triple>(s, p, oDefault)), true)
         assert.equal(view.has(DataFactory.quad<Triple, N3Triple & Triple>(s, p, oNamed)), true)
@@ -77,7 +81,7 @@ await describe("GraphScopedDataset (union)", async () => {
     })
 
     await it("match returns a union view filtered by subject/predicate/object", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         const matched = Array.from(view.match(s, p, undefined, defaultGraph))
         assert.equal(matched.length, 3)
@@ -87,7 +91,7 @@ await describe("GraphScopedDataset (union)", async () => {
     })
 
     await it("match accepts an explicit default graph argument", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         const matched = Array.from(view.match(undefined, undefined, undefined, DataFactory.defaultGraph()))
         assert.equal(matched.length, 3)
@@ -95,7 +99,7 @@ await describe("GraphScopedDataset (union)", async () => {
 
     await it("add inserts into the configured named graph", () => {
         const store = multiGraphStore()
-        const view = new SomeDataset(store, DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(store), dataFactory, n3StoreFactory).unionView
         const newObject = DataFactory.literal("added")
 
         view.add(DataFactory.quad<Triple, N3Triple & Triple>(s, p, newObject))
@@ -107,7 +111,7 @@ await describe("GraphScopedDataset (union)", async () => {
 
     await it("delete only removes from the configured named graph", () => {
         const store = multiGraphStore()
-        const view = new SomeDataset(store, DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(store), dataFactory, n3StoreFactory).unionView
 
         // The triple <s,p,"named"> exists only in `graph` so it should be removed.
         view.delete(DataFactory.quad<Triple, N3Triple & Triple>(s, p, oNamed))
@@ -123,7 +127,7 @@ await describe("GraphScopedDataset (union)", async () => {
     })
 
     await it("throws NamedGraphError when adding a quad with a non-default graph", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         assert.throws(
             // @ts-expect-error
@@ -133,7 +137,7 @@ await describe("GraphScopedDataset (union)", async () => {
     })
 
     await it("throws NamedGraphError when deleting a quad with a non-default graph", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         assert.throws(
             // @ts-expect-error
@@ -143,7 +147,7 @@ await describe("GraphScopedDataset (union)", async () => {
     })
 
     await it("throws NamedGraphError when checking has with a non-default graph quad", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         assert.throws(
             // @ts-expect-error
@@ -153,7 +157,7 @@ await describe("GraphScopedDataset (union)", async () => {
     })
 
     await it("throws TermTypeError when matching with a non-default graph", () => {
-        const view = new SomeDataset(multiGraphStore(), DataFactory, n3StoreFactory).unionView
+        const view = new SomeDataset(asTripleStore(multiGraphStore()), dataFactory, n3StoreFactory).unionView
 
         assert.throws(
             () => view.match(undefined, undefined, undefined, otherGraph as any),
@@ -185,7 +189,7 @@ await describe("GraphScopedDataset (union) with TermWrapper", async () => {
     }
 
     await it("reads properties from any graph through TermWrapper", () => {
-        const root = new Root(modelStore(), DataFactory, n3StoreFactory)
+        const root = new Root(asTripleStore(modelStore()), dataFactory, n3StoreFactory)
         const parent = root.union.parent
 
         assert.equal(parent.hasString, "default value")
@@ -194,7 +198,7 @@ await describe("GraphScopedDataset (union) with TermWrapper", async () => {
 
     await it("writes new properties into the configured named graph", () => {
         const store = modelStore()
-        const root = new Root(store, DataFactory, n3StoreFactory)
+        const root = new Root(asTripleStore(store), dataFactory, n3StoreFactory)
         const parent = root.union.parent
 
         parent.hasNullableString = "updated"

@@ -1,6 +1,7 @@
 import { TermWrapper } from "../TermWrapper.js"
 import type { ITermFromValueMapping } from "../type/ITermFromValueMapping.js"
 import type { Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { Triple } from "../type/ITriple.js"
 
 export namespace OptionalAs {
     export function object<T>(anchor: TermWrapper, p: string, value: T | undefined, termFrom: ITermFromValueMapping<T>) {
@@ -10,7 +11,7 @@ export namespace OptionalAs {
 
         const predicate = anchor.factory.namedNode(p)
 
-        for (const q of anchor.dataset.match(anchor as Term, predicate, undefined, anchor.factory.defaultGraph())) {
+        for (const q of anchor.dataset.match(anchor as Quad_Subject, predicate, undefined, anchor.factory.defaultGraph())) {
             anchor.dataset.delete(q)
         }
 
