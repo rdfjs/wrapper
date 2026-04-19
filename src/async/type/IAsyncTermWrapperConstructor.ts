@@ -1,7 +1,6 @@
 import type { DataFactory, Term } from "@rdfjs/types"
 import type { AsyncDefaultDatasetCore } from "../AsyncNotifyingDatasetCore.js"
 import type { Triple } from "../../type/ITriple.js"
-import { AsyncTermWrapper } from "../AsyncTermWrapper.js"
 
 /**
  * Constructor signature for an {@link AsyncTermWrapper} subclass. Mirrors
