@@ -184,7 +184,7 @@ export namespace LiteralAs {
         if (term.termType !== "Literal") {
             throw new TermTypeError(term, "Literal")
         }
-        ensureDatatype(term, XSD.anyUri)
+        ensureDatatype(term, XSD.anyURI)
 
         return new URL(term.value)
     }

@@ -1,5 +1,7 @@
-import type { DataFactory, DatasetCore, Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { DataFactory, DatasetCore, Quad, Quad_Graph, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import type { ITermWrapperConstructor } from "./type/ITermWrapperConstructor.js"
+import type { NamedGraphDataset } from "./NamedGraphDataset.js"
+import type { INamedGraphDatasetConstructor } from "./type/INamedGraphDatasetConstructor.js"
 
 import { RDF } from "./vocabulary/RDF.js"
 import { TermWrapper } from "./TermWrapper.js"
@@ -14,8 +16,8 @@ export class DatasetWrapper implements DatasetCore {
         return this.dataset.size
     }
 
-    public [Symbol.iterator](): Iterator<Quad> {
-        return this.dataset[Symbol.iterator]()
+    public* [Symbol.iterator](): Iterator<Quad> {
+        yield* this.dataset
     }
 
     public add(quad: Quad): this {
@@ -50,6 +52,22 @@ export class DatasetWrapper implements DatasetCore {
 
     protected instancesOf<T extends TermWrapper>(klass: string, constructor: ITermWrapperConstructor<T>): Iterable<T & Quad_Subject> {
         return this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(klass))
+    }
+
+    /**
+     * Creates a view over a single named graph, projecting its contents into the default graph.
+     *
+     * The returned dataset only exposes quads from the specified named graph, with their graph component replaced by the default graph. Writes through the view are mapped back to the named graph in the underlying dataset. Any attempt to use a non-default graph on the returned dataset throws a {@link NamedGraphError}.
+     *
+     * @param graph - The name of the graph to use.
+     * @param klass - A constructor of a class derived from named graph dataset
+     * @returns An instance of a class derived from {@link NamedGraphDataset} that is a view scoped to the specified named graph.
+     */
+    protected named<T extends NamedGraphDataset>(graph: string, klass: INamedGraphDatasetConstructor<T>): T
+    protected named<T extends NamedGraphDataset>(graph: Quad_Graph, klass: INamedGraphDatasetConstructor<T>): T
+    protected named<T extends NamedGraphDataset>(graph: string | Quad_Graph, klass: INamedGraphDatasetConstructor<T>): T {
+        const g = typeof graph === "string" ? this.factory.namedNode(graph) : graph
+        return new klass(g, this.dataset, this.factory)
     }
 
     protected* matchSubjectsOf<T extends TermWrapper>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T & Quad_Subject> {
