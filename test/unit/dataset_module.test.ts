@@ -15,7 +15,6 @@ const s2 = DataFactory.namedNode("https://example.org/s2")
 const p = DataFactory.namedNode("https://example.org/p")
 const o1 = DataFactory.literal("o1")
 const o2 = DataFactory.literal("o2")
-const g = DataFactory.namedNode("https://example.org/g")
 
 await describe("defaultGraph", async () => {
     await it("has the correct shape", () => {
