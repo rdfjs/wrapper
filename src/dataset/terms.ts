@@ -1,4 +1,4 @@
-import { DefaultGraph, Term } from "@rdfjs/types";
+import type { DefaultGraph, Term } from "@rdfjs/types";
 
 /**
  * Frozen, shared singleton {@link DefaultGraph} term used internally to
