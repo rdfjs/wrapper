@@ -28,9 +28,63 @@ const listenerAdapters = new WeakMap<
     Map<string, (event: ChangeEvent, q: Triple) => void>
 >()
 
+/**
+ * A {@link Set} view over the objects of all `<subject> <predicate> ?o`
+ * quads in the default graph of the underlying dataset.
+ *
+ * The set is **live**: iteration, {@link size} and {@link has} re-query the
+ * dataset on every call, so the contents always reflect the current state.
+ * Mutations performed via {@link add}, {@link delete} and {@link clear}
+ * write through to the dataset and surface as change events on the
+ * underlying {@link NotifyingDatasetCore}.
+ *
+ * @example Subscribing to changes
+ * Use {@link on} / {@link off} to observe additions and removals filtered
+ * by this set's subject / predicate. The mapped JavaScript value is passed
+ * to the listener:
+ * ```ts
+ * const children = SetFrom.subjectPredicate(parent, ":hasChild", TermAs.instance(Person), TermFrom.instance)
+ * children.on((event, child) => console.log(event, child.value))
+ *
+ * children.add(somePerson)    // logs: "add", "<somePerson IRI>"
+ * children.delete(somePerson) // logs: "delete", "<somePerson IRI>"
+ * ```
+ *
+ * @example Listener identity across instances
+ * Mappers like {@link SetFrom.subjectPredicate} typically return a fresh
+ * {@link WrappingSet} on every property access. {@link off} is keyed by
+ * `(listener, subject, predicate)` rather than by instance, so this works:
+ * ```ts
+ * parent.children.on(listener)
+ * parent.children.off(listener) // detaches the listener attached above
+ * ```
+ *
+ * @example Mutations from outside the set
+ * Because notifications come from the underlying dataset, the listener
+ * also fires when something *else* mutates a matching quad - for example
+ * {@link DatasetWrapper.add} / {@link DatasetWrapper.delete} or a sibling
+ * {@link WrappingSet} targeting the same subject / predicate.
+ */
 export class WrappingSet<T> implements Set<T> {
     // TODO: Direction
 
+    /**
+     * Constructs a {@link WrappingSet}.
+     *
+     * Application code typically does not call this constructor directly;
+     * use {@link SetFrom.subjectPredicate} instead, which produces a
+     * {@link WrappingSet} for a given anchor / predicate / mapping triple.
+     *
+     * @param subject  The anchor {@link TermWrapper} - all quads in this
+     *                 set have this term as their subject.
+     * @param predicate The IRI of the predicate - all quads in this set
+     *                  have a {@link NamedNode} with this IRI as their
+     *                  predicate.
+     * @param termAs   Mapping from RDF object to JavaScript value, used by
+     *                 iteration and emitted to {@link on} listeners.
+     * @param termFrom Mapping from JavaScript value to RDF object, used by
+     *                 {@link add}, {@link delete} and {@link has}.
+     */
     public constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
     }
 

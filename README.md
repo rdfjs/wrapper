@@ -177,50 +177,128 @@ RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/
 
 ### Named Graphs
 
-The `namedGraph` function creates a `DatasetCore` view over a single named graph, projecting its contents into the default graph. This lets you use any existing `TermWrapper` or `DatasetWrapper` classes unchanged, scoped to a specific graph.
+The `GraphScopedDataset` class is a `DatasetWrapper` that exposes one or more named graphs of an underlying dataset projected onto the default graph. Existing `TermWrapper` and `DatasetWrapper` subclasses can be reused unchanged against quads that live in named graphs.
+
+The recommended entry point is `DatasetWrapper.scoped`, which constructs the projection for you from a parent wrapper:
 
 ```javascript
-import { namedGraph, DatasetWrapper } from "@rdfjs/wrapper"
+import { DatasetWrapper, GraphScopedDataset } from "@rdfjs/wrapper"
 
-// Given a dataset with quads in a named graph:
-// <ex:person1> <ex:name> "Alice" <ex:graph1> .
-// <ex:person2> <ex:name> "Bob" <ex:graph1> .
-// <ex:person1> <ex:name> "Charlie" .                  (default graph)
-
-const graphView = namedGraph(DataFactory.namedNode("https://example.org/graph1"), dataset, DataFactory)
-
-// graphView behaves as a DatasetCore containing only default graph quads:
-// <ex:person1> <ex:name> "Alice" .
-// <ex:person2> <ex:name> "Bob" .
-
-// Wrap it with your existing classes:
-class People extends DatasetWrapper {
+class People extends GraphScopedDataset {
     get all() {
         return this.subjectsOf("https://example.org/name", Person)
     }
 }
 
-const people = new People(graphView, DataFactory)
-for (const person of people.all) {
-    console.log(person.name)
+class Workspace extends DatasetWrapper {
+    people(graphIri) {
+        // Read from and write to the same named graph.
+        return this.scoped(graphIri, [graphIri], People)
+    }
+}
+```
+
+Given the following RDF:
+
+```turtle
+PREFIX ex: <https://example.org/>
+
+GRAPH ex:graph1 {
+    ex:person1 ex:name "Alice" .
+    ex:person2 ex:name "Bob" .
+}
+
+ex:person1 ex:name "Charlie" .   # default graph
+```
+
+```javascript
+const ws = new Workspace(dataset, DataFactory, datasetFactory)
+const team = ws.people("https://example.org/graph1")
+
+for (const p of team.all) {
+    console.log(p.name)
 }
 // outputs "Alice", "Bob"  (Charlie is excluded — different graph)
 ```
 
-Writes through the view are mapped back to the named graph in the underlying dataset:
+Writes through the view are mapped back into the configured `writeGraph`:
 
 ```javascript
-// Adding a quad through the view stores it in the named graph
-graphView.add(DataFactory.quad(s, p, o))
-// Equivalent to: dataset.add(DataFactory.quad(s, p, o, DataFactory.namedNode("https://example.org/graph1")))
+team.add(DataFactory.quad(s, p, o))
+// stored in the underlying dataset as:
+// DataFactory.quad(s, p, o, DataFactory.namedNode("https://example.org/graph1"))
 ```
 
-Any attempt to use a non-default graph on the returned `DatasetCore` throws a `NamedGraphError`:
+`writeGraph` and `readGraphs` need not be the same. Passing `undefined` for `readGraphs` reads from every graph (default and named) and deduplicates triples across them — useful for read-only union views:
 
 ```javascript
-// These all throw NamedGraphError:
-graphView.add(DataFactory.quad(s, p, o, DataFactory.namedNode("https://other.org/g")))
-graphView.match(undefined, undefined, undefined, DataFactory.namedNode("https://other.org/g"))
+class ReadOnlyUnion extends GraphScopedDataset { /* ... */ }
+const union = ws.scoped("https://example.org/scratch", undefined, ReadOnlyUnion)
+```
+
+Any attempt to use a non-default graph on the projected view throws a `NamedGraphError` (for `add` / `delete` / `has`) or a `TermTypeError` (for `match`):
+
+```javascript
+// These all throw:
+team.add(DataFactory.quad(s, p, o, DataFactory.namedNode("https://other.org/g")))      // NamedGraphError
+team.match(undefined, undefined, undefined, DataFactory.namedNode("https://other.org/g")) // TermTypeError
+```
+
+
+### Change notifications
+
+Every `DatasetWrapper` exposes `on(listener)` / `off(listener)` so consumers can react to additions and removals on the underlying dataset:
+
+```javascript
+const ds = new People(dataset, DataFactory, datasetFactory)
+
+const listener = (event, quad) => {
+    // event is "add" or "delete"
+    console.log(event, quad.subject.value, quad.predicate.value, quad.object.value)
+}
+ds.on(listener)
+// ...
+ds.off(listener)
+```
+
+Notifications fire for **every** quad-level mutation, regardless of how it was triggered:
+
+- direct `dataset.add(quad)` / `dataset.delete(quad)`
+- a setter on a `TermWrapper` (`person.name = "..."`)
+- mutations through a `WrappingSet` returned by `SetFrom`
+- mutations through an `RdfList`
+- writes made through a `GraphScopedDataset` view (the listener attached to the scoped view receives default-graph quads; the listener attached to the underlying dataset receives the rewritten named-graph quads)
+
+Setters that *change* a value emit a `delete` for the previous quad followed by an `add` for the new quad. Clearing an optional value emits only `delete`. Setting from `undefined` emits only `add`.
+
+#### Set-level notifications
+
+`WrappingSet` (the type returned by `SetFrom.subjectPredicate`) also exposes `on` / `off`. The listener receives the mutation type and the **mapped JavaScript value** for that set's subject + predicate, so callers do not need to filter dataset-wide events themselves:
+
+```javascript
+import { SetFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
+
+class Person extends TermWrapper {
+    get children() {
+        return SetFrom.subjectPredicate(this, "https://example.org/hasChild", TermAs.instance(Person), TermFrom.instance)
+    }
+}
+
+const alice = new Person("https://example.org/alice", dataset, DataFactory)
+
+alice.children.on((event, child) => console.log(event, child.value))
+
+alice.children.add(bob)    // logs: add, https://example.org/bob
+alice.children.delete(bob) // logs: delete, https://example.org/bob
+```
+
+The set is a **live view**: iterating `alice.children` always reflects the current state of the dataset, including additions made by other code paths.
+
+`WrappingSet.off(listener)` is keyed by `(listener, subject, predicate)` rather than by instance, so it works correctly even when called on a fresh `WrappingSet` returned by a subsequent property access:
+
+```javascript
+alice.children.on(listener)
+alice.children.off(listener) // detaches the listener attached above
 ```
 
 

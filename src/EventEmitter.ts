@@ -2,23 +2,46 @@ import { BaseQuad, Quad, Term } from "@rdfjs/types";
 import { IPattern } from "./dataset/LazyMaterialize.js";
 import { ChangeEvent } from "./dataset/NotifyingDatasetCore.js";
 
+/**
+ * A minimal multi-cast event emitter generic over the listener argument
+ * tuple `Args`. Listeners attached with {@link on} are invoked, in
+ * insertion order, on every {@link emit} call until detached with
+ * {@link off}.
+ *
+ * Used internally to back the change-notification stream of
+ * {@link NotifyingDatasetCoreWrapper} and {@link ProjectedDatasetCoreWrapper},
+ * but exported because consumer-level wrappers may find it useful.
+ *
+ * @example Subscribing to dataset changes
+ * ```ts
+ * const ee = new EventEmitter<[ChangeEvent, Triple]>()
+ * const listener = (event, quad) => console.log(event, quad.object.value)
+ * ee.on(listener)
+ * ee.emit("add", someQuad)
+ * ee.off(listener)
+ * ```
+ */
 export class EventEmitter<Args extends any[]> {
     private readonly listeners: Set<(...args: Args) => void> = new Set();
 
+    /** Adds `listener` to the set of subscribers. Re-adding the same listener has no effect. */
     on(listener: (...args: Args) => void): void {
         this.listeners.add(listener);
     }
 
+    /** Removes `listener` from the set of subscribers. Removing an unknown listener is a no-op. */
     off(listener: (...args: Args) => void): void {
         this.listeners.delete(listener);
     }
 
+    /** Synchronously invokes every registered listener with `args`, in insertion order. */
     emit(...args: Args): void {
         for (const listener of this.listeners) {
             listener(...args);
         }
     }
 
+    /** `true` when no listeners are attached. */
     get empty(): boolean {
         return this.listeners.size === 0;
     }
@@ -67,6 +90,29 @@ function *yieldListeners<IQuad extends BaseQuad>(idx: number, pattern: IPattern<
     }
 }
 
+/**
+ * An event emitter that dispatches quad change events according to a
+ * subscribed quad pattern.
+ *
+ * Subscribers register an {@link IPattern} along with their listener;
+ * calling {@link emit} delivers the event only to those listeners whose
+ * pattern matches the emitted quad. A field omitted (`undefined`) from
+ * the pattern acts as a wildcard for that position, matching any term.
+ *
+ * Used internally by {@link LazyMatchNotifyingDatasetCore} to dispatch
+ * pattern-filtered change notifications without re-scanning the full
+ * listener list on every event.
+ *
+ * @example Subscribing to changes for a specific subject + predicate
+ * ```ts
+ * const ee = new PatternEventEmitter<Quad>()
+ * ee.on({ subject: aliceTerm, predicate: hasChildTerm }, (event, quad) => {
+ *     console.log(event, quad.object.value)
+ * })
+ * ee.emit("add", aliceHasBobQuad)   // delivered (matches subject + predicate)
+ * ee.emit("add", bobHasCarolQuad)   // not delivered (subject differs)
+ * ```
+ */
 export class PatternEventEmitter<IQuad extends BaseQuad> {
     private listeners: Map<string, any> = new Map();
 
