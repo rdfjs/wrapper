@@ -20,7 +20,7 @@ export * from "./mapping/RequiredAs.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
-export * from "./ProjectedDataset.js"
+export * from "./dataset/ProjectedDataset.js"
 export * from "./GraphScopedDataset.js"
 
 export * from "./errors/WrapperError.js"

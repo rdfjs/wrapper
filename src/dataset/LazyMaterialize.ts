@@ -1,16 +1,15 @@
-import type { Quad, DatasetCoreFactory, Term, DatasetCore, BaseQuad } from "@rdfjs/types";
-import type { DefaultDatasetCore } from "./DatasetWrapper.js";
-import { ChangeEvent, IterableDatasetCoreFactory, NotifyingDatasetCore } from "./NotifyingDatasetCore.js";
-import { Triple } from "./ProjectedDataset.js";
+import type { BaseQuad, DatasetCore, Quad } from "@rdfjs/types";
+import { ChangeEvent, IterableDatasetCoreFactory, Listener, NotifyingDatasetCore } from "./NotifyingDatasetCore.js";
+import { EventEmitter, PatternEventEmitter } from "../EventEmitter.js";
 
-interface IPattern<OutQuad extends BaseQuad = Quad> {
+export interface IPattern<OutQuad extends BaseQuad = Quad> {
     subject?: OutQuad['subject'] | undefined,
     predicate?: OutQuad['predicate'] | undefined,
     object?: OutQuad['object'] | undefined,
     graph?: OutQuad['graph'] | undefined,
 };
 
-interface Pattern<OutQuad extends BaseQuad = Quad> {
+export interface Pattern<OutQuad extends BaseQuad = Quad> {
     pattern: IPattern<OutQuad>;
 }
 
@@ -19,6 +18,8 @@ interface IterableSource<OutQuad extends BaseQuad = Quad> {
     add: (quad: OutQuad) => void;
     delete: (quad: OutQuad) => void;
     has: (quad: OutQuad) => boolean;
+    on: (listener: Listener<OutQuad>) => void;
+    off: (listener: Listener<OutQuad>) => void;
 }
 
 /**
@@ -42,7 +43,7 @@ const lazyMaterializedFinalizers = new FinalizationRegistry<() => void>(cleanup 
 
 // Lazily materialized dataset, which keeps in sync with source
 export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implements NotifyingDatasetCore<IQuad, IQuad>, Pattern<IQuad>, Disposable {
-    private materialized?: NotifyingDatasetCore<IQuad, IQuad> | undefined;
+    private materialized?: DatasetCore<IQuad, IQuad> | undefined;
     private cb?: ((event: ChangeEvent, q: IQuad) => void) | undefined;
 
     /**
@@ -61,22 +62,24 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
 
     }
 
-    private init(ds: NotifyingDatasetCore<IQuad, IQuad>): void {
+    private init(ds: DatasetCore<IQuad, IQuad>): void {
         const cb = (event: ChangeEvent, q: IQuad): void => { ds[event](q); };
         this.cb = cb;
-        ds.on(cb);
+        const self = this;
+
+        self.on(cb);
 
         // Register a best-effort finalizer. The cleanup closure only
         // references `ds` and the local handlers - never `this` -
         // so the wrapper remains eligible for garbage collection.
         lazyMaterializedFinalizers.register(
             this,
-            () => ds.off(cb),
+            () => self.off(cb),
             this.finalizerToken,
         );
     }
 
-    private get dataset(): NotifyingDatasetCore<IQuad, IQuad> {
+    private get dataset(): DatasetCore<IQuad, IQuad> {
         if (this.materialized === undefined) {
             // Capture `ds` locally so the listener closures do not close over `this`.
             // This avoids creating a strong self-reference cycle through the listener list.
@@ -107,7 +110,7 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
     [Symbol.dispose](): void {
         if (this.materialized) {
             if (this.cb) {
-                this.materialized.off(this.cb);
+                this.off(this.cb);
             }
             lazyMaterializedFinalizers.unregister(this.finalizerToken);
         }
@@ -174,12 +177,20 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
         );
     }
 
+    private ee = new PatternEventEmitter<IQuad>();
+
     on(...args: Parameters<NotifyingDatasetCore<IQuad, IQuad>["on"]>): void {
-        this.dataset.on(...args);
+        if (this.ee.empty) {
+            this.source.on(this.ee.emit);
+        }
+        this.ee.on(this.pattern, ...args);
     }
 
     off(...args: Parameters<NotifyingDatasetCore<IQuad, IQuad>["off"]>): void {
-        this.dataset.off(...args);
+        this.ee.off(this.pattern, ...args);
+        if (this.ee.empty) {
+            this.source.off(this.ee.emit);
+        }
     }
 }
 

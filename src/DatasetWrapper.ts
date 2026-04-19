@@ -1,18 +1,13 @@
 import type { DataFactory, DatasetCore, DatasetCoreFactory, DatasetFactory, DefaultGraph, Quad, Quad_Graph, Term } from "@rdfjs/types"
 import type { ITermWrapperConstructor } from "./type/ITermWrapperConstructor.js"
-import type { GraphScopedDataset } from "./GraphScopedDataset.js"
+import type { GraphScopedDataset } from "./dataset/GraphScopedDataset.js"
 import type { IGraphScopedDatasetConstructor } from "./type/IGraphScopedDatasetConstructor.js"
 
 import { RDF } from "./vocabulary/RDF.js"
 import { ensureDefaultGraph } from "./ensure.js"
-import { ensureNotifyingDatasetCore, NotifyingDatasetCore } from "./NotifyingDatasetCore.js"
-import { Triple } from "./ProjectedDataset.js"
-
-export const defaultGraph: DefaultGraph = Object.freeze({
-    termType: "DefaultGraph",
-    value: "",
-    equals: (other: Term | null | undefined) => other?.termType === "DefaultGraph" && other.value === ""
-});
+import { ensureNotifyingDatasetCore, NotifyingDatasetCore } from "./dataset/NotifyingDatasetCore.js"
+import { ITriple } from "./type/ITriple.js"
+import { defaultGraph } from "./dataset/terms.js"
 
 export interface DefaultDatasetCore extends DatasetCore, NotifyingDatasetCore {
     match(subject?: Term, predicate?: Term, object?: Term): DefaultDatasetCore;
@@ -41,19 +36,19 @@ export class DatasetWrapper implements DefaultDatasetCore {
         return this.match()[Symbol.iterator]()
     }
 
-    public add(quad: Triple): this {
+    public add(quad: ITriple): this {
         ensureDefaultGraph(quad)
         this.dataset.add(quad)
         return this
     }
 
-    public delete(quad: Triple): this {
+    public delete(quad: ITriple): this {
         ensureDefaultGraph(quad)
         this.dataset.delete(quad)
         return this
     }
 
-    public has(quad: Triple): boolean {
+    public has(quad: ITriple): boolean {
         ensureDefaultGraph(quad)
         return this.dataset.has(quad)
     }

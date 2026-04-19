@@ -1,23 +1,16 @@
-import type { BaseQuad, DataFactory, DatasetCore, DefaultGraph, Quad, Quad_Graph, Term } from "@rdfjs/types"
-import { ensureDefaultGraph } from "./ensure.js"
-import { ChangeEvent, Listener, NotifyingDatasetCore, NotifyingDatasetCoreFactory } from "./NotifyingDatasetCore.js"
-import { EventEmitter } from "./EventEmitter.js";
-import { LazyMatchNotifyingDatasetCore } from "./LazyMaterialize.js"
-import { defaultGraph } from "./DatasetWrapper.js";
-
-export interface BaseTriple extends BaseQuad {
-    graph: DefaultGraph;
-}
-
-export interface Triple extends Quad {
-    graph: DefaultGraph;
-}
+import type { DataFactory, Quad, Quad_Graph } from "@rdfjs/types";
+import { defaultGraph } from "./terms.js";
+import { ensureDefaultGraph } from "../ensure.js";
+import { EventEmitter } from "../EventEmitter.js";
+import { LazyMatchNotifyingDatasetCore } from "./LazyMaterialize.js";
+import { ChangeEvent, Listener, NotifyingDatasetCore, NotifyingDatasetCoreFactory } from "./NotifyingDatasetCore.js";
+import { ITriple, IBaseTriple } from "../type/ITriple.js";
 
 /**
  * A {@link NotifyingDatasetCore} whose quads are always exposed in the
  * default graph. Returned by {@link ProjectedDatasetCoreWrapper.match}.
  */
-export interface ProjectedDatasetCore<OutQuad extends Triple = Triple, InQuad extends BaseTriple = OutQuad> extends NotifyingDatasetCore<OutQuad, InQuad> {
+export interface ProjectedDatasetCore<OutQuad extends ITriple = ITriple, InQuad extends IBaseTriple = OutQuad> extends NotifyingDatasetCore<OutQuad, InQuad> {
     match(subject?: OutQuad['subject'], predicate?: OutQuad['predicate'], object?: OutQuad['object']): ProjectedDatasetCore<OutQuad, InQuad>;
 }
 
@@ -39,22 +32,22 @@ export interface ProjectedDatasetCore<OutQuad extends Triple = Triple, InQuad ex
  *   changes (a triple appearing in several read graphs is reported as added
  *   once and as deleted only once the last copy is removed).
  */
-export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple, Triple> {
-    private readonly ee = new EventEmitter<[ChangeEvent, Triple]>()
+export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<ITriple, ITriple> {
+    private readonly ee = new EventEmitter<[ChangeEvent, ITriple]>()
 
-    private _dataset: ProjectedDatasetCore<Triple, Triple> | null = null
+    private _dataset: ProjectedDatasetCore<ITriple, ITriple> | null = null
 
     public constructor(
         private readonly writeGraph: Quad_Graph,
         private readonly readGraphs: ReadonlyArray<Quad_Graph> | undefined,
         private readonly source: NotifyingDatasetCore<Quad, Quad>,
         private readonly factory: DataFactory,
-        private readonly datasetFactory: NotifyingDatasetCoreFactory<Quad, Quad, NotifyingDatasetCore<Triple, Triple>>,
+        private readonly datasetFactory: NotifyingDatasetCoreFactory<Quad, Quad, NotifyingDatasetCore<ITriple, ITriple>>,
     ) {
     }
 
     /** Lazily-materialized snapshot of the projected view. */
-    private get dataset(): ProjectedDatasetCore<Triple, Triple> {
+    private get dataset(): ProjectedDatasetCore<ITriple, ITriple> {
         if (this._dataset === null) {
             this._dataset = this.match()
         }
@@ -65,7 +58,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
         return this.dataset.size
     }
 
-    public [Symbol.iterator](): Iterator<Triple> {
+    public [Symbol.iterator](): Iterator<ITriple> {
         return this.dataset[Symbol.iterator]()
     }
 
@@ -73,7 +66,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
      * Adds `quad` to the underlying dataset, rewriting its graph to
      * `writeGraph`. Throws if `quad` is not in the default graph.
      */
-    public add(quad: Triple): this {
+    public add(quad: ITriple): this {
         ensureDefaultGraph(quad)
         this.source.add(this.inGraph(quad, this.writeGraph))
         return this
@@ -83,7 +76,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
      * Removes `quad` from the underlying dataset, rewriting its graph to
      * `writeGraph`. Throws if `quad` is not in the default graph.
      */
-    public delete(quad: Triple): this {
+    public delete(quad: ITriple): this {
         ensureDefaultGraph(quad)
         this.source.delete(this.inGraph(quad, this.writeGraph))
         return this
@@ -93,7 +86,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
      * Returns whether the projected view contains `quad`. Throws if `quad`
      * is not in the default graph.
      */
-    public has(quad: Triple): boolean {
+    public has(quad: ITriple): boolean {
         ensureDefaultGraph(quad)
         if (this.readGraphs) {
             return this.readGraphs.some(g => this.source.has(this.inGraph(quad, g)))
@@ -108,13 +101,15 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
      * Returns a {@link ProjectedDatasetCore} containing the matching quads
      * projected onto the default graph.
      */
-    public match(subject?: Triple['subject'], predicate?: Triple['predicate'], object?: Triple['object']): ProjectedDatasetCore<Triple, Triple> {
-        return new LazyMatchNotifyingDatasetCore<Triple>(
+    public match(subject?: ITriple['subject'], predicate?: ITriple['predicate'], object?: ITriple['object']): ProjectedDatasetCore<ITriple, ITriple> {
+        return new LazyMatchNotifyingDatasetCore<ITriple>(
             {
-                match: (s?: Triple['subject'], p?: Triple['predicate'], o?: Triple['object']) => this.matchInSourceAsDefault(s, p, o),
-                has: (quad: Triple) => this.has(quad),
-                add: (quad: Triple) => this.add(quad),
-                delete: (quad: Triple) => this.delete(quad),
+                match: (s?: ITriple['subject'], p?: ITriple['predicate'], o?: ITriple['object']) => this.matchInSourceAsDefault(s, p, o),
+                has: (quad: ITriple) => this.has(quad),
+                add: (quad: ITriple) => this.add(quad),
+                delete: (quad: ITriple) => this.delete(quad),
+                on: (listener: Listener<ITriple>) => this.on(listener),
+                off: (listener: Listener<ITriple>) => this.off(listener),
             },
             { subject, predicate, object, graph: defaultGraph },
             this.datasetFactory,
@@ -122,7 +117,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
     }
 
     /** Yields source quads matching the pattern across every read graph. */
-    private *matchInSource(subject?: Triple['subject'], predicate?: Triple['predicate'], object?: Triple['object']): Iterable<Quad> {
+    private *matchInSource(subject?: ITriple['subject'], predicate?: ITriple['predicate'], object?: ITriple['object']): Iterable<Quad> {
         if (this.readGraphs === undefined) {
             yield* this.source.match(subject, predicate, object)
             return
@@ -133,7 +128,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
     }
 
     /** Like {@link matchInSource}, but rewrites every quad's graph to the default graph. */
-    private *matchInSourceAsDefault(subject?: Triple['subject'], predicate?: Triple['predicate'], object?: Triple['object']): Iterable<Triple> {
+    private *matchInSourceAsDefault(subject?: ITriple['subject'], predicate?: ITriple['predicate'], object?: ITriple['object']): Iterable<ITriple> {
         for (const q of this.matchInSource(subject, predicate, object)) {
             yield this.asDefault(q)
         }
@@ -172,23 +167,23 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
         }
     }
 
-    public on(listener: Listener<Triple>): void {
-        if (this.ee.listeners.size === 0) {
+    public on(listener: Listener<ITriple>): void {
+        if (this.ee.empty) {
             this.source.on(this.cb)
         }
         this.ee.on(listener)
     }
 
-    public off(listener: Listener<Triple>): void {
+    public off(listener: Listener<ITriple>): void {
         this.ee.off(listener)
-        if (this.ee.listeners.size === 0) {
+        if (this.ee.empty) {
             this.source.off(this.cb)
         }
     }
 
     /** Returns a copy of `quad` placed in the default graph. */
-    private asDefault(quad: Quad): Triple {
-        return this.factory.quad(quad.subject, quad.predicate, quad.object) as Triple
+    private asDefault(quad: Quad): ITriple {
+        return this.factory.quad(quad.subject, quad.predicate, quad.object) as ITriple
     }
 
     /** Returns a copy of `quad` placed in `graph`. */

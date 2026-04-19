@@ -1,6 +1,5 @@
-import type { BaseQuad, DatasetCore, DatasetCoreFactory, Quad, Term } from "@rdfjs/types";
-import { listeners } from "cluster";
-import { EventEmitter } from "./EventEmitter.js";
+import type { BaseQuad, DatasetCore, DatasetCoreFactory, Quad } from "@rdfjs/types";
+import { EventEmitter } from "../EventEmitter.js";
 
 export type ChangeEvent = 'add' | 'delete'
 export type Listener<InQuad extends BaseQuad = Quad> = (event: ChangeEvent, quad: InQuad) => void

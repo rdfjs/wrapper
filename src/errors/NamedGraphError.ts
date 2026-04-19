@@ -1,4 +1,4 @@
-import { BaseTriple } from "../ProjectedDataset.js"
+import { IBaseTriple } from "../type/ITriple.js"
 import { QuadError } from "./QuadError.js"
 import type { Quad } from "@rdfjs/types"
 
@@ -8,7 +8,7 @@ import type { Quad } from "@rdfjs/types"
  * @see {@link namedGraph}
  */
 export class NamedGraphError extends QuadError {
-    constructor(quad: BaseTriple, cause?: any) {
+    constructor(quad: IBaseTriple, cause?: any) {
         super(quad, `Graph must be default (empty) but was ${quad.value}`, cause)
     }
 }

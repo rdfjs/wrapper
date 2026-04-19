@@ -1,5 +1,5 @@
 import type { DataFactory, DatasetCore, DatasetCoreFactory, Quad_Graph } from "@rdfjs/types"
-import type { GraphScopedDataset } from "../GraphScopedDataset.js"
+import type { GraphScopedDataset } from "../dataset/GraphScopedDataset.js"
 
 export type IGraphScopedDatasetConstructor<T extends GraphScopedDataset> = new (
     writeGraph: Quad_Graph,
