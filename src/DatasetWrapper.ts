@@ -81,10 +81,42 @@ export class DatasetWrapper implements DefaultDatasetCore {
         return this.dataset.match(subject, predicate, object, defaultGraph)
     }
 
+    /**
+     * Subscribes `listener` to be invoked whenever a quad is added to or
+     * removed from the underlying dataset.
+     *
+     * Events are emitted for every mutation, regardless of how the mutation
+     * was performed: direct calls to {@link add} / {@link delete}, mutating a
+     * mapped property on a {@link TermWrapper}, mutating a {@link WrappingSet}
+     * returned by a {@link SetFrom} mapping, or mutating a wrapper-managed
+     * {@link RdfList}. Setters that "change" a value emit a `delete` for the
+     * previous quad followed by an `add` for the new quad; clearing an
+     * optional value emits only `delete`.
+     *
+     * Listeners receive the mutation type (`'add'` or `'delete'`) and the
+     * affected quad. The wrapper does **not** deduplicate: setting a property
+     * to its current value still emits a delete and an add. Use {@link off}
+     * to detach a previously attached listener.
+     *
+     * @example Observing wrapper-driven mutations
+     * ```ts
+     * const events: string[] = []
+     * dataset.on((event, quad) => events.push(`${event}:${quad.object.value}`))
+     *
+     * parent.hasString = "new"   // events: ["delete:old", "add:new"]
+     * parent.hasNullableString = undefined // events: ["delete:..."]
+     * dataset.add(quad)          // events: ["add:..."]
+     * ```
+     */
     public on(listener: Parameters<DefaultDatasetCore["on"]>[0]): void {
         this.dataset.on(listener)
     }
 
+    /**
+     * Detaches a listener previously attached with {@link on}. The listener
+     * reference must be the same function that was passed to {@link on};
+     * detaching an unknown listener is a no-op.
+     */
     public off(...args: Parameters<DefaultDatasetCore["off"]>): void {
         this.dataset.off(...args)
     }

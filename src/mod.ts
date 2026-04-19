@@ -21,6 +21,8 @@ export * from "./mapping/RequiredAs.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
+export * from "./WrappingSet.js"
+export * from "./EventEmitter.js"
 export * from "./dataset/NotifyingDatasetCore.js"
 export * from "./dataset/LazyMaterialize.js"
 export * from "./dataset/terms.js"
