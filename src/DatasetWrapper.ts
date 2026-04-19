@@ -1,4 +1,4 @@
-import type { DataFactory, DatasetCore, DatasetFactory, DefaultGraph, Quad, Quad_Graph, Term } from "@rdfjs/types"
+import type { DataFactory, DatasetCore, DatasetCoreFactory, DatasetFactory, DefaultGraph, Quad, Quad_Graph, Term } from "@rdfjs/types"
 import type { ITermWrapperConstructor } from "./type/ITermWrapperConstructor.js"
 import type { GraphScopedDataset } from "./GraphScopedDataset.js"
 import type { IGraphScopedDatasetConstructor } from "./type/IGraphScopedDatasetConstructor.js"
@@ -26,7 +26,7 @@ export class DatasetWrapper implements DefaultDatasetCore {
     public constructor(
         dataset: DatasetCore,
         protected readonly factory: DataFactory,
-        protected readonly datasetFactory: DatasetFactory,
+        protected readonly datasetFactory: DatasetCoreFactory,
     ) {
         this.dataset = ensureNotifyingDatasetCore(dataset)
     }

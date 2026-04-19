@@ -49,7 +49,7 @@ export class ProjectedDatasetCoreWrapper implements ProjectedDatasetCore<Triple,
         private readonly readGraphs: ReadonlyArray<Quad_Graph> | undefined,
         private readonly source: NotifyingDatasetCore<Quad, Quad>,
         private readonly factory: DataFactory,
-        private readonly datasetFactory: NotifyingDatasetCoreFactory<Triple, Triple>,
+        private readonly datasetFactory: NotifyingDatasetCoreFactory<Quad, Quad, NotifyingDatasetCore<Triple, Triple>>,
     ) {
     }
 

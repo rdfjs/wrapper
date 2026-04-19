@@ -1,7 +1,7 @@
-import type { DataFactory, DatasetCore, DatasetFactory, Quad, Quad_Graph } from "@rdfjs/types"
+import type { DataFactory, Quad, Quad_Graph } from "@rdfjs/types"
 import { DatasetWrapper } from "./DatasetWrapper.js"
-import { ProjectedDatasetCoreWrapper } from "./ProjectedDataset.js"
-import { NotifyingDatasetCore } from "./NotifyingDatasetCore.js"
+import { ProjectedDatasetCoreWrapper, Triple } from "./ProjectedDataset.js"
+import { NotifyingDatasetCore, NotifyingDatasetCoreFactory } from "./NotifyingDatasetCore.js"
 
 /**
  * A {@link DatasetWrapper} that exposes a configurable set of graphs from an
@@ -19,8 +19,8 @@ export class GraphScopedDataset extends DatasetWrapper {
         readGraphs: ReadonlyArray<Quad_Graph> | undefined,
         dataset: NotifyingDatasetCore<Quad, Quad>,
         factory: DataFactory,
-        datasetFactory: DatasetFactory,
+        datasetFactory: NotifyingDatasetCoreFactory<Quad, Quad, NotifyingDatasetCore<Triple, Triple>>,
     ) {
-        super(new ProjectedDatasetCoreWrapper(writeGraph, readGraphs, dataset, factory, datasetFactory), factory)
+        super(new ProjectedDatasetCoreWrapper(writeGraph, readGraphs, dataset, factory, datasetFactory), factory, datasetFactory)
     }
 }
