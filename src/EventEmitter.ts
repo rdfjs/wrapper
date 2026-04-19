@@ -1,6 +1,6 @@
-import { BaseQuad, Quad, Term } from "@rdfjs/types";
-import { IPattern } from "./dataset/LazyMaterialize.js";
-import { ChangeEvent } from "./dataset/NotifyingDatasetCore.js";
+import type { BaseQuad, Quad, Term } from "@rdfjs/types";
+import type { IPattern } from "./dataset/LazyMaterialize.js";
+import type { ChangeEvent } from "./dataset/NotifyingDatasetCore.js";
 
 /**
  * A minimal multi-cast event emitter generic over the listener argument
