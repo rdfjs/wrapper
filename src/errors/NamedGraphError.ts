@@ -1,6 +1,5 @@
-import { IBaseTriple } from "../type/ITriple.js"
+import type { BaseQuad } from "@rdfjs/types"
 import { QuadError } from "./QuadError.js"
-import type { Quad } from "@rdfjs/types"
 
 /**
  * Thrown when a named graph is used on a dataset view that only supports the default graph.
@@ -8,7 +7,7 @@ import type { Quad } from "@rdfjs/types"
  * @see {@link namedGraph}
  */
 export class NamedGraphError extends QuadError {
-    constructor(quad: IBaseTriple, cause?: any) {
-        super(quad, `Graph must be default (empty) but was ${quad.value}`, cause)
+    constructor(quad: BaseQuad, cause?: any) {
+        super(quad, `Graph must be default (empty) but was ${quad.graph.value}`, cause)
     }
 }

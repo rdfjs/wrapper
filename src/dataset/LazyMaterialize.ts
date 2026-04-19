@@ -1,7 +1,11 @@
 import type { BaseQuad, DatasetCore, Quad } from "@rdfjs/types";
 import { ChangeEvent, IterableDatasetCoreFactory, Listener, NotifyingDatasetCore } from "./NotifyingDatasetCore.js";
-import { EventEmitter, PatternEventEmitter } from "../EventEmitter.js";
+import { PatternEventEmitter } from "../EventEmitter.js";
 
+/**
+ * A quad pattern: any subset of subject / predicate / object / graph.
+ * Missing fields act as wildcards that match any term in that position.
+ */
 export interface IPattern<OutQuad extends BaseQuad = Quad> {
     subject?: OutQuad['subject'] | undefined,
     predicate?: OutQuad['predicate'] | undefined,
@@ -9,10 +13,16 @@ export interface IPattern<OutQuad extends BaseQuad = Quad> {
     graph?: OutQuad['graph'] | undefined,
 };
 
+/** Carries an {@link IPattern} - implemented by lazy / projected views. */
 export interface Pattern<OutQuad extends BaseQuad = Quad> {
     pattern: IPattern<OutQuad>;
 }
 
+/**
+ * Minimal interface that a {@link LazyMatchNotifyingDatasetCore} needs from
+ * its backing source: the standard mutating / matching methods and a way to
+ * subscribe to change events.
+ */
 interface IterableSource<OutQuad extends BaseQuad = Quad> {
     match: (subject?: OutQuad['subject'], predicate?: OutQuad['predicate'], object?: OutQuad['object'], graph?: OutQuad['graph']) => Iterable<OutQuad>;
     add: (quad: OutQuad) => void;
@@ -41,10 +51,45 @@ const lazyMaterializedFinalizers = new FinalizationRegistry<() => void>(cleanup 
     }
 });
 
-// Lazily materialized dataset, which keeps in sync with source
+/**
+ * A {@link NotifyingDatasetCore} that exposes a quad-pattern view over a
+ * notifying source dataset.
+ *
+ * The view is **lazily materialized**: the matching quads are only copied
+ * into an internal dataset when needed (e.g. on the first call to
+ * {@link size}, {@link has} or repeated iteration). Once materialized, the
+ * view subscribes to the source's change events and keeps the cached set in
+ * sync, so it remains a live view of the underlying data.
+ *
+ * - {@link add} / {@link delete} are forwarded to the source (the source's
+ *   change notification updates the materialized cache).
+ * - {@link has} answers from the cache when materialized, otherwise from the
+ *   source.
+ * - {@link match} returns another {@link LazyMatchNotifyingDatasetCore} that
+ *   intersects the requested pattern with the current view's pattern. If the
+ *   patterns conflict (different bound terms in the same position) an
+ *   {@link EmptyDataset} is returned.
+ * - {@link on} / {@link off} subscribe to source changes filtered by the
+ *   view's pattern.
+ *
+ * The class implements {@link Disposable}: prefer the `using` declaration so
+ * that listeners are detached deterministically. A {@link FinalizationRegistry}
+ * provides a best-effort safety net when explicit disposal is missed.
+ */
 export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implements NotifyingDatasetCore<IQuad, IQuad>, Pattern<IQuad>, Disposable {
     private materialized?: DatasetCore<IQuad, IQuad> | undefined;
     private cb?: ((event: ChangeEvent, q: IQuad) => void) | undefined;
+
+    /**
+     * Bound source listener that forwards change events to the pattern
+     * emitter. Stored once so the *same* function reference is added to and
+     * removed from the source - a fresh closure per call would be a different
+     * reference and {@link IterableSource.off} would silently fail.
+     *
+     * The `=> this.ee.emit(...)` form preserves the `this` context that
+     * {@link PatternEventEmitter.emit} relies on.
+     */
+    private readonly emitToEe: (event: ChangeEvent, q: IQuad) => void;
 
     /**
      * Token used to unregister this instance from the finalization
@@ -59,22 +104,29 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
         public readonly pattern: IPattern<IQuad>,
         private readonly datasetFactory: IterableDatasetCoreFactory<IQuad, IQuad, NotifyingDatasetCore<IQuad, IQuad>>,
     ) {
-
+        const ee = this.ee;
+        this.emitToEe = (event, q) => ee.emit(event, q);
     }
 
+    /**
+     * Subscribes the materialized cache to source changes so it stays in
+     * sync. The closure intentionally captures `ds` and `source` - never
+     * `this` - so the wrapper remains eligible for garbage collection and
+     * the finalizer can run.
+     */
     private init(ds: DatasetCore<IQuad, IQuad>): void {
         const cb = (event: ChangeEvent, q: IQuad): void => { ds[event](q); };
         this.cb = cb;
-        const self = this;
+        const source = this.source;
 
-        self.on(cb);
+        source.on(cb);
 
         // Register a best-effort finalizer. The cleanup closure only
-        // references `ds` and the local handlers - never `this` -
+        // references `source` and the local handler - never `this` -
         // so the wrapper remains eligible for garbage collection.
         lazyMaterializedFinalizers.register(
             this,
-            () => self.off(cb),
+            () => source.off(cb),
             this.finalizerToken,
         );
     }
@@ -108,11 +160,12 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
      * specification, so deterministic disposal should still be preferred.
      */
     [Symbol.dispose](): void {
-        if (this.materialized) {
-            if (this.cb) {
-                this.off(this.cb);
-            }
+        if (this.cb) {
+            this.source.off(this.cb);
             lazyMaterializedFinalizers.unregister(this.finalizerToken);
+        }
+        if (!this.ee.empty) {
+            this.source.off(this.emitToEe);
         }
         this.cb = undefined;
         this.materialized = undefined;
@@ -120,10 +173,14 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
 
     public *[Symbol.iterator](): Iterator<IQuad> {
         // If already materialized, delegate to the dataset's iterator.
+        // NOTE: `yield*` is required - `return iterator` from a generator
+        // would set the generator's return value rather than iterating.
         if (this.materialized) {
-            return this.materialized[Symbol.iterator]();
+            yield* this.materialized;
+            return;
         }
 
+        // Stream and materialize in a single pass, deduplicating along the way.
         const materialized = this.datasetFactory.dataset();
         for (const q of this.source.match(this.pattern.subject, this.pattern.predicate, this.pattern.object, this.pattern.graph)) {
             if (!materialized.has(q)) {
@@ -132,6 +189,7 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
             }
         }
 
+        this.materialized = materialized;
         this.init(materialized);
     }
 
@@ -160,14 +218,16 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
     }
 
     match(subject?: IQuad['subject'], predicate?: IQuad['predicate'], object?: IQuad['object'], graph?: IQuad['graph']): NotifyingDatasetCore<IQuad, IQuad> {
-        let pattern: IPattern<IQuad> = { subject, predicate, object, graph };
+        const pattern: IPattern<IQuad> = { subject, predicate, object, graph };
 
         for (const key of ['subject', 'predicate', 'object', 'graph'] as const) {
-            if (pattern[key] !== undefined && this.pattern[key] !== undefined && !pattern[key].equals(this.pattern[key])) {
+            const requested = pattern[key];
+            const existing = this.pattern[key];
+            if (requested !== undefined && existing !== undefined && !requested.equals(existing)) {
                 // Pattern and argument conflict; return an empty dataset.
-                return EMTY_DATASET;
+                return EMPTY_DATASET as NotifyingDatasetCore<IQuad, IQuad>;
             }
-            pattern[key] ??= this.pattern[key];
+            pattern[key] ??= existing;
         }
 
         return new LazyMatchNotifyingDatasetCore<IQuad>(
@@ -181,7 +241,7 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
 
     on(...args: Parameters<NotifyingDatasetCore<IQuad, IQuad>["on"]>): void {
         if (this.ee.empty) {
-            this.source.on(this.ee.emit);
+            this.source.on(this.emitToEe);
         }
         this.ee.on(this.pattern, ...args);
     }
@@ -189,11 +249,17 @@ export class LazyMatchNotifyingDatasetCore<IQuad extends BaseQuad = Quad> implem
     off(...args: Parameters<NotifyingDatasetCore<IQuad, IQuad>["off"]>): void {
         this.ee.off(this.pattern, ...args);
         if (this.ee.empty) {
-            this.source.off(this.ee.emit);
+            this.source.off(this.emitToEe);
         }
     }
 }
 
+/**
+ * A {@link NotifyingDatasetCore} that contains no quads. Returned by
+ * {@link LazyMatchNotifyingDatasetCore.match} when the requested pattern
+ * conflicts with the view's existing pattern. Mutations are not supported
+ * and throw.
+ */
 export class EmptyDataset<OutQuad extends BaseQuad = Quad, InQuad extends BaseQuad = OutQuad> implements NotifyingDatasetCore<OutQuad, InQuad> {
     size = 0;
 
@@ -226,4 +292,4 @@ export class EmptyDataset<OutQuad extends BaseQuad = Quad, InQuad extends BaseQu
     }
 }
 
-const EMTY_DATASET = new EmptyDataset();
+const EMPTY_DATASET = new EmptyDataset();

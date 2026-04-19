@@ -1,8 +1,10 @@
 import assert from "node:assert"
 import { describe, it } from "node:test"
-import { DataFactory } from "n3"
+import { DataFactory, Triple as N3Triple } from "n3"
 import { ParentDataset } from "./model/ParentDataset.js"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
+import { n3StoreFactory } from "./util/n3StoreFactory.js"
+import { defaultGraph, type Triple } from "@rdfjs/wrapper"
 
 const rdf = `
 prefix : <https://example.org/>
@@ -22,8 +24,8 @@ prefix : <https://example.org/>
 `;
 
 await describe("Dataset Core Bases", async () => {
-    const parentDataset = new ParentDataset(datasetFromRdf(rdf), DataFactory)
-    const newQuad = DataFactory.quad(DataFactory.blankNode(), DataFactory.namedNode("x"), DataFactory.literal("x"))
+    const parentDataset = new ParentDataset(datasetFromRdf(rdf), DataFactory, n3StoreFactory)
+    const newQuad = DataFactory.quad<Triple, N3Triple & Triple>(DataFactory.blankNode(), DataFactory.namedNode("x"), DataFactory.literal("x"))
 
     await it("get size", async () => {
         assert.equal(parentDataset.size, 8)
@@ -51,8 +53,8 @@ await describe("Dataset Core Bases", async () => {
 
     await it("match quads", async () => {
         parentDataset.add(newQuad)
-        assert.equal((Array.from(parentDataset.match(newQuad.subject, newQuad.predicate, newQuad.object, newQuad.graph)).length), 1)
+        assert.equal((Array.from(parentDataset.match(newQuad.subject, newQuad.predicate, newQuad.object, defaultGraph)).length), 1)
         parentDataset.delete(newQuad)
-        assert.equal((Array.from(parentDataset.match(newQuad.subject, newQuad.predicate, newQuad.object, newQuad.graph)).length), 0)
+        assert.equal((Array.from(parentDataset.match(newQuad.subject, newQuad.predicate, newQuad.object, defaultGraph)).length), 0)
     })
 })

@@ -5,7 +5,7 @@ import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
 import { RDF } from "./vocabulary/RDF.js"
 import { ListRootError } from "./errors/ListRootError.js"
 import { NamedGraphError } from "./errors/NamedGraphError.js"
-import { IBaseTriple } from "./type/ITriple.js"
+import { BaseTriple } from "./type/ITriple.js"
 
 export function ensurePresent(object: any) {
     if (object !== undefined && object !== null) {
@@ -51,7 +51,7 @@ export function ensureListRoot(term: IRdfJsTerm) {
     throw new ListRootError(term as Term)
 }
 
-export function ensureDefaultGraph(quad: IBaseTriple): asserts quad is IBaseTriple {
+export function ensureDefaultGraph(quad: BaseQuad): asserts quad is BaseTriple {
     if (quad.graph.termType === "DefaultGraph") {
         return
     }

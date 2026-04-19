@@ -27,7 +27,7 @@ export class WrappingSet<T> implements Set<T> {
         const o = this.termFrom(value, this.subject.factory) // TODO: guards
         const p = this.subject.factory.namedNode(this.predicate)
 
-        for (const q of this.subject.dataset.match(this.subject as Term, p, o as Term)) {
+        for (const q of this.subject.dataset.match(this.subject as Term, p, o as Term, this.subject.factory.defaultGraph())) {
             this.subject.dataset.delete(q)
         }
 
@@ -82,6 +82,6 @@ export class WrappingSet<T> implements Set<T> {
 
     private get matches(): DatasetCore {
         const p = this.subject.factory.namedNode(this.predicate)
-        return this.subject.dataset.match(this.subject as Term, p)
+        return this.subject.dataset.match(this.subject as Term, p, undefined, this.subject.factory.defaultGraph())
     }
 }

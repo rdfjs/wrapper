@@ -33,18 +33,20 @@ const idxToStr = (idx: number, pattern: IPattern<any>): string => {
 
 function handleMap<IQuad extends BaseQuad>(map: Map<string, any>, idx: number, pattern: IPattern<IQuad>, listener: (event: ChangeEvent, q: IQuad) => void): void {
     const str = idxToStr(idx, pattern);
-    if (map.has(str)) {
-        const item: Map<string, any> | Set<(event: ChangeEvent, q: IQuad) => void> = map.get(str);
+    if (!map.has(str)) {
+        return;
+    }
+    const item: Map<string, any> | Set<(event: ChangeEvent, q: IQuad) => void> = map.get(str);
 
-        if (idx === LAST) {
-            map.delete(str);
-        } else {
-            handleMap(item as Map<string, any>, idx + 1, pattern, listener);
+    if (idx === LAST) {
+        // Leaf level: remove the specific listener, not every listener for this pattern.
+        (item as Set<(event: ChangeEvent, q: IQuad) => void>).delete(listener);
+    } else {
+        handleMap(item as Map<string, any>, idx + 1, pattern, listener);
+    }
 
-            if (item.size === 0) {
-                map.delete(str);
-            }
-        }
+    if (item.size === 0) {
+        map.delete(str);
     }
 }
 
@@ -71,12 +73,13 @@ export class PatternEventEmitter<IQuad extends BaseQuad> {
     on(pattern: IPattern<IQuad>, listener: (event: ChangeEvent, q: IQuad) => void): void {
         let listenerSet: any = this.listeners;
         for (const key of KEYS) {
-            const newListenerList = listenerSet.get(toString(pattern[key]));
-            if (newListenerList === undefined) {
-                const newListenerList = key === 'graph' ? new Set<(event: ChangeEvent, q: IQuad) => void>() : new Map<string, any>();
-                listenerSet.set(toString(pattern[key]), newListenerList);
+            const str = toString(pattern[key]);
+            let next = listenerSet.get(str);
+            if (next === undefined) {
+                next = key === 'object' ? new Set<(event: ChangeEvent, q: IQuad) => void>() : new Map<string, any>();
+                listenerSet.set(str, next);
             }
-            listenerSet = newListenerList;
+            listenerSet = next;
         }
         listenerSet.add(listener);
     }

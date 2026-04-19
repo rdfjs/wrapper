@@ -9,7 +9,7 @@ export namespace RequiredFrom {
         }
 
         const anchor2 = anchor1.factory.namedNode(p)
-        const matches = anchor1.dataset.match(anchor1 as Term, anchor2)[Symbol.iterator]()
+        const matches = anchor1.dataset.match(anchor1 as Term, anchor2, undefined, anchor1.factory.defaultGraph())[Symbol.iterator]()
 
         // TODO: Expose standard errors
         const {value: first, done: none} = matches.next()

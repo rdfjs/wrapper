@@ -1,9 +1,9 @@
 import type { BaseQuad, DefaultGraph, Quad } from "@rdfjs/types";
 
-export interface IBaseTriple extends BaseQuad {
+export interface BaseTriple extends BaseQuad {
     graph: DefaultGraph;
 }
 
-export interface ITriple extends Quad {
+export interface Triple extends Quad {
     graph: DefaultGraph;
 }

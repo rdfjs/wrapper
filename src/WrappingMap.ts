@@ -99,7 +99,7 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
     private get matches(): Iterable<Quad> {
         const p = this.subject.factory.namedNode(this.predicate)
 
-        return this.subject.dataset.match(this.subject as Term, p)
+        return this.subject.dataset.match(this.subject as Term, p, undefined, this.subject.factory.defaultGraph())
     }
 
     private add(k: TKey, v: TValue) {

@@ -10,7 +10,7 @@ export namespace OptionalFrom {
 
         const predicate = anchor.factory.namedNode(p)
 
-        for (const q of anchor.dataset.match(anchor as Term, predicate)) {
+        for (const q of anchor.dataset.match(anchor as Term, predicate, undefined, anchor.factory.defaultGraph())) {
             return termAs(new TermWrapper(q.object, anchor.dataset, anchor.factory))
         }
 
