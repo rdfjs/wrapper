@@ -19,7 +19,7 @@ jobs:
       - run: npm i
       - run: npx typedoc
       - run: cp context7_website.json _site/context7.json
-      - uses: actions/upload-pages-artifact@v4
+      - uses: actions/upload-pages-artifact@v5
 
   deploy:
     needs: build
