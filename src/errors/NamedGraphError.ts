@@ -4,7 +4,8 @@ import { QuadError } from "./QuadError.js"
 /**
  * Thrown when a named graph is used on a dataset view that only supports the default graph.
  *
- * @see {@link namedGraph}
+ * @see {@link DatasetWrapper.scoped}
+ * @see {@link GraphScopedDataset}
  */
 export class NamedGraphError extends QuadError {
     constructor(quad: BaseQuad, cause?: any) {
