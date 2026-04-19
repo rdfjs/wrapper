@@ -302,6 +302,127 @@ alice.children.off(listener) // detaches the listener attached above
 ```
 
 
+### Async API
+
+The library ships a parallel asynchronous surface for use with RDF/JS-shaped datasets that are themselves asynchronous (or that you want to expose through promises). Every type, class and mapping has a sync sibling and an async sibling; the names are prefixed with `Async`.
+
+The shape of the async dataset interface mirrors RDF/JS `DatasetCore` with one deliberate exception: `match` returns another `AsyncDatasetCore` synchronously (the matched view is materialised lazily on iteration), while every other read/write returns a `Promise`. Iteration is exposed via `Symbol.asyncIterator`; there is no synchronous `Symbol.iterator`.
+
+| Sync                                | Async                                       |
+| ----------------------------------- | ------------------------------------------- |
+| `DatasetCore`                       | `AsyncDatasetCore`                          |
+| `NotifyingDatasetCore`              | `AsyncNotifyingDatasetCore`                 |
+| `NotifyingDatasetCoreWrapper`       | `AsyncNotifyingDatasetCoreWrapper`          |
+| `DatasetWrapper`                    | `AsyncDatasetWrapper`                       |
+| `TermWrapper`                       | `AsyncTermWrapper`                          |
+| `WrappingSet`                       | `AsyncWrappingSet`                          |
+| `RequiredFrom` / `OptionalFrom`     | `AsyncRequiredFrom` / `AsyncOptionalFrom`   |
+| `RequiredAs` / `OptionalAs`         | `AsyncRequiredAs` / `AsyncOptionalAs`       |
+| `SetFrom`                           | `AsyncSetFrom`                              |
+| `TermAs` / `LiteralAs`              | `AsyncTermAs` / `AsyncLiteralAs`            |
+| `LiteralFrom` / `NamedNodeFrom` / `BlankNodeFrom` / `TermFrom` | _reused as-is_ (pure functions) |
+
+#### Defining async wrappers
+
+JavaScript property setters cannot be `async`, so write-mappings on async wrappers are exposed as `setX(value)` methods that return a `Promise`. Read-mappings are normal getters that return a `Promise`; set-mappings return an `AsyncWrappingSet`.
+
+```javascript
+import {
+    AsyncLiteralAs, AsyncOptionalAs, AsyncOptionalFrom,
+    AsyncRequiredAs, AsyncRequiredFrom,
+    AsyncSetFrom, AsyncTermAs,
+    AsyncTermWrapper,
+    LiteralFrom, TermFrom,
+} from "@rdfjs/wrapper"
+
+class AsyncPerson extends AsyncTermWrapper {
+    get name() {
+        return AsyncRequiredFrom.subjectPredicate(this, "https://example.org/name", AsyncLiteralAs.string)
+    }
+    setName(value) {
+        return AsyncRequiredAs.object(this, "https://example.org/name", value, LiteralFrom.string)
+    }
+
+    get nickname() {
+        return AsyncOptionalFrom.subjectPredicate(this, "https://example.org/nickname", AsyncLiteralAs.string)
+    }
+    setNickname(value) {
+        return AsyncOptionalAs.object(this, "https://example.org/nickname", value, LiteralFrom.string)
+    }
+
+    get children() {
+        return AsyncSetFrom.subjectPredicate(this, "https://example.org/hasChild", AsyncTermAs.instance(AsyncPerson), TermFrom.instance)
+    }
+}
+```
+
+Usage:
+
+```javascript
+const alice = new AsyncPerson("https://example.org/alice", asyncDataset, DataFactory)
+
+console.log(await alice.name)           // "Alice"
+await alice.setName("Alicia")
+console.log(await alice.name)           // "Alicia"
+
+for await (const child of alice.children) {
+    console.log(await child.name)
+}
+```
+
+#### Async dataset wrappers
+
+`AsyncDatasetWrapper` is the async counterpart of `DatasetWrapper`. The same `subjectsOf` / `objectsOf` / `instancesOf` / `matchSubjectsOf` / `matchObjectsOf` helpers are available, but they return `AsyncIterable` so callers iterate with `for await`:
+
+```javascript
+import { AsyncDatasetWrapper } from "@rdfjs/wrapper"
+
+class People extends AsyncDatasetWrapper {
+    get all() {
+        return this.subjectsOf("https://example.org/name", AsyncPerson)
+    }
+}
+
+const people = new People(asyncDataset, DataFactory, asyncDatasetFactory)
+for await (const person of people.all) {
+    console.log(await person.name)
+}
+
+console.log(await people.size) // resolves to a number
+```
+
+#### Bridging a synchronous dataset
+
+`AsyncNotifyingDatasetCoreWrapper` accepts either an `AsyncDatasetCore` or any synchronous `DatasetCore` (e.g. an n3 `Store`), so existing sync stores can be exposed through the async pipeline without re-implementation:
+
+```javascript
+import { AsyncNotifyingDatasetCoreWrapper } from "@rdfjs/wrapper"
+import { Store } from "n3"
+
+const store = new Store()
+const asyncDataset = new AsyncNotifyingDatasetCoreWrapper(store)
+
+await asyncDataset.add(quad)
+console.log(await asyncDataset.size)
+```
+
+You can also implement `AsyncNotifyingDatasetCoreFactory` to plug in a genuinely asynchronous backing store (database, remote SPARQL endpoint, etc.).
+
+#### Async change notifications
+
+`AsyncDatasetWrapper` and `AsyncWrappingSet` expose the same `on` / `off` shape as their sync siblings. Listeners may be `async` - the dispatcher awaits a returned promise before invoking the next listener:
+
+```javascript
+asyncDataset.on(async (event, quad) => {
+    await sendToAuditLog(event, quad)
+})
+
+alice.children.on(async (event, child) => {
+    console.log(event, await child.name)
+})
+```
+
+
 ## Background
 
 Practically, to map RDF to objects, you need to:
