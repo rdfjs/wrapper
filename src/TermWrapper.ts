@@ -30,7 +30,7 @@ import type { DataFactory, DatasetCore, NamedNode, Term } from "@rdfjs/types"
  * We can work with this data in JavaScript and TypeScript as follows:
  * ```ts
  * const dataset: DatasetCore // which has the RDF above loaded
- * const instance = new SomeClass("http://example.com/someSubject", dataset, DataFactory)
+ * const instance = SomeClass.from("http://example.com/someSubject", dataset, DataFactory)
  *
  * const value = instance.someProperty // contains "some value"
  *
@@ -38,35 +38,19 @@ import type { DataFactory, DatasetCore, NamedNode, Term } from "@rdfjs/types"
  * ```
  *
  * @example Using instances of TermWrapper as instances of RDF/JS Term
- * Since this class implements all members of all term types (named nodes, literals, blank nodes etc.), it can be cast to an RDF/JS Term:
+ * Instances created via {@link TermWrapper.from} are typed as both the wrapper and the underlying RDF/JS {@link Term}, so they can be passed directly anywhere a `Term` is expected — no casts required:
  * ```ts
- * let instance: TermWrapper
+ * const instance = SomeClass.from("http://example.com/someSubject", dataset, factory)
  *
- * // Our instance cast as Term
- * const term = instance as Term
+ * // Used as subject when creating a quad
+ * factory.quad(instance, predicate, object)
+ *
+ * // Used as subject when matching statements in a dataset
+ * dataset.match(instance)
  * ```
  *
- * @example Using instances of TermWrapper to create quads
- * Instances of this class can be used anywhere an RDF/JS Term can be used, which includes creating quads:
- * ```ts
- * let instance: TermWrapper
- * let factory: DataFactory
- * const predicate = factory.namedNode("http://example.com/p")
- * const object = factory.literal("o")
- *
- * // Our instance used as subject when creating a quad
- * factory.quad(instance as Quad_Subject, predicate, object)
- * ```
- *
- * @example Using instances of TermWrapper to match graph patterns
- * Instances of this class can be used anywhere an RDF/JS Term can be used, which includes matching quads in a dataset:
- * ```ts
- * let instance: TermWrapper
- * let dataset: DatasetCore
- *
- * // Our instance used as subject when matching statements in a dataset
- * dataset.match(instance as Term)
- * ```
+ * @see
+ * - {@link TermWrapper.from}
  */
 export class TermWrapper<T extends Term = Term> {
     private readonly original: T
