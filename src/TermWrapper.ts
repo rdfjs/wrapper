@@ -1,5 +1,4 @@
-import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Quad_Subject, Term } from "@rdfjs/types"
-import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
+import type { DataFactory, DatasetCore, NamedNode, Term } from "@rdfjs/types"
 
 /**
  * `TermWrapper` is one of the two central constructs of this library. It is the base class of all models that represent a mapping from RDF to JavaScript. It _is_ an {@link Term | RDF/JS term} (or node) that also has a reference to both the dataset (or graph) that is the context of (i.e. contains) the term and to a factory that can be used to create additional terms.
@@ -69,8 +68,8 @@ import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
  * dataset.match(instance as Term)
  * ```
  */
-export class TermWrapper implements IRdfJsTerm {
-    private readonly original: Term
+export class TermWrapper<T extends Term = Term> {
+    private readonly original: T
     private readonly _dataset: DatasetCore
     private readonly _factory: DataFactory
 
@@ -93,7 +92,7 @@ export class TermWrapper implements IRdfJsTerm {
     constructor(term: Term, dataset: DatasetCore, factory: DataFactory)
 
     constructor(term: string | Term, dataset: DatasetCore, factory: DataFactory) {
-        this.original = typeof term === "string" ? factory.namedNode(term) : term
+        this.original = (typeof term === "string" ? factory.namedNode(term) : term) as T
         this._dataset = dataset
         this._factory = factory
     }
@@ -189,7 +188,7 @@ export class TermWrapper implements IRdfJsTerm {
 
     //#region Implementation of RDF/JS Term
 
-    get termType(): Term["termType"] {
+    get termType(): T["termType"] {
         return this.original.termType
     }
 
@@ -201,41 +200,39 @@ export class TermWrapper implements IRdfJsTerm {
         return this.original.equals(other)
     }
 
-    //#region Implementation of RDF/JS Literal
-
-    get language(): string {
-        return (this.original as Literal).language
+    /**
+     * Creates a new instance of this class (or subclass), typed as both the wrapper and the underlying RDF/JS {@link Term}.
+     *
+     * @remarks
+     * Equivalent to invoking the constructor directly, but the returned value is typed as the intersection of the (sub)class instance type and the term type. When called on a subclass (e.g. `Child.from(...)`), the returned value is `Child & T`, where `T` is inferred from the `term` argument (defaults to {@link NamedNode} when a string is passed).
+     *
+     * @example
+     * ```ts
+     * const child = Child.from("http://example.com/x", dataset, factory)
+     * // typeof child === Child & NamedNode<string>
+     * ```
+     */
+    public static from<This extends new (...args: any) => any>(
+        this: This,
+        term: string,
+        dataset: DatasetCore,
+        factory: DataFactory,
+    ): InstanceType<This> & NamedNode<string>
+    public static from<This extends new (...args: any) => any, T extends Term>(
+        this: This,
+        term: T,
+        dataset: DatasetCore,
+        factory: DataFactory,
+    ): InstanceType<This> & T
+    public static from(this: any, term: string | Term, dataset: DatasetCore, factory: DataFactory): any {
+        return new this(term, dataset, factory)
     }
+}
 
-    get direction(): Literal["direction"] {
-        return (this.original as Literal).direction
-    }
-
-    get datatype(): NamedNode {
-        return (this.original as Literal).datatype
-    }
-
-    //#endregion
-
-    //#region Implementation of RDF/JS Quad
-
-    get subject(): Term {
-        return (this.original as BaseQuad).subject
-    }
-
-    get predicate(): Term {
-        return (this.original as BaseQuad).predicate
-    }
-
-    get object(): Term {
-        return (this.original as BaseQuad).object
-    }
-
-    get graph(): Term {
-        return (this.original as BaseQuad).graph
-    }
-
-    //#endregion
-
-    //#endregion
+for (const prop of ['language', 'direction', 'datatype', 'subject', 'predicate', 'object', 'graph'] as const) {
+    Object.defineProperty(TermWrapper.prototype, prop, {
+        get(this: TermWrapper) { return (this as any).original[prop] },
+        enumerable: false,
+        configurable: true,
+    })
 }

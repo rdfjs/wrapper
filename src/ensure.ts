@@ -1,10 +1,10 @@
 import type { DefaultGraph, Literal, Quad, Term } from "@rdfjs/types"
 import { TermTypeError } from "./errors/TermTypeError.js"
 import { LiteralDatatypeError } from "./errors/LiteralDatatypeError.js"
-import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
 import { RDF } from "./vocabulary/RDF.js"
 import { ListRootError } from "./errors/ListRootError.js"
 import { NamedGraphError } from "./errors/NamedGraphError.js"
+import { TermWrapper } from "./TermWrapper.js"
 
 export function ensurePresent(object: any) {
     if (object !== undefined && object !== null) {
@@ -30,15 +30,15 @@ export function ensureTermType(term: { termType: Term["termType"] }, type: Term[
     throw new TermTypeError(term as Term, type)
 }
 
-export function ensureDatatype(term: IRdfJsTerm, ...datatypes: string[]) {
-    if (datatypes.includes(term.datatype.value)) {
+export function ensureDatatype(term: TermWrapper, ...datatypes: string[]) {
+    if (datatypes.includes((term as unknown as Literal).datatype.value)) {
         return
     }
 
-    throw new LiteralDatatypeError(term as Literal, datatypes)
+    throw new LiteralDatatypeError(term as unknown as Literal, datatypes)
 }
 
-export function ensureListRoot(term: IRdfJsTerm) {
+export function ensureListRoot(term: TermWrapper) {
     if (term.termType === "NamedNode" && term.value === RDF.nil) {
         return
     }
