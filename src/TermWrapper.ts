@@ -196,13 +196,13 @@ export class TermWrapper<T extends Term = Term> {
      * // typeof child === Child & NamedNode<string>
      * ```
      */
-    public static from<This extends new (...args: any) => any>(
+    public static from<This extends new (term: string, dataset: DatasetCore, factory: DataFactory) => any>(
         this: This,
         term: string,
         dataset: DatasetCore,
         factory: DataFactory,
     ): InstanceType<This> & NamedNode<string>
-    public static from<This extends new (...args: any) => any, T extends Term>(
+    public static from<T extends Term, This extends new (term: T, dataset: DatasetCore, factory: DataFactory) => any>(
         this: This,
         term: T,
         dataset: DatasetCore,
