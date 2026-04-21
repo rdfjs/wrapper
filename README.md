@@ -57,6 +57,7 @@ ex:person1 ex:name "Alice" .
 Class usage:
 
 ```javascript
+import { DataFactory } from "n3"
 const person1 = Person.from("https://example.org/person1", dataset_x, DataFactory)
 
 // Get property
