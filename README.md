@@ -46,12 +46,17 @@ class Person extends TermWrapper {
 }
 ```
 
-Assuming the following RDF has been loaded in a dataset `dataset_x`:
+Assuming the following RDF
 
 ```turtle
 PREFIX ex: <https://example.org/>
 
 ex:person1 ex:name "Alice" .
+```
+
+has been loaded into an RDF/JS dataset `dataset_x` (here using [N3.js](https://github.com/rdfjs/N3.js/) `Store`):
+```js
+const dataset_x = new N3.Store(new N3.Parser().parse(rdf)) // rdf holds the turtle above
 ```
 
 Class usage:
