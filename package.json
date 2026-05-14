@@ -27,9 +27,11 @@
     "mapping",
     "wrapper"
   ],
+  "author": "Samu Lang (https://github.com/langsamu)",
   "contributors": [
     "Matthieu Bosquet (https://github.com/matthieubosquet)",
-    "Samu Lang (https://github.com/langsamu)"
+    "Samu Lang (https://github.com/langsamu)",
+    "Jesse Wright (https://github.com/jeswr)"
   ],
   "license": "MIT",
   "dependencies": {},

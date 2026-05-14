@@ -258,6 +258,11 @@ Practically, to map RDF to objects, you need to:
 - [RDF](https://en.wikipedia.org/wiki/Resource_Description_Framework)
 - [Knowledge Graph](https://en.wikipedia.org/wiki/Knowledge_graph)
 
+## History
+
+The paradigm employed here originates in [@langsamu](https://github.com/langsamu)'s research on using the [Test case manifest vocabulary](https://www.w3.org/2001/sw/DataAccess/tests/test-manifest#) to implement [unit tests in Java for the UK National Archives](https://github.com/nationalarchives/kettle-jena-plugins/pull/26).
+
+It was later used to implement a [.NET SHACL processor](https://github.com/dotnetrdf/dotnetrdf/pull/236) and expanded into a robust library in [Inrupt RDF Wrapping for Java](https://github.com/inrupt/rdf-wrapping-java/).
 
 ## License
 
