@@ -28,7 +28,9 @@ export namespace LiteralFrom {
     }
 
     export function date(value: Date, factory: DataFactory): Term {
-        return factory.literal(value.toISOString(), factory.namedNode(XSD.date))
+        // xsd:date's lexical space is YYYY-MM-DD; toISOString() returns a full
+        // dateTime, so take only the date portion (see issue #78).
+        return factory.literal(value.toISOString().slice(0, 10), factory.namedNode(XSD.date))
     }
 
     export function dateTime(value: Date, factory: DataFactory): Term {
