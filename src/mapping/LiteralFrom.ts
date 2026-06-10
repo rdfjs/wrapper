@@ -28,7 +28,7 @@ export namespace LiteralFrom {
     }
 
     export function date(value: Date, factory: DataFactory): Term {
-        return factory.literal(value.toISOString().slice(0, 10), factory.namedNode(XSD.date))
+        return factory.literal(value.toISOString().split("T")[0], factory.namedNode(XSD.date))
     }
 
     export function dateTime(value: Date, factory: DataFactory): Term {
