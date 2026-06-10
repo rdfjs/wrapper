@@ -28,8 +28,6 @@ export namespace LiteralFrom {
     }
 
     export function date(value: Date, factory: DataFactory): Term {
-        // xsd:date's lexical space is YYYY-MM-DD; toISOString() returns a full
-        // dateTime, so take only the date portion (see issue #78).
         return factory.literal(value.toISOString().slice(0, 10), factory.namedNode(XSD.date))
     }
 
