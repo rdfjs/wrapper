@@ -37,7 +37,7 @@
   "dependencies": {},
   "devDependencies": {
     "@rdfjs/types": "^2",
-    "@types/node": "^25",
+    "@types/node": "^26",
     "typescript": "^6",
     "@types/n3": "^1",
     "n3": "^2",
