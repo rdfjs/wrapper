@@ -34,7 +34,9 @@
     "Jesse Wright (https://github.com/jeswr)"
   ],
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@jeswr/async-dataset": "github:jeswr/async-dataset#feat/async-dataset"
+  },
   "devDependencies": {
     "@rdfjs/types": "^2",
     "@types/node": "^26",
