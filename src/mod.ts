@@ -31,11 +31,13 @@ export * from "./errors/MappingArgumentError.js"
 export * from "./errors/ListRootError.js"
 export * from "./errors/QuadError.js"
 export * from "./errors/NamedGraphError.js"
+export * from "./errors/DatasetEventsError.js"
 
 // Async surface
 export type * from "./async/type/IAsyncTermAsValueMapping.js"
 export type * from "./async/type/IAsyncTermFromValueMapping.js"
 export type * from "./async/type/IAsyncTermWrapperConstructor.js"
+export type * from "./async/type/IAsyncDatasetChangeListener.js"
 
 export * from "./async/AsyncDatasetWrapper.js"
 export * from "./async/AsyncTermWrapper.js"
