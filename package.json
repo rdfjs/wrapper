@@ -36,6 +36,7 @@
   "license": "MIT",
   "dependencies": {},
   "devDependencies": {
+    "@jeswr/eventful-dataset": "github:jeswr/eventful-dataset#feat/eventful-dataset",
     "@rdfjs/types": "^2",
     "@types/node": "^26",
     "typescript": "^6",

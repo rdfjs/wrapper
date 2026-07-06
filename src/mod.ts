@@ -20,6 +20,7 @@ export * from "./mapping/RequiredAs.js"
 
 export * from "./DatasetWrapper.js"
 export * from "./TermWrapper.js"
+export * from "./WrappingSet.js"
 export * from "./NamedGraphDataset.js"
 
 export * from "./errors/WrapperError.js"
@@ -29,3 +30,4 @@ export * from "./errors/LiteralDatatypeError.js"
 export * from "./errors/ListRootError.js"
 export * from "./errors/QuadError.js"
 export * from "./errors/NamedGraphError.js"
+export * from "./errors/DatasetEventsError.js"
