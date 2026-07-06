@@ -201,6 +201,68 @@ export class TermWrapper implements IRdfJsTerm {
         return new this(term, dataset, factory)
     }
 
+    /**
+     * Creates a factory function, bound to the given dataset and term factory, that creates instances of this class (or subclass) typed as both the wrapper and the {@link Term} it wraps.
+     *
+     * @remarks
+     * This is the curried counterpart of {@link TermWrapper.from}: where {@link TermWrapper.from} wraps a single term, this method binds the `dataset` and `factory` arguments once and returns a function that only takes the term to wrap. The returned function accepts either the IRI of a named node or an existing term, and, like {@link TermWrapper.from}, returns the intersection of the (sub)class instance type and the type of the wrapped term.
+     *
+     * The bound factory function is most useful when wrapping many terms from the same dataset, for example when mapping a collection of IRIs.
+     *
+     * @example Mapping many IRIs with one bound factory
+     * Assume the following RDF data:
+     * ```turtle
+     * BASE <http://example.com/>
+     *
+     * <person1> <name> "Ann" .
+     * <person2> <name> "Bob" .
+     * ```
+     * A single bound factory wraps all subjects without repeating the dataset and factory arguments:
+     * ```ts
+     * class Person extends TermWrapper {
+     *   get name(): string {
+     *     return RequiredFrom.subjectPredicate(this, "http://example.com/name", LiteralAs.string)
+     *   }
+     * }
+     *
+     * const iris = ["http://example.com/person1", "http://example.com/person2"]
+     * const people = iris.map(Person.in(dataset, factory))
+     *
+     * const names = people.map(person => person.name) // contains ["Ann", "Bob"]
+     * ```
+     *
+     * @example Preserving the type of wrapped terms
+     * The returned function preserves the term type of its argument, so term-type-specific members are available without casts:
+     * ```ts
+     * const wrap = SomeClass.in(dataset, factory)
+     *
+     * const namedNode = wrap("http://example.com/someSubject") // typed as SomeClass & NamedNode
+     * const literal = wrap(factory.literal("some value", "en")) // typed as SomeClass & Literal
+     *
+     * const language = literal.language // contains "en"
+     * ```
+     *
+     * @param dataset The dataset that contains the terms being wrapped.
+     * @param factory A collection of methods for creating terms.
+     * @returns A function that takes an IRI or a {@link Term} and returns a new instance of the class this method was invoked on, typed additionally as the term it wraps.
+     *
+     * @see
+     * - [Terms in the RDF/JS Data model specification](https://rdf.js.org/data-model-spec/#term-interface)
+     * - [DatasetCore in the RDF/JS Dataset specification](https://rdf.js.org/dataset-spec/#datasetcore-interface)
+     */
+    public static in<This extends new (term: any, dataset: DatasetCore, factory: DataFactory) => any>(
+        this: This,
+        dataset: DatasetCore,
+        factory: DataFactory,
+    ): {
+        (term: string): InstanceType<This> & NamedNode<string>
+        <T extends Term>(term: T): InstanceType<This> & T
+    }
+
+    public static in(this: any, dataset: DatasetCore, factory: DataFactory): (term: string | Term) => any {
+        return (term: string | Term) => new this(term, dataset, factory)
+    }
+
     //#endregion
 
     /**
