@@ -40,6 +40,45 @@ export namespace LiteralAs {
         return new Date(term.value)
     }
 
+    /**
+     * {@link ITermAsValueMapping Maps} a language-tagged literal to an {@link ILangString}.
+     *
+     * @param {TermWrapper} term - The term containing a language-tagged string.
+     * @return An {@link ILangString} carrying the term's {@link Literal.language | language tag} (`lang`) and lexical value (`string`).
+     *
+     * @remarks
+     * Only literals with the [`rdf:langString`](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal) datatype are supported,
+     * which is the datatype of every literal written with a language tag (e.g. `"..."@en`).
+     *
+     * Use {@link langTuple} to map the same literals to plain `[language, value]` tuples instead.
+     *
+     * @throws {@link !ReferenceError ReferenceError} If the term is `undefined` or `null`.
+     * @throws {@link !TypeError TypeError} If the term is not a {@link TermWrapper}.
+     * @throws {@link TermTypeError} If the term is not a {@link Literal}.
+     * @throws {@link LiteralDatatypeError} If the term's datatype is not `rdf:langString`.
+     *
+     * @example Read a language-tagged string
+     * The RDF
+     * ```turtle
+     * <s> <p> "The librarian"@en .
+     * ```
+     *
+     * can be represented by the mapping
+     * ```ts
+     * class Class extends TermWrapper {
+     *     public get property(): ILangString {
+     *         return RequiredFrom.subjectPredicate(this, "p", LiteralAs.langString)
+     *     }
+     * }
+     * ```
+     *
+     * which returns the value `{lang: "en", string: "The librarian"}`.
+     *
+     * @see
+     * - {@link ILangString}
+     * - {@link LiteralFrom.langString} for the inverse mapping
+     * - [Language-tagged strings in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)
+     */
     export function langString(term: TermWrapper): ILangString {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
@@ -173,6 +212,65 @@ export namespace LiteralAs {
         return new URL(term.value)
     }
 
+    /**
+     * {@link ITermAsValueMapping Maps} a language-tagged literal to a `[language, value]` tuple.
+     *
+     * @param {TermWrapper} term - The term containing a language-tagged string.
+     * @return A tuple of the term's {@link Literal.language | language tag} and lexical value.
+     *
+     * @remarks
+     * Only literals with the [`rdf:langString`](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal) datatype are supported,
+     * which is the datatype of every literal written with a language tag (e.g. `"..."@en`).
+     *
+     * Paired with {@link LiteralFrom.langTuple}, this mapper is suited as the read half of
+     * {@link Mapping.languageDictionary}, which wraps a predicate holding one value per language as a `Map`.
+     *
+     * Use {@link langString} to map the same literals to {@link ILangString} objects instead.
+     *
+     * @throws {@link !ReferenceError ReferenceError} If the term is `undefined` or `null`.
+     * @throws {@link !TypeError TypeError} If the term is not a {@link TermWrapper}.
+     * @throws {@link TermTypeError} If the term is not a {@link Literal}.
+     * @throws {@link LiteralDatatypeError} If the term's datatype is not `rdf:langString`.
+     *
+     * @example Read a language-tagged string as a tuple
+     * The RDF
+     * ```turtle
+     * <s> <p> "The librarian"@en .
+     * ```
+     *
+     * can be represented by the mapping
+     * ```ts
+     * class Class extends TermWrapper {
+     *     public get property(): [string, string] {
+     *         return RequiredFrom.subjectPredicate(this, "p", LiteralAs.langTuple)
+     *     }
+     * }
+     * ```
+     *
+     * which returns the value `["en", "The librarian"]`.
+     *
+     * @example Wrap language-tagged strings as a dictionary
+     * The RDF
+     * ```turtle
+     * <s> <p> "The librarian"@en, "Le bibliothécaire"@fr .
+     * ```
+     *
+     * can be represented by the mapping
+     * ```ts
+     * class Class extends TermWrapper {
+     *     public get property(): Map<string, string> {
+     *         return Mapping.languageDictionary(this, "p", LiteralAs.langTuple, LiteralFrom.langTuple)
+     *     }
+     * }
+     * ```
+     *
+     * which returns a map of `"en" => "The librarian", "fr" => "Le bibliothécaire"`.
+     *
+     * @see
+     * - {@link LiteralFrom.langTuple} for the inverse mapping
+     * - {@link Mapping.languageDictionary}
+     * - [Language-tagged strings in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)
+     */
     export function langTuple(term: TermWrapper): [string, string] {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
