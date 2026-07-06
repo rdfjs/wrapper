@@ -4,6 +4,8 @@ import type { ITermWrapperConstructor } from "./type/ITermWrapperConstructor.js"
 import type { IDatasetChangeListener } from "./type/IDatasetChangeListener.js"
 import type { NamedGraphDataset } from "./NamedGraphDataset.js"
 import type { INamedGraphDatasetConstructor } from "./type/INamedGraphDatasetConstructor.js"
+import type { GraphScopedDataset } from "./GraphScopedDataset.js"
+import type { IGraphScopedDatasetConstructor } from "./type/IGraphScopedDatasetConstructor.js"
 
 import { ensureEventfulDatasetCore } from "./ensure.js"
 import { RDF } from "./vocabulary/RDF.js"
@@ -177,6 +179,22 @@ export class DatasetWrapper implements DatasetCore {
     protected named<T extends NamedGraphDataset>(graph: string | Quad_Graph, klass: INamedGraphDatasetConstructor<T>): T {
         const g = typeof graph === "string" ? this.factory.namedNode(graph) : graph
         return new klass(g, this.dataset, this.factory)
+    }
+
+    /**
+     * Creates a view over a configurable set of graphs in the underlying dataset, projected onto the default graph.
+     *
+     * Reads come from the supplied `readGraphs`; if `readGraphs` is `undefined`, quads from every graph (default and named) are read, and a triple appearing in multiple graphs is exposed only once. Writes through the view are mapped to `writeGraph` in the underlying dataset. Any attempt to use a non-default graph on the returned dataset throws a {@link NamedGraphError} (for write operations) or a {@link TermTypeError} (for {@link DatasetCore.match}).
+     *
+     * @param writeGraph - The graph that writes through the view are directed to.
+     * @param readGraphs - The graphs that are read through the view, or `undefined` to read from every graph.
+     * @param klass - A constructor of a class derived from graph scoped dataset
+     * @returns An instance of a class derived from {@link GraphScopedDataset} that is a view scoped to the specified graphs.
+     */
+    protected scoped<T extends GraphScopedDataset>(writeGraph: string | Quad_Graph, readGraphs: ReadonlyArray<string | Quad_Graph> | undefined, klass: IGraphScopedDatasetConstructor<T>): T {
+        const write = typeof writeGraph === "string" ? this.factory.namedNode(writeGraph) : writeGraph
+        const reads = readGraphs?.map(graph => typeof graph === "string" ? this.factory.namedNode(graph) : graph)
+        return new klass(write, reads, this.dataset, this.factory)
     }
 
     protected* matchSubjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T> {
