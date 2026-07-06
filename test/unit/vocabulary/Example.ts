@@ -1,5 +1,6 @@
 export const Example = {
     /* Term and Value mapping */
+    hasBigint: "https://example.org/hasBigint",
     hasBlankNode: "https://example.org/hasBlankNode",
     hasDate: "https://example.org/hasDate",
     hasLangString: "https://example.org/hasLangString",
@@ -7,6 +8,7 @@ export const Example = {
     hasBoolean: "https://example.org/hasBoolean",
     hasIri: "https://example.org/hasIri",
     hasString: "https://example.org/hasString",
+    hasSymbol: "https://example.org/hasSymbol",
     /* Object mapping */
     hasChild: "https://example.org/hasChild",
     /* Set mapping */
