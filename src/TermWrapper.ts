@@ -1,11 +1,12 @@
-import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Quad_Subject, Term } from "@rdfjs/types"
-import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
+import type { DataFactory, DatasetCore, Literal, NamedNode, Quad, Term } from "@rdfjs/types"
 
 /**
  * `TermWrapper` is one of the two central constructs of this library. It is the base class of all models that represent a mapping from RDF to JavaScript. It _is_ an {@link Term | RDF/JS term} (or node) that also has a reference to both the dataset (or graph) that is the context of (i.e. contains) the term and to a factory that can be used to create additional terms.
  *
  * @remarks
- * This class contains all members of all types derived from {@link Term}. This is so instances of this class can be used _as_ instances of any term type. See relevant example.
+ * This class declares only the members common to all term types: {@link TermWrapper.termType | termType}, {@link TermWrapper.value | value} and {@link TermWrapper.equals | equals}. Members that are specific to some term types — {@link Literal.language | language}, {@link Literal.direction | direction} and {@link Literal.datatype | datatype} of {@link Literal} and {@link Quad.subject | subject}, {@link Quad.predicate | predicate}, {@link Quad.object | object} and {@link Quad.graph | graph} of {@link Quad} — remain available at runtime, delegating to the wrapped term, but are deliberately not part of the type. This prevents members like `language` from falsely appearing to be present on wrappers of term types that lack them, such as {@link NamedNode}. To access such a member, narrow to the term type that declares it. See relevant example.
+ *
+ * @template T - The type of the term being wrapped. Narrows {@link TermWrapper.termType | termType}. Defaults to {@link Term}.
  *
  * @example Basic usage
  * The basic pattern of working with this class is to simply extend it and add accessors and mutators (both optional) that expose data from the underlying RDF:
@@ -39,7 +40,7 @@ import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
  * ```
  *
  * @example Using instances of TermWrapper as instances of RDF/JS Term
- * Since this class implements all members of all term types (named nodes, literals, blank nodes etc.), it can be cast to an RDF/JS Term:
+ * Since this class implements the members common to all term types, it can be cast to an RDF/JS Term:
  * ```ts
  * let instance: TermWrapper
  *
@@ -68,9 +69,19 @@ import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
  * // Our instance used as subject when matching statements in a dataset
  * dataset.match(instance as Term)
  * ```
+ *
+ * @example Narrowing the type of the wrapped term
+ * The optional type parameter narrows {@link TermWrapper.termType | termType} to that of the wrapped term. Members that are specific to a term type are not declared on this class, so accessing them requires a cast to the term type that declares them:
+ * ```ts
+ * const literal = factory.literal("some value", "en")
+ * const wrapper = new TermWrapper<Literal>(literal, dataset, factory)
+ *
+ * const termType = wrapper.termType // typed "Literal" instead of the union of all term types
+ * const language = (wrapper as unknown as Literal).language // contains "en"
+ * ```
  */
-export class TermWrapper implements IRdfJsTerm {
-    private readonly original: Term
+export class TermWrapper<T extends Term = Term> {
+    private readonly original: T
     private readonly _dataset: DatasetCore
     private readonly _factory: DataFactory
 
@@ -93,7 +104,7 @@ export class TermWrapper implements IRdfJsTerm {
     constructor(term: Term, dataset: DatasetCore, factory: DataFactory)
 
     constructor(term: string | Term, dataset: DatasetCore, factory: DataFactory) {
-        this.original = typeof term === "string" ? factory.namedNode(term) : term
+        this.original = (typeof term === "string" ? factory.namedNode(term) : term) as T
         this._dataset = dataset
         this._factory = factory
     }
@@ -189,7 +200,7 @@ export class TermWrapper implements IRdfJsTerm {
 
     //#region Implementation of RDF/JS Term
 
-    get termType(): Term["termType"] {
+    get termType(): T["termType"] {
         return this.original.termType
     }
 
@@ -201,41 +212,16 @@ export class TermWrapper implements IRdfJsTerm {
         return this.original.equals(other)
     }
 
-    //#region Implementation of RDF/JS Literal
-
-    get language(): string {
-        return (this.original as Literal).language
-    }
-
-    get direction(): Literal["direction"] {
-        return (this.original as Literal).direction
-    }
-
-    get datatype(): NamedNode {
-        return (this.original as Literal).datatype
-    }
-
     //#endregion
+}
 
-    //#region Implementation of RDF/JS Quad
-
-    get subject(): Term {
-        return (this.original as BaseQuad).subject
-    }
-
-    get predicate(): Term {
-        return (this.original as BaseQuad).predicate
-    }
-
-    get object(): Term {
-        return (this.original as BaseQuad).object
-    }
-
-    get graph(): Term {
-        return (this.original as BaseQuad).graph
-    }
-
-    //#endregion
-
-    //#endregion
+// Members that are specific to some term types (the Literal members language, direction and datatype and the Quad members subject, predicate, object and graph) are deliberately not declared on the class, so they do not falsely appear on wrappers of term types that lack them (see the class remarks). They remain available at runtime for any wrapped term that has them, delegating to the wrapped term.
+for (const member of ["language", "direction", "datatype", "subject", "predicate", "object", "graph"] as const) {
+    Object.defineProperty(TermWrapper.prototype, member, {
+        get(this: TermWrapper) {
+            return (this as any).original[member]
+        },
+        enumerable: false,
+        configurable: true,
+    })
 }

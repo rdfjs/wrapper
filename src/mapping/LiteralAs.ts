@@ -47,7 +47,7 @@ export namespace LiteralAs {
         ensureDatatype(term, RDF.langString)
 
         // TODO: Direction
-        return {lang: term.language, string: term.value}
+        return {lang: (term as unknown as Literal).language, string: term.value}
     }
 
     export function number(term: TermWrapper): number {
@@ -152,7 +152,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...byteArrayDatatypes)
 
-        switch (term.datatype.value) {
+        switch ((term as unknown as Literal).datatype.value) {
             case XSD.hexBinary:
                 // TODO: When Node 25 - return Uint8Array.fromHex(term.value)
                 return Uint8Array.from(Buffer.from(term.value, "hex"))
@@ -179,7 +179,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, RDF.langString)
 
-        return [term.language, term.value]
+        return [(term as unknown as Literal).language, term.value]
     }
 
     export function datatypeTuple(term: TermWrapper): [string, string] {
@@ -187,7 +187,7 @@ export namespace LiteralAs {
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
 
-        return [term.datatype.value, term.value]
+        return [(term as unknown as Literal).datatype.value, term.value]
     }
 }
 
