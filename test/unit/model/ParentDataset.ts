@@ -16,6 +16,10 @@ export class ParentDataset extends DatasetWrapper {
         return this.objectsOf(Example.hasChild, Child)
     }
 
+    public get objectsOfHasLangString(): Iterable<Child> {
+        return this.objectsOf(Example.hasLangString, Child)
+    }
+
     public get matchSubjectsOfPropertyanyObjectparentGraphany(): Iterable<Parent> {
         return this.matchSubjectsOf(Parent, undefined, this.factory.namedNode(Example.Parent), undefined)
     }
