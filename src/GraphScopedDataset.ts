@@ -1,4 +1,5 @@
 import type { DataFactory, DatasetCore, Quad, Quad_Graph, Term } from "@rdfjs/types"
+import type { IDatasetChangeListener } from "./type/IDatasetChangeListener.js"
 import { DatasetWrapper } from "./DatasetWrapper.js"
 import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
 
@@ -11,6 +12,8 @@ import { ensureDefaultGraph, ensureTermType } from "./ensure.js"
  * This class generalizes {@link NamedGraphDataset}, which is the special case of reading from and writing to the same single graph. It addresses the common asymmetry in RDF applications where data is assembled from several graphs (for example, a union over every graph in the dataset) but changes must land in one designated graph.
  *
  * Because the projection rewrites every read quad to the default graph, {@link TermWrapper} and {@link DatasetWrapper} subclasses that operate on the default graph work unchanged against quads that live in named graphs.
+ *
+ * Change notifications ({@link on} / {@link off}) follow the projection as well: listeners observe the view's default-graph surface, so a triple occurring in several read graphs is reported as added only once and as deleted only when its last copy disappears from the read scope.
  *
  * The view enforces the default graph on its own surface:
  * - {@link add}, {@link delete} and {@link has} throw a {@link NamedGraphError} when the supplied quad is not in the default graph.
@@ -179,7 +182,150 @@ export class GraphScopedDataset extends DatasetWrapper {
 
     //#endregion
 
+    //#region Events
+
+    /**
+     * Listeners subscribed via {@link on}, notified in subscription order.
+     */
+    private readonly scopedListeners = new Set<IDatasetChangeListener>()
+
+    /**
+     * The single callback this view keeps subscribed to the underlying dataset while at least one listener is attached.
+     *
+     * Forwards a change to the subscribers only when it affects the projected view - see {@link on} - with the quad projected onto the default graph.
+     */
+    private readonly changed: IDatasetChangeListener = (event, quad) => {
+        if (!this.isReadGraph(quad.graph) || this.existsInOtherReadGraph(quad)) {
+            return
+        }
+
+        const projected = this.asDefault(quad)
+
+        for (const listener of this.scopedListeners) {
+            listener(event, projected)
+        }
+    }
+
+    /**
+     * Subscribes `listener` to change notifications for the projected view.
+     *
+     * The listener is invoked synchronously with the type of the change (`"add"` or `"delete"`) and the affected quad whenever the contents of the view effectively change, regardless of which read graph the change happened in. Quads are delivered projected onto the default graph, like all reads through the view.
+     *
+     * @remarks
+     * - Only changes visible through the projection are notified. Because the view collapses every read graph onto the default graph, a triple occurring in several read graphs is reported as added only once - when its first copy appears - and as deleted only once - when its last copy disappears. Adding a copy of a triple that another read graph already contains, or deleting a copy while another read graph still holds one, does not invoke the listener.
+     * - Changes to graphs outside the read scope are not reported.
+     * - Writes performed through the view itself are observed like any other change: {@link add} stores the quad in the write graph, and the listener receives it projected onto the default graph (provided the write graph is within the read scope).
+     * - The view observes the underlying dataset lazily: the first subscription attaches a single shared callback (via {@link DatasetWrapper.on}) and the last {@link off} detaches it.
+     * - Only mutations performed through a wrapper sharing the same underlying eventful dataset are observed: the wrapper this view was created from, the view itself, or sibling views. Mutating the wrapped dataset directly does not notify listeners.
+     * - Subscribing a listener that is already subscribed has no effect. Listeners are notified in subscription order.
+     *
+     * @param listener - The callback to invoke with every change to the contents of the view.
+     *
+     * @example Cross-graph deduplication
+     * Assume the following RDF data:
+     * ```turtle
+     * BASE <https://example.org/>
+     * PREFIX : <https://example.org/>
+     *
+     * :g1 { <x> :hasString "shared" . }
+     * ```
+     *
+     * A view reading `:g1` and `:g2` reports each triple as added once and as deleted only when the last copy disappears:
+     * ```ts
+     * class SomeDataset extends DatasetWrapper {
+     *   get merged(): GraphScopedDataset {
+     *     return this.scoped("https://example.org/g1", ["https://example.org/g1", "https://example.org/g2"], GraphScopedDataset)
+     *   }
+     * }
+     *
+     * const wrapper = new SomeDataset(dataset, factory) // which has the RDF above loaded
+     * const merged = wrapper.merged
+     * merged.on((event, quad) => console.log(`${event} ${quad.object.value}`))
+     *
+     * const shared = (graph: Quad_Graph) => factory.quad(x, hasString, factory.literal("shared"), graph)
+     *
+     * wrapper.add(shared(g2))    // logs nothing - the triple was already visible through g1
+     * wrapper.delete(shared(g1)) // logs nothing - the copy in g2 still backs the view
+     * wrapper.delete(shared(g2)) // logs `delete shared` - the last copy disappeared
+     * ```
+     *
+     * @example Observing writes through the view
+     * ```ts
+     * const merged = wrapper.merged
+     * merged.on((event, quad) => console.log(event, quad.graph.termType))
+     *
+     * // The quad is stored in g1 (the write graph) but delivered projected onto the default graph.
+     * merged.add(factory.quad(x, hasString, factory.literal("new"))) // logs `add DefaultGraph`
+     * ```
+     *
+     * @see
+     * - {@link off} for detaching the listener.
+     * - {@link DatasetWrapper.on} for observing the underlying dataset without projection.
+     * - {@link IDatasetChangeListener} for the listener signature.
+     * - [RDF/JS: Dataset specification](https://rdf.js.org/dataset-spec/)
+     */
+    public override on(listener: IDatasetChangeListener): void {
+        if (this.scopedListeners.has(listener)) {
+            return
+        }
+
+        if (this.scopedListeners.size === 0) {
+            super.on(this.changed)
+        }
+
+        this.scopedListeners.add(listener)
+    }
+
+    /**
+     * Unsubscribes `listener` from change notifications for the projected view.
+     *
+     * @remarks
+     * The argument must be the same function reference that was passed to {@link on}. Detaching a listener that is not subscribed has no effect. When the last listener is detached, the view also detaches its own callback from the underlying dataset.
+     *
+     * @param listener - The callback to detach.
+     *
+     * @see
+     * - {@link on} for attaching a listener.
+     */
+    public override off(listener: IDatasetChangeListener): void {
+        if (!this.scopedListeners.delete(listener)) {
+            return
+        }
+
+        if (this.scopedListeners.size === 0) {
+            super.off(this.changed)
+        }
+    }
+
+    //#endregion
+
     //#region Utilities
+
+    /**
+     * Returns whether `graph` is within the read scope of this view.
+     */
+    private isReadGraph(graph: Quad_Graph): boolean {
+        return this.readGraphs === undefined || this.readGraphs.some(other => other.equals(graph))
+    }
+
+    /**
+     * Returns whether the triple of `quad` also occurs in a read graph other than `quad.graph`.
+     *
+     * Used to decide whether a change to one read graph is visible through the projection: because the view collapses every read graph onto the default graph, adding a copy of a triple that another read graph already contains, or deleting one of several copies, does not change the view.
+     */
+    private existsInOtherReadGraph(quad: Quad): boolean {
+        if (this.readGraphs === undefined) {
+            for (const { graph } of super.match(quad.subject, quad.predicate, quad.object)) {
+                if (!graph.equals(quad.graph)) {
+                    return true
+                }
+            }
+
+            return false
+        }
+
+        return this.readGraphs.some(graph => !graph.equals(quad.graph) && super.has(this.inGraph(quad, graph)))
+    }
 
     /**
      * Yields the quads of the underlying dataset that are within the read scope, in their original graphs.
