@@ -1,20 +1,12 @@
-import type { AsyncDatasetCore, DataFactory, Term } from "@rdfjs/types"
+import { AsyncLiteralAs, AsyncOptionalAs, AsyncOptionalFrom, AsyncTermWrapper, LiteralFrom } from "@rdfjs/wrapper"
 import { Example } from "../vocabulary/Example.js"
 
-export class AsyncChild {
-    public constructor(
-        protected readonly term: Term,
-        protected readonly dataset: AsyncDatasetCore,
-        protected readonly factory: DataFactory,
-    ) {
+export class AsyncChild extends AsyncTermWrapper {
+    public get hasString(): Promise<string | undefined> {
+        return AsyncOptionalFrom.subjectPredicate(this, Example.hasString, AsyncLiteralAs.string)
     }
 
-    public get hasString(): Promise<string | undefined> {
-        return (async () => {
-            for await (const quad of this.dataset.match(this.term, this.factory.namedNode(Example.hasString))) {
-                return quad.object.value
-            }
-            return undefined
-        })()
+    public setHasString(value: string | undefined): Promise<void> {
+        return AsyncOptionalAs.object(this, Example.hasString, value, LiteralFrom.string)
     }
 }
