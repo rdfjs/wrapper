@@ -1,7 +1,8 @@
-import type { DataFactory, DatasetCore, Quad, Quad_Graph, Term } from "@rdfjs/types"
+import type { DataFactory, DatasetCore, Quad, Quad_Graph, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import type { ITermWrapperConstructor } from "./type/ITermWrapperConstructor.js"
 import type { NamedGraphDataset } from "./NamedGraphDataset.js"
 import type { INamedGraphDatasetConstructor } from "./type/INamedGraphDatasetConstructor.js"
+import type { TermWrapper } from "./TermWrapper.js"
 
 import { RDF } from "./vocabulary/RDF.js"
 
@@ -41,15 +42,45 @@ export class DatasetWrapper implements DatasetCore {
 
     //#region Utilities
 
-    protected subjectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
+    /**
+     * Yields a wrapper around the subject of every statement with the given predicate.
+     *
+     * @remarks
+     * The results are typed as both the wrapper and the {@link Quad.subject | subject term} they wrap, so they can be passed directly anywhere an RDF/JS {@link Term} is expected — for example when creating quads with a {@link DataFactory} or when matching with {@link DatasetCore.match} — without casts.
+     *
+     * @param predicate - The IRI of the predicate to match.
+     * @param termWrapper - A constructor of a class derived from {@link TermWrapper} that wraps each result.
+     * @returns Wrappers around the subjects of matching statements, typed additionally as the subject terms they wrap.
+     */
+    protected subjectsOf<T extends TermWrapper>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T & Quad_Subject> {
         return this.matchSubjectsOf(termWrapper, this.factory.namedNode(predicate))
     }
 
-    protected objectsOf<T>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T> {
+    /**
+     * Yields a wrapper around the object of every statement with the given predicate.
+     *
+     * @remarks
+     * The results are typed as both the wrapper and the {@link Quad.object | object term} they wrap, so they can be passed directly anywhere an RDF/JS {@link Term} is expected — for example when creating quads with a {@link DataFactory} or when matching with {@link DatasetCore.match} — without casts.
+     *
+     * @param predicate - The IRI of the predicate to match.
+     * @param termWrapper - A constructor of a class derived from {@link TermWrapper} that wraps each result.
+     * @returns Wrappers around the objects of matching statements, typed additionally as the object terms they wrap.
+     */
+    protected objectsOf<T extends TermWrapper>(predicate: string, termWrapper: ITermWrapperConstructor<T>): Iterable<T & Quad_Object> {
         return this.matchObjectsOf(termWrapper, undefined, this.factory.namedNode(predicate))
     }
 
-    protected instancesOf<T>(klass: string, constructor: ITermWrapperConstructor<T>): Iterable<T> {
+    /**
+     * Yields a wrapper around every instance of the given class, that is the subject of every statement with a predicate of `rdf:type` and the given class as the object.
+     *
+     * @remarks
+     * The results are typed as both the wrapper and the {@link Quad.subject | subject term} they wrap, so they can be passed directly anywhere an RDF/JS {@link Term} is expected — for example when creating quads with a {@link DataFactory} or when matching with {@link DatasetCore.match} — without casts.
+     *
+     * @param klass - The IRI of the class to match instances of.
+     * @param constructor - A constructor of a class derived from {@link TermWrapper} that wraps each result.
+     * @returns Wrappers around the instances, typed additionally as the subject terms they wrap.
+     */
+    protected instancesOf<T extends TermWrapper>(klass: string, constructor: ITermWrapperConstructor<T>): Iterable<T & Quad_Subject> {
         return this.matchSubjectsOf(constructor, this.factory.namedNode(RDF.type), this.factory.namedNode(klass))
     }
 
@@ -69,15 +100,39 @@ export class DatasetWrapper implements DatasetCore {
         return new klass(g, this.dataset, this.factory)
     }
 
-    protected* matchSubjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T> {
+    /**
+     * Yields a wrapper around the subject of every statement matching the given pattern.
+     *
+     * @remarks
+     * The results are typed as both the wrapper and the {@link Quad.subject | subject term} they wrap, so they can be passed directly anywhere an RDF/JS {@link Term} is expected — for example when creating quads with a {@link DataFactory} or when matching with {@link DatasetCore.match} — without casts.
+     *
+     * @param termWrapper - A constructor of a class derived from {@link TermWrapper} that wraps each result.
+     * @param predicate - The predicate to match, if any.
+     * @param object - The object to match, if any.
+     * @param graph - The graph to match, if any.
+     * @returns Wrappers around the subjects of matching statements, typed additionally as the subject terms they wrap.
+     */
+    protected* matchSubjectsOf<T extends TermWrapper>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T & Quad_Subject> {
         for (const q of this.match(undefined, predicate, object, graph)) {
-            yield new termWrapper(q.subject, this, this.factory)
+            yield termWrapper.from(q.subject, this, this.factory)
         }
     }
 
-    protected* matchObjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, subject?: Term, predicate?: Term, graph?: Term): Iterable<T> {
+    /**
+     * Yields a wrapper around the object of every statement matching the given pattern.
+     *
+     * @remarks
+     * The results are typed as both the wrapper and the {@link Quad.object | object term} they wrap, so they can be passed directly anywhere an RDF/JS {@link Term} is expected — for example when creating quads with a {@link DataFactory} or when matching with {@link DatasetCore.match} — without casts.
+     *
+     * @param termWrapper - A constructor of a class derived from {@link TermWrapper} that wraps each result.
+     * @param subject - The subject to match, if any.
+     * @param predicate - The predicate to match, if any.
+     * @param graph - The graph to match, if any.
+     * @returns Wrappers around the objects of matching statements, typed additionally as the object terms they wrap.
+     */
+    protected* matchObjectsOf<T extends TermWrapper>(termWrapper: ITermWrapperConstructor<T>, subject?: Term, predicate?: Term, graph?: Term): Iterable<T & Quad_Object> {
         for (const q of this.match(subject, predicate, undefined, graph)) {
-            yield new termWrapper(q.object, this, this.factory)
+            yield termWrapper.from(q.object, this, this.factory)
         }
     }
 
