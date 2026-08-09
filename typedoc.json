@@ -10,6 +10,9 @@
         "typedoc-plugin-mdn-links"
     ],
     "externalSymbolLinkMappings": {
+        "@jeswr/async-dataset": {
+            "AsyncDatasetCore": "https://github.com/jeswr/async-dataset#readme"
+        },
         "@rdfjs/types": {
             "BlankNode": "https://rdf.js.org/data-model-spec/#blanknode-interface",
             "DataFactory": "https://rdf.js.org/data-model-spec/#datafactory-interface",
