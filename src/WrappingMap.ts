@@ -1,7 +1,8 @@
 import { TermWrapper } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
-import type { Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { Quad_Object, Quad_Subject } from "@rdfjs/types"
+import type { Triple } from "./type/ITriple.js"
 
 export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
     constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<[TKey, TValue]>, private readonly termFrom: ITermFromValueMapping<[TKey, TValue]>) {
@@ -96,10 +97,10 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
         return this.constructor.name
     }
 
-    private get matches(): Iterable<Quad> {
+    private get matches(): Iterable<Triple> {
         const p = this.subject.factory.namedNode(this.predicate)
 
-        return this.subject.dataset.match(this.subject as Term, p)
+        return this.subject.dataset.match(this.subject as Quad_Subject, p, undefined, this.subject.factory.defaultGraph())
     }
 
     private add(k: TKey, v: TValue) {

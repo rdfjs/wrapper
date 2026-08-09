@@ -1,6 +1,6 @@
 import { TermWrapper } from "../TermWrapper.js"
 import type { ITermAsValueMapping } from "../type/ITermAsValueMapping.js"
-import type { Term } from "@rdfjs/types"
+import type { Quad_Subject, Term } from "@rdfjs/types"
 
 export namespace RequiredFrom {
     export function subjectPredicate<T>(anchor1: TermWrapper, p: string, termAs: ITermAsValueMapping<T>): T {
@@ -9,7 +9,7 @@ export namespace RequiredFrom {
         }
 
         const anchor2 = anchor1.factory.namedNode(p)
-        const matches = anchor1.dataset.match(anchor1 as Term, anchor2)[Symbol.iterator]()
+        const matches = anchor1.dataset.match(anchor1 as Quad_Subject, anchor2, undefined, anchor1.factory.defaultGraph())[Symbol.iterator]()
 
         // TODO: Expose standard errors
         const {value: first, done: none} = matches.next()

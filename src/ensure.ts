@@ -1,10 +1,11 @@
-import type { DefaultGraph, Literal, Quad, Term } from "@rdfjs/types"
+import type { BaseQuad, DefaultGraph, Literal, Quad, Term } from "@rdfjs/types"
 import { TermTypeError } from "./errors/TermTypeError.js"
 import { LiteralDatatypeError } from "./errors/LiteralDatatypeError.js"
 import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
 import { RDF } from "./vocabulary/RDF.js"
 import { ListRootError } from "./errors/ListRootError.js"
 import { NamedGraphError } from "./errors/NamedGraphError.js"
+import { BaseTriple } from "./type/ITriple.js"
 
 export function ensurePresent(object: any) {
     if (object !== undefined && object !== null) {
@@ -50,7 +51,7 @@ export function ensureListRoot(term: IRdfJsTerm) {
     throw new ListRootError(term as Term)
 }
 
-export function ensureDefaultGraph(quad: Quad): asserts quad is Quad & { graph: DefaultGraph } {
+export function ensureDefaultGraph(quad: BaseQuad): asserts quad is BaseTriple {
     if (quad.graph.termType === "DefaultGraph") {
         return
     }

@@ -1,5 +1,7 @@
 import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Quad_Subject, Term } from "@rdfjs/types"
 import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
+import { DefaultDatasetCore } from "./DatasetWrapper.js"
+import { Triple } from "./mod.js"
 
 /**
  * `TermWrapper` is one of the two central constructs of this library. It is the base class of all models that represent a mapping from RDF to JavaScript. It _is_ an {@link Term | RDF/JS term} (or node) that also has a reference to both the dataset (or graph) that is the context of (i.e. contains) the term and to a factory that can be used to create additional terms.
@@ -71,8 +73,8 @@ import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
  */
 export class TermWrapper implements IRdfJsTerm {
     private readonly original: Term
-    private readonly _dataset: DatasetCore
-    private readonly _factory: DataFactory
+    private readonly _dataset: DefaultDatasetCore
+    private readonly _factory: DataFactory<Triple, Triple>
 
     /**
      * Creates a new instance of {@link TermWrapper}.
@@ -81,7 +83,7 @@ export class TermWrapper implements IRdfJsTerm {
      * @param dataset The dataset that contains the term being wrapped.
      * @param factory A collection of methods for creating terms.
      */
-    constructor(term: string, dataset: DatasetCore, factory: DataFactory)
+    constructor(term: string, dataset: DefaultDatasetCore, factory: DataFactory<Triple, Triple>)
 
     /**
      * Creates a new instance of {@link TermWrapper}.
@@ -90,9 +92,9 @@ export class TermWrapper implements IRdfJsTerm {
      * @param dataset The dataset that contains the term being wrapped.
      * @param factory A collection of methods for creating terms.
      */
-    constructor(term: Term, dataset: DatasetCore, factory: DataFactory)
+    constructor(term: Term, dataset: DefaultDatasetCore, factory: DataFactory<Triple, Triple>)
 
-    constructor(term: string | Term, dataset: DatasetCore, factory: DataFactory) {
+    constructor(term: string | Term, dataset: DefaultDatasetCore, factory: DataFactory<Triple, Triple>) {
         this.original = typeof term === "string" ? factory.namedNode(term) : term
         this._dataset = dataset
         this._factory = factory
@@ -141,7 +143,7 @@ export class TermWrapper implements IRdfJsTerm {
      * }
      * ```
      */
-    get dataset(): DatasetCore {
+    get dataset(): DefaultDatasetCore {
         return this._dataset
     }
 
@@ -176,7 +178,7 @@ export class TermWrapper implements IRdfJsTerm {
      * }
      * ```
      */
-    get factory(): DataFactory {
+    get factory(): DataFactory<Triple, Triple> {
         return this._factory
     }
 
