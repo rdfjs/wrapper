@@ -3,6 +3,7 @@ export type * from "./type/ITermWrapperConstructor.js"
 export type * from "./type/INamedGraphDatasetConstructor.js"
 export type * from "./type/ITermFromValueMapping.js"
 export type * from "./type/ILangString.js"
+export type * from "./type/IDatasetChangeListener.js"
 
 export * from "./mapping/TermAs.js"
 export * from "./mapping/LiteralAs.js"
