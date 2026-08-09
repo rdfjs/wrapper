@@ -98,6 +98,173 @@ export class TermWrapper implements IRdfJsTerm {
         this._factory = factory
     }
 
+    //#region Static factory
+
+    /**
+     * Creates a new instance of this class (or subclass) from an IRI, typed as both the wrapper and the {@link NamedNode} it wraps.
+     *
+     * @remarks
+     * This factory is equivalent to invoking the constructor directly, differing only in the return type: the constructor returns the declared instance type, whereas this factory returns the intersection of the (sub)class instance type and {@link NamedNode}. Because the result _is_ a {@link NamedNode} at the type level, it can be passed directly anywhere an RDF/JS {@link Term} is expected — for example when creating quads with a {@link DataFactory} or when matching with {@link DatasetCore.match} — without casts.
+     *
+     * @example Creating an instance of a subclass
+     * Assume the following RDF data:
+     * ```turtle
+     * BASE <http://example.com/>
+     *
+     * <someSubject> <someProperty> "some value" .
+     * ```
+     * We can wrap the subject and use the wrapper directly as a named node:
+     * ```ts
+     * class SomeClass extends TermWrapper {
+     *   get someProperty(): string {
+     *     return RequiredFrom.subjectPredicate(this, "http://example.com/someProperty", LiteralAs.string)
+     *   }
+     * }
+     *
+     * const instance = SomeClass.from("http://example.com/someSubject", dataset, factory)
+     * // instance is typed as SomeClass & NamedNode
+     *
+     * const value = instance.someProperty // contains "some value"
+     * ```
+     *
+     * @example Using created instances directly as RDF/JS terms
+     * In contrast to instances created with the constructor, no casts are required to use the result as a term:
+     * ```ts
+     * const instance = SomeClass.from("http://example.com/someSubject", dataset, factory)
+     *
+     * // Used as subject when creating a quad
+     * factory.quad(instance, predicate, object)
+     *
+     * // Used as subject when matching statements in a dataset
+     * dataset.match(instance)
+     * ```
+     *
+     * @param term The IRI of a named node that is the original term being wrapped.
+     * @param dataset The dataset that contains the term being wrapped.
+     * @param factory A collection of methods for creating terms.
+     * @returns A new instance of the class this method was invoked on, typed additionally as the {@link NamedNode} it wraps.
+     *
+     * @see
+     * - [Named nodes in the RDF/JS Data model specification](https://rdf.js.org/data-model-spec/#namednode-interface)
+     */
+    public static from<This extends new (term: string, dataset: DatasetCore, factory: DataFactory) => any>(
+        this: This,
+        term: string,
+        dataset: DatasetCore,
+        factory: DataFactory,
+    ): InstanceType<This> & NamedNode<string>
+
+    /**
+     * Creates a new instance of this class (or subclass), typed as both the wrapper and the type of the {@link Term} it wraps.
+     *
+     * @remarks
+     * This factory is equivalent to invoking the constructor directly, differing only in the return type: the constructor returns the declared instance type, whereas this factory returns the intersection of the (sub)class instance type and the type of the `term` argument. Because the result _is_ a {@link Term} at the type level, it can be passed directly anywhere an RDF/JS term is expected — for example when creating quads with a {@link DataFactory} or when matching with {@link DatasetCore.match} — without casts.
+     *
+     * @example Wrapping a literal
+     * The term type of the argument is preserved in the return type, so term-type-specific members are available without casts:
+     * ```ts
+     * const literal = factory.literal("some value", "en")
+     * const instance = SomeClass.from(literal, dataset, factory)
+     * // instance is typed as SomeClass & Literal
+     *
+     * const language = instance.language // contains "en"
+     * ```
+     *
+     * @example Using created instances directly as RDF/JS terms
+     * In contrast to instances created with the constructor, no casts are required to use the result as a term:
+     * ```ts
+     * const instance = SomeClass.from(factory.blankNode(), dataset, factory)
+     *
+     * // Used as subject when creating a quad
+     * factory.quad(instance, predicate, object)
+     *
+     * // Used as subject when matching statements in a dataset
+     * dataset.match(instance)
+     * ```
+     *
+     * @param term The original term being wrapped.
+     * @param dataset The dataset that contains the term being wrapped.
+     * @param factory A collection of methods for creating terms.
+     * @returns A new instance of the class this method was invoked on, typed additionally as the {@link Term} it wraps.
+     *
+     * @see
+     * - [Terms in the RDF/JS Data model specification](https://rdf.js.org/data-model-spec/#term-interface)
+     */
+    public static from<T extends Term, This extends new (term: T, dataset: DatasetCore, factory: DataFactory) => any>(
+        this: This,
+        term: T,
+        dataset: DatasetCore,
+        factory: DataFactory,
+    ): InstanceType<This> & T
+
+    public static from(this: any, term: string | Term, dataset: DatasetCore, factory: DataFactory): any {
+        return new this(term, dataset, factory)
+    }
+
+    /**
+     * Creates a factory function, bound to the given dataset and term factory, that creates instances of this class (or subclass) typed as both the wrapper and the {@link Term} it wraps.
+     *
+     * @remarks
+     * This is the curried counterpart of {@link TermWrapper.from}: where {@link TermWrapper.from} wraps a single term, this method binds the `dataset` and `factory` arguments once and returns a function that only takes the term to wrap. The returned function accepts either the IRI of a named node or an existing term, and, like {@link TermWrapper.from}, returns the intersection of the (sub)class instance type and the type of the wrapped term.
+     *
+     * The bound factory function is most useful when wrapping many terms from the same dataset, for example when mapping a collection of IRIs.
+     *
+     * @example Mapping many IRIs with one bound factory
+     * Assume the following RDF data:
+     * ```turtle
+     * BASE <http://example.com/>
+     *
+     * <person1> <name> "Ann" .
+     * <person2> <name> "Bob" .
+     * ```
+     * A single bound factory wraps all subjects without repeating the dataset and factory arguments:
+     * ```ts
+     * class Person extends TermWrapper {
+     *   get name(): string {
+     *     return RequiredFrom.subjectPredicate(this, "http://example.com/name", LiteralAs.string)
+     *   }
+     * }
+     *
+     * const iris = ["http://example.com/person1", "http://example.com/person2"]
+     * const people = iris.map(Person.in(dataset, factory))
+     *
+     * const names = people.map(person => person.name) // contains ["Ann", "Bob"]
+     * ```
+     *
+     * @example Preserving the type of wrapped terms
+     * The returned function preserves the term type of its argument, so term-type-specific members are available without casts:
+     * ```ts
+     * const wrap = SomeClass.in(dataset, factory)
+     *
+     * const namedNode = wrap("http://example.com/someSubject") // typed as SomeClass & NamedNode
+     * const literal = wrap(factory.literal("some value", "en")) // typed as SomeClass & Literal
+     *
+     * const language = literal.language // contains "en"
+     * ```
+     *
+     * @param dataset The dataset that contains the terms being wrapped.
+     * @param factory A collection of methods for creating terms.
+     * @returns A function that takes an IRI or a {@link Term} and returns a new instance of the class this method was invoked on, typed additionally as the term it wraps.
+     *
+     * @see
+     * - [Terms in the RDF/JS Data model specification](https://rdf.js.org/data-model-spec/#term-interface)
+     * - [DatasetCore in the RDF/JS Dataset specification](https://rdf.js.org/dataset-spec/#datasetcore-interface)
+     */
+    public static in<This extends new (term: any, dataset: DatasetCore, factory: DataFactory) => any>(
+        this: This,
+        dataset: DatasetCore,
+        factory: DataFactory,
+    ): {
+        (term: string): InstanceType<This> & NamedNode<string>
+        <T extends Term>(term: T): InstanceType<This> & T
+    }
+
+    public static in(this: any, dataset: DatasetCore, factory: DataFactory): (term: string | Term) => any {
+        return (term: string | Term) => new this(term, dataset, factory)
+    }
+
+    //#endregion
+
     /**
      * The dataset that contains this term.
      *
