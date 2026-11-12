@@ -129,6 +129,53 @@ describe("tojson", () => {
             })
     })
 
+    it("3.3", () => {
+        class Wrapper extends TermWrapper {
+            get name(): string {
+                return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
+            }
+
+            get child(): Wrapper | undefined {
+                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Wrapper))
+            }
+        }
+
+        const rdf = `
+<s1>
+    <name> "o1" ;
+    <child> <s2> ;
+.
+
+<s2>
+    <name> "o2" ;
+    <child> <s1> ;
+.
+`
+        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
+
+        const seen: Array<Term> = []
+        const stringified = JSON.stringify(wrapper, function (this: any, key: string, current: any) {
+            if (current !== undefined && current["equals"] !== undefined) {
+                if (seen.some(previous => previous.equals(current))) {
+                    return "CYCLE"
+                }
+
+                seen.push(current)
+            }
+
+            return current
+        })
+
+        assert.deepStrictEqual(JSON.parse(stringified),
+            {
+                name: "o1",
+                child: {
+                    name: "o2",
+                    child: "CYCLE"
+                }
+            })
+    })
+
     it("X", () => {
         class T {
             constructor(public readonly name: string, public child?: T) {
