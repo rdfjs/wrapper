@@ -101,14 +101,21 @@ describe("tojson", () => {
 `
         const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
 
-        const seen: Array<Term> = []
+        const ancestors = new WeakMap<object, Array<TermWrapper>>()
         const stringified = JSON.stringify(wrapper, function (this: any, key: string, current: any) {
-            if (current !== undefined && current["equals"] !== undefined) {
-                if (seen.some(previous => previous.equals(current))) {
+            const original = this[key]
+            let path = ancestors.get(this) ?? []
+
+            if (original instanceof TermWrapper) {
+                if (path.some(previous => previous.equals(original as Term))) {
                     return "CYCLE"
                 }
 
-                seen.push(current)
+                path = [...path, original]
+            }
+
+            if (typeof current === "object" && current !== null) {
+                ancestors.set(current, path)
             }
 
             return current
@@ -153,14 +160,21 @@ describe("tojson", () => {
 `
         const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
 
-        const seen: Array<Term> = []
+        const ancestors = new WeakMap<object, Array<TermWrapper>>()
         const stringified = JSON.stringify(wrapper, function (this: any, key: string, current: any) {
-            if (current !== undefined && current["equals"] !== undefined) {
-                if (seen.some(previous => previous.equals(current))) {
+            const original = this[key]
+            let path = ancestors.get(this) ?? []
+
+            if (original instanceof TermWrapper) {
+                if (path.some(previous => previous.equals(original as Term))) {
                     return "CYCLE"
                 }
 
-                seen.push(current)
+                path = [...path, original]
+            }
+
+            if (typeof current === "object" && current !== null) {
+                ancestors.set(current, path)
             }
 
             return current
