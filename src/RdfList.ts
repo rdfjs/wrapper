@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import { TermWrapper } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
@@ -211,6 +212,6 @@ export class RdfList<T> implements Array<T> {
     }
 
     toJSON() {
-        return [...this]
+        return [...this].map(x => withPath(x, pathOf(this)))
     }
 }

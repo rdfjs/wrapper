@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Quad_Subject, Term } from "@rdfjs/types"
 import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
 
@@ -188,6 +189,13 @@ export class TermWrapper implements IRdfJsTerm {
     }
 
     toJSON() {
+        const path = pathOf(this)
+
+        if (path.some(a => a.equals(this as Term))) {
+            throw new TypeError("Converting circular structure to JSON")
+        }
+
+        const next = [...path, this as Term]
         const result = {}
 
         for (let instance = Object.getPrototypeOf(this); instance !== TermWrapper.prototype; instance = Object.getPrototypeOf(instance)) {
@@ -196,7 +204,7 @@ export class TermWrapper implements IRdfJsTerm {
                     continue
                 }
 
-                Reflect.set(result, propertyName, Reflect.get(this, propertyName))
+                Reflect.set(result, propertyName, withPath(Reflect.get(this, propertyName), next))
             }
         }
 

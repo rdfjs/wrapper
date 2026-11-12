@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import { TermWrapper } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
@@ -97,7 +98,9 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
     }
 
     toJSON(){
-        return Object.fromEntries(this)
+        const path = pathOf(this)
+
+        return Object.fromEntries([...this].map(([k, v]) => [k, withPath(v, path)]))
     }
 
     private get matches(): Iterable<Quad> {
