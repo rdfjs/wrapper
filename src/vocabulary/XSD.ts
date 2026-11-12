@@ -1,5 +1,5 @@
 export const XSD = {
-    anyUri: "http://www.w3.org/2001/XMLSchema#anyUri",
+    anyURI: "http://www.w3.org/2001/XMLSchema#anyURI",
     base64Binary: "http://www.w3.org/2001/XMLSchema#base64Binary",
     boolean: "http://www.w3.org/2001/XMLSchema#boolean",
     byte: "http://www.w3.org/2001/XMLSchema#byte",

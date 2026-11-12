@@ -2,6 +2,7 @@ import { TermWrapper } from "./TermWrapper.js"
 import { ListItem } from "./ListItem.js"
 import type { Term } from "@rdfjs/types"
 import { TermFrom } from "./mapping/TermFrom.js"
+import { RequiredAs } from "./mapping/RequiredAs.js"
 
 export class Overwriter<T> extends TermWrapper {
     constructor(subject: TermWrapper, private readonly p: string) {
@@ -9,6 +10,6 @@ export class Overwriter<T> extends TermWrapper {
     }
 
     set listNode(object: ListItem<T>) {
-        this.overwrite(this.p, object, TermFrom.instance)
+        RequiredAs.object(this, this.p, object, TermFrom.instance)
     }
 }

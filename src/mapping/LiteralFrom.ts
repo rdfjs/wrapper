@@ -1,10 +1,17 @@
-import type { DataFactory, Term } from "@rdfjs/types"
+import type { DataFactory, Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import type { ILangString } from "../type/ILangString.js"
 
+/**
+ * A collection of {@link ITermFromValueMapping | mappers} that create RDF/JS literals from JavaScript primitives.
+ *
+ * @see
+ * - {@link Literal}
+ * - [Literals in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal)
+ */
 export namespace LiteralFrom {
     export function anyUriString(value: string, factory: DataFactory): Term {
-        return factory.literal(value, factory.namedNode(XSD.anyUri))
+        return factory.literal(value, factory.namedNode(XSD.anyURI))
     }
 
     export function anyUriUrl(value: URL, factory: DataFactory): Term {
@@ -21,7 +28,7 @@ export namespace LiteralFrom {
     }
 
     export function date(value: Date, factory: DataFactory): Term {
-        return factory.literal(value.toISOString(), factory.namedNode(XSD.date))
+        return factory.literal(value.toISOString().split("T")[0]!, factory.namedNode(XSD.date))
     }
 
     export function dateTime(value: Date, factory: DataFactory): Term {
@@ -30,6 +37,10 @@ export namespace LiteralFrom {
 
     export function double(value: number, factory: DataFactory): Term {
         return factory.literal(value.toString(), factory.namedNode(XSD.double))
+    }
+
+    export function integer(value: number, factory: DataFactory): Term {
+        return factory.literal(value.toString(), factory.namedNode(XSD.integer))
     }
 
     export function hex(value: Uint8Array, factory: DataFactory): Term {
@@ -44,5 +55,13 @@ export namespace LiteralFrom {
 
     export function string(value: string, factory: DataFactory): Term {
         return factory.literal(value)
+    }
+
+    export function langTuple([key, value]: [string, string], factory: DataFactory): Term {
+        return factory.literal(value, key)
+    }
+
+    export function datatypeTuple([key, value]: [string, string], factory: DataFactory): Term {
+        return factory.literal(value, factory.namedNode(key))
     }
 }

@@ -14,31 +14,9 @@ In other words, [RDF data](https://en.wikipedia.org/wiki/Resource_Description_Fr
 
 Additionally, standard mapping classes can be defined and reused in any number of context where they are relevant (see for example [@solid/object](https://github.com/solid/object)).
 
+A guide and demo for using this library in the context of Solid and Next.js is available [here](https://dev.solidproject.org/guides/solid_nextjs_wrapper_demo_application/).
 
-## How To?
-
-### Publish the package
-
-1. Run `npm version major | minor | patch` locally (see [npm-version](https://docs.npmjs.com/cli/v8/commands/npm-version))
-1. [Draft a new release](https://github.com/theodi/wrapper/releases)
-1. The [Continuous Deployment action](https://github.com/theodi/wrapper/actions/workflows/cd.yml) will be triggered and automatically publish to npm
-
-
-## Background
-
-RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/) specifications.
-
-Practically, to map RDF to objects, you need to:
-1. Write a class or use an existing class that extends TermWrapper
-1. Each class needs a Term, a Dataset, and a DataFactory to be instantiated
-1. Each class property will have an associated RDF Property (a string, generally a URL, that is defined by an ontology/vocabulary)
-1. Each class property will have an associated arity (singular, singular nullable or set)
-1. Each class property depending on its type can have:
-    1. a corresponding ValueMapping to get values, that is translating RDF Terms to JavaScript [primitive values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#primitive_values) (string, number, boolean...)
-    1. a corresponding TermMapping to set values, that is translating Javascript primitive values to RDF Terms
-    1. a corresponding ObjectMapping to wrap child objects as a TermWrapper
-    1. a corresponding ValueMapping and TermMapping for sets of primitive values (both can be an ObjectMapping)
-1. Each class mutates the underlying Dataset that is passed to it at instantiation time
+A script for generating mapping classes from SHACL shapes is available [here](https://github.com/theodi/shacl-shape-converter-typescript).
 
 
 ## Wrapping RDF
@@ -55,25 +33,30 @@ A [term](https://www.w3.org/TR/rdf12-concepts/#section-terms) wrapper instantiat
 For example you can write a `Person` class with one `name` property:
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping } from "https://unpkg.com/@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, OptionalAs, OptionalFrom, TermWrapper } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {
-		return this.singularNullable("https://example.org/name", ValueMapping.literalToString)
+		return OptionalFrom.subjectPredicate(this, "https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		this.overwriteNullable("https://example.org/name", value, TermMapping.literalToString)
+		OptionalAs.object(this, "https://example.org/name", value, LiteralFrom.string)
 	}
 }
 ```
 
-Assuming the following RDF has been loaded in a dataset `dataset_x`:
+Assuming the following RDF
 
 ```turtle
 PREFIX ex: <https://example.org/>
 
 ex:person1 ex:name "Alice" .
+```
+
+has been loaded into an RDF/JS dataset `dataset_x` (here using [N3.js](https://github.com/rdfjs/N3.js/) `Store`):
+```js
+const dataset_x = new N3.Store(new N3.Parser().parse(rdf)) // rdf holds the turtle above
 ```
 
 Class usage:
@@ -134,23 +117,23 @@ for (const person of people) {
 For example you can write a `Person` class with one `name` and one `mum` property:
 
 ```javascript
-import { TermWrapper, ValueMapping, TermMapping, ObjectMapping } from "https://unpkg.com/@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, OptionalAs, OptionalFrom, TermAs, TermFrom, TermWrapper } from "https://unpkg.com/@rdfjs/wrapper"
 
 class Person extends TermWrapper {
 	get name() {
-		return this.singularNullable("https://example.org/name", ValueMapping.literalToString)
+		return OptionalFrom.subjectPredicate(this, "https://example.org/name", LiteralAs.string)
 	}
 
 	set name(value) {
-		this.singularNullable("https://example.org/name", value, TermMapping.literalToString)
+		OptionalAs.object(this, "https://example.org/name", value, LiteralFrom.string)
 	}
 
 	get mum() {
-		return this.singularNullable("https://example.org/mum", ObjectMapping.as(Person))
+		return OptionalFrom.subjectPredicate(this, "https://example.org/mum", TermAs.instance(Person))
 	}
 
 	set mum(value) {
-		this.overwriteNullable("https://example.org/mum", value, ObjectMapping.as(Person))
+		OptionalAs.object(this, "https://example.org/mum", value, TermFrom.instance)
 	}
 }
 ```
@@ -192,11 +175,94 @@ console.log(person2.mum.mum.name)
 ```
 
 
+## Background
+
+RDF/JS Wrapper uses the interfaces described in the [RDF/JS](https://rdf.js.org/) specifications.
+
+
+### Named Graphs
+
+The `namedGraph` function creates a `DatasetCore` view over a single named graph, projecting its contents into the default graph. This lets you use any existing `TermWrapper` or `DatasetWrapper` classes unchanged, scoped to a specific graph.
+
+```javascript
+import { namedGraph, DatasetWrapper } from "@rdfjs/wrapper"
+
+// Given a dataset with quads in a named graph:
+// <ex:person1> <ex:name> "Alice" <ex:graph1> .
+// <ex:person2> <ex:name> "Bob" <ex:graph1> .
+// <ex:person1> <ex:name> "Charlie" .                  (default graph)
+
+const graphView = namedGraph(DataFactory.namedNode("https://example.org/graph1"), dataset, DataFactory)
+
+// graphView behaves as a DatasetCore containing only default graph quads:
+// <ex:person1> <ex:name> "Alice" .
+// <ex:person2> <ex:name> "Bob" .
+
+// Wrap it with your existing classes:
+class People extends DatasetWrapper {
+    get all() {
+        return this.subjectsOf("https://example.org/name", Person)
+    }
+}
+
+const people = new People(graphView, DataFactory)
+for (const person of people.all) {
+    console.log(person.name)
+}
+// outputs "Alice", "Bob"  (Charlie is excluded — different graph)
+```
+
+Writes through the view are mapped back to the named graph in the underlying dataset:
+
+```javascript
+// Adding a quad through the view stores it in the named graph
+graphView.add(DataFactory.quad(s, p, o))
+// Equivalent to: dataset.add(DataFactory.quad(s, p, o, DataFactory.namedNode("https://example.org/graph1")))
+```
+
+Any attempt to use a non-default graph on the returned `DatasetCore` throws a `NamedGraphError`:
+
+```javascript
+// These all throw NamedGraphError:
+graphView.add(DataFactory.quad(s, p, o, DataFactory.namedNode("https://other.org/g")))
+graphView.match(undefined, undefined, undefined, DataFactory.namedNode("https://other.org/g"))
+```
+
+
+## Background
+
+Practically, to map RDF to objects, you need to:
+1. Write a class or use an existing class that extends TermWrapper
+1. Each class needs a [Term](https://rdf.js.org/data-model-spec/#term-interface), a [Dataset](https://rdf.js.org/dataset-spec/#dataset-interface), and a [DataFactory](https://rdf.js.org/data-model-spec/#datafactory-interface) to be instantiated
+1. Each class property will have an associated www.w3.org/TR/rdf11-schema/#ch_properties (a string, generally a URL, that is defined by an [ontology/vocabulary)](https://www.w3.org/TR/owl-rdf-based-semantics/)
+1. Each class property will have an associated arity (singular, singular nullable or set)
+1. Each class property depending on its type can have:
+    1. a corresponding value mapping to get values, that is translating RDF Terms to JavaScript [primitive values](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Data_structures#primitive_values) (string, number, boolean...)
+    1. a corresponding term mapping to set values, that is translating Javascript primitive values to RDF Terms
+    1. a corresponding mapping to wrap child objects as a TermWrapper
+    1. a corresponding mapping for sets of primitive values
+1. Each class mutates the underlying Dataset that is passed to it at instantiation time
+
+
+## How To?
+
+### Publish the package
+
+1. Run `npm version major | minor | patch` locally (see [npm-version](https://docs.npmjs.com/cli/v8/commands/npm-version))
+1. [Draft a new release](https://github.com/theodi/wrapper/releases)
+1. The [Continuous Deployment action](https://github.com/theodi/wrapper/actions/workflows/cd.yml) will be triggered and automatically publish to npm
+
+
 ## See also
 
 - [RDF](https://en.wikipedia.org/wiki/Resource_Description_Framework)
 - [Knowledge Graph](https://en.wikipedia.org/wiki/Knowledge_graph)
 
+## History
+
+The paradigm employed here originates in [@langsamu](https://github.com/langsamu)'s research on using the [Test case manifest vocabulary](https://www.w3.org/2001/sw/DataAccess/tests/test-manifest#) to implement [unit tests in Java for the UK National Archives](https://github.com/nationalarchives/kettle-jena-plugins/pull/26).
+
+It was later used to implement a [.NET SHACL processor](https://github.com/dotnetrdf/dotnetrdf/pull/236) and expanded into a robust library in [Inrupt RDF Wrapping for Java](https://github.com/inrupt/rdf-wrapping-java/).
 
 ## License
 
