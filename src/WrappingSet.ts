@@ -73,7 +73,18 @@ export class WrappingSet<T> implements Set<T> {
         return this.constructor.name
     }
 
+    /**
+     * Converts this set to an array for JSON serialization. This method is called by {@link JSON.stringify}; there is usually no reason to call it directly.
+     *
+     * @remarks
+     * A native {@link Set} is serialized as `{}`, which loses its content. An array is the nearest JSON equivalent.
+     *
+     * The result is shallow: the items are returned as they are, and {@link JSON.stringify} descends into them.
+     *
+     * @returns A new array that contains the items of this set.
+     */
     toJSON(): T[] {
+        // A set is not a node, so it adds nothing to the path: its items have the same ancestors as the set.
         const path = pathOf(this)
 
         return Array.from(this, item => withPath(item, path))
