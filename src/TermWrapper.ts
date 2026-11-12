@@ -188,27 +188,24 @@ export class TermWrapper implements IRdfJsTerm {
         return this.constructor.name
     }
 
-    toJSON() {
-        const path = pathOf(this)
+    toJSON(): Record<string, unknown> {
+        const ancestors = pathOf(this)
 
-        if (path.some(a => a.equals(this as Term))) {
+        if (ancestors.some(ancestor => ancestor.equals(this as Term))) {
             throw new TypeError("Converting circular structure to JSON")
         }
 
-        const next = [...path, this as Term]
-        const result = {}
+        const path = [...ancestors, this as Term]
 
-        for (let instance = Object.getPrototypeOf(this); instance !== TermWrapper.prototype; instance = Object.getPrototypeOf(instance)) {
-            for (const [propertyName, {get}] of Object.entries(Object.getOwnPropertyDescriptors(instance))) {
-                if (get === undefined) {
-                    continue
-                }
-
-                Reflect.set(result, propertyName, withPath(Reflect.get(this, propertyName), next))
-            }
+        const names: string[][] = []
+        for (let prototype = Object.getPrototypeOf(this); prototype !== TermWrapper.prototype; prototype = Object.getPrototypeOf(prototype)) {
+            names.unshift(Object
+                .entries(Object.getOwnPropertyDescriptors(prototype))
+                .filter(([, {get}]) => get !== undefined)
+                .map(([name]) => name))
         }
 
-        return result
+        return Object.fromEntries(Array.from(new Set(names.flat()), name => [name, withPath(Reflect.get(this, name), path)]))
     }
 
     //#region Implementation of RDF/JS Term

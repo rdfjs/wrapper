@@ -207,11 +207,13 @@ export class RdfList<T> implements Array<T> {
         return this.constructor.name
     }
 
-    private get items(): Iterable<ListItem<T>> {
-        return this.root.items()
+    toJSON(): T[] {
+        const path = pathOf(this)
+
+        return Array.from(this, item => withPath(item, path))
     }
 
-    toJSON() {
-        return [...this].map(x => withPath(x, pathOf(this)))
+    private get items(): Iterable<ListItem<T>> {
+        return this.root.items()
     }
 }

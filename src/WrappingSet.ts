@@ -73,8 +73,10 @@ export class WrappingSet<T> implements Set<T> {
         return this.constructor.name
     }
 
-    toJSON() {
-        return [...this].map(x => withPath(x, pathOf(this)))
+    toJSON(): T[] {
+        const path = pathOf(this)
+
+        return Array.from(this, item => withPath(item, path))
     }
 
     private quad(value: T): Quad {

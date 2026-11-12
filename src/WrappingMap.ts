@@ -97,10 +97,10 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
         return this.constructor.name
     }
 
-    toJSON(){
+    toJSON(): Record<string, TValue> {
         const path = pathOf(this)
 
-        return Object.fromEntries([...this].map(([k, v]) => [k, withPath(v, path)]))
+        return Object.fromEntries(Array.from(this, ([key, value]) => [key, withPath(value, path)]))
     }
 
     private get matches(): Iterable<Quad> {
