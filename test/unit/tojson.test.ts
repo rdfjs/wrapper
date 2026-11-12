@@ -1,7 +1,7 @@
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
-import { LiteralAs, LiteralFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, Mapping, OptionalFrom, RequiredFrom, SetFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
 import assert from "node:assert"
 import { Term } from "@rdfjs/types";
 
@@ -9,7 +9,7 @@ describe("tojson", () => {
     it("1", () => {
         class Wrapper extends TermWrapper {
             get p(): string | undefined {
-                return this.singularNullable("p", LiteralAs.string)
+                return OptionalFrom.subjectPredicate(this, "p", LiteralAs.string)
             }
         }
 
@@ -22,7 +22,7 @@ describe("tojson", () => {
     it("2", () => {
         class Wrapper extends TermWrapper {
             get p(): string | undefined {
-                return this.singularNullable("p", LiteralAs.string)
+                return OptionalFrom.subjectPredicate(this, "p", LiteralAs.string)
             }
         }
 
@@ -35,7 +35,7 @@ describe("tojson", () => {
     it("3", () => {
         class Wrapper extends TermWrapper {
             get p(): string {
-                return this.singular("p", LiteralAs.string)
+                return RequiredFrom.subjectPredicate(this, "p", LiteralAs.string)
             }
         }
 
@@ -48,11 +48,11 @@ describe("tojson", () => {
     it("3.1", () => {
         class Wrapper extends TermWrapper {
             get p1(): string {
-                return this.singular("p1", LiteralAs.string)
+                return RequiredFrom.subjectPredicate(this, "p1", LiteralAs.string)
             }
 
             get p2(): Wrapper | undefined {
-                return this.singularNullable("p2", TermAs.instance(Wrapper))
+                return OptionalFrom.subjectPredicate(this, "p2", TermAs.instance(Wrapper))
             }
         }
 
@@ -71,15 +71,15 @@ describe("tojson", () => {
     it("3.2", () => {
         class Wrapper extends TermWrapper {
             get name(): string {
-                return this.singular("name", LiteralAs.string)
+                return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
             }
 
             get child(): Wrapper | undefined {
-                return this.singularNullable("child", TermAs.instance(Wrapper))
+                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Wrapper))
             }
 
             get child2(): Wrapper | undefined {
-                return this.singularNullable("child2", TermAs.instance(Wrapper))
+                return OptionalFrom.subjectPredicate(this, "child2", TermAs.instance(Wrapper))
             }
         }
 
@@ -164,7 +164,7 @@ describe("tojson", () => {
     it("4", () => {
         class Wrapper extends TermWrapper {
             get p(): Set<string> {
-                return this.objects("p", LiteralAs.string, LiteralFrom.string)
+                return SetFrom.subjectPredicate(this, "p", LiteralAs.string, LiteralFrom.string)
             }
         }
 
@@ -177,7 +177,7 @@ describe("tojson", () => {
     it("5", () => {
         class Wrapper extends TermWrapper {
             get p(): Set<string> {
-                return this.objects("p", LiteralAs.string, LiteralFrom.string)
+                return SetFrom.subjectPredicate(this, "p", LiteralAs.string, LiteralFrom.string)
             }
         }
 
@@ -190,11 +190,11 @@ describe("tojson", () => {
     it("5.1", () => {
         class Wrapper extends TermWrapper {
             get p1(): string {
-                return this.singular("p1", LiteralAs.string)
+                return RequiredFrom.subjectPredicate(this, "p1", LiteralAs.string)
             }
 
             get p2(): Set<Wrapper> {
-                return this.objects("p2", TermAs.instance(Wrapper), TermFrom.instance)
+                return SetFrom.subjectPredicate(this, "p2", TermAs.instance(Wrapper), TermFrom.instance)
             }
         }
 
@@ -213,7 +213,7 @@ describe("tojson", () => {
     it("6", () => {
         class Wrapper extends TermWrapper {
             get p(): string[] {
-                return this.singular("p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
+                return RequiredFrom.subjectPredicate(this, "p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
             }
         }
 
@@ -226,7 +226,7 @@ describe("tojson", () => {
     it("7", () => {
         class Wrapper extends TermWrapper {
             get p(): string[] {
-                return this.singular("p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
+                return RequiredFrom.subjectPredicate(this, "p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
             }
         }
 
@@ -239,11 +239,11 @@ describe("tojson", () => {
     it("7.1", () => {
         class Wrapper extends TermWrapper {
             get p1(): string {
-                return this.singular("p1", LiteralAs.string)
+                return RequiredFrom.subjectPredicate(this, "p1", LiteralAs.string)
             }
 
             get p2(): Wrapper[] | undefined {
-                return this.singularNullable("p2", TermAs.list(this, "p2", TermAs.instance(Wrapper), TermFrom.instance))
+                return OptionalFrom.subjectPredicate(this, "p2", TermAs.list(this, "p2", TermAs.instance(Wrapper), TermFrom.instance))
             }
         }
 
@@ -262,15 +262,7 @@ describe("tojson", () => {
     it("8", () => {
         class Wrapper extends TermWrapper {
             public get p(): Map<string, string> {
-                return this.map(
-                    "p",
-                    ({language, value}) => [
-                        language,
-                        value
-                    ],
-                    ([key, value], factory) =>
-                        factory.literal(value, key)
-                )
+                return Mapping.languageDictionary(this, "p", LiteralAs.langTuple, LiteralFrom.langTuple)
             }
         }
 
