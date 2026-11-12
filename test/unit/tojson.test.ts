@@ -1,296 +1,620 @@
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
-import { LiteralAs, LiteralFrom, Mapping, OptionalFrom, RequiredFrom, SetFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, Mapping, OptionalFrom, SetFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
 import assert from "node:assert"
-import { Term } from "@rdfjs/types";
+import type { DatasetCore, Term } from "@rdfjs/types"
 
-describe("tojson", () => {
-    it("1", () => {
-        class Wrapper extends TermWrapper {
-            get p(): string | undefined {
-                return OptionalFrom.subjectPredicate(this, "p", LiteralAs.string)
+function wrap<T>(model: new (term: string, dataset: DatasetCore, factory: typeof DataFactory) => T, rdf: string, iri = "s"): T {
+    return new model(iri, datasetFromRdf(rdf), DataFactory)
+}
+
+function parsedJson(value: unknown): unknown {
+    return JSON.parse(JSON.stringify(value))
+}
+
+const circularStructureError = {name: "TypeError", message: "Converting circular structure to JSON"}
+
+describe("JSON serialization", () => {
+    describe("TermWrapper", () => {
+        class Person extends TermWrapper {
+            get name(): string | undefined {
+                return OptionalFrom.subjectPredicate(this, "name", LiteralAs.string)
+            }
+
+            get friend(): Person | undefined {
+                return OptionalFrom.subjectPredicate(this, "friend", TermAs.instance(Person))
             }
         }
 
-        const rdf = ``
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
+        it("serializes each getter of the class as a property", () => {
+            const person = wrap(Person, `<s> <name> "Alice" .`)
 
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {})
-    })
+            const json = JSON.stringify(person)
 
-    it("2", () => {
-        class Wrapper extends TermWrapper {
-            get p(): string | undefined {
-                return OptionalFrom.subjectPredicate(this, "p", LiteralAs.string)
-            }
-        }
-
-        const rdf = `<s> <other> "value" .`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {})
-    })
-
-    it("3", () => {
-        class Wrapper extends TermWrapper {
-            get p(): string {
-                return RequiredFrom.subjectPredicate(this, "p", LiteralAs.string)
-            }
-        }
-
-        const rdf = `<s> <p> "o" .`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p: "o"})
-    })
-
-    it("3.1", () => {
-        class Wrapper extends TermWrapper {
-            get p1(): string {
-                return RequiredFrom.subjectPredicate(this, "p1", LiteralAs.string)
-            }
-
-            get p2(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "p2", TermAs.instance(Wrapper))
-            }
-        }
-
-        const rdf = `
-<s>
-    <p1> "o1" ;
-    <p2> [
-        <p1> "o2" ;
-    ] ;
-.`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p1: "o1", p2: {p1: "o2"}})
-    })
-
-    it("3.2", () => {
-        class Wrapper extends TermWrapper {
-            get name(): string {
-                return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
-            }
-
-            get child(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Wrapper))
-            }
-
-            get child2(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "child2", TermAs.instance(Wrapper))
-            }
-        }
-
-        const rdf = `
-<s1>
-    <name> "o1" ;
-    <child> <s2> ;
-    <child2> <s3> ;
-.
-
-<s2>
-    <name> "o2" ;
-    <child> <s3> ;
-.
-
-<s3>
-    <name> "o3" ;
-.
-`
-        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
-
-        const ancestors = new WeakMap<object, Array<TermWrapper>>()
-        const stringified = JSON.stringify(wrapper, function (this: any, key: string, current: any) {
-            const original = this[key]
-            let path = ancestors.get(this) ?? []
-
-            if (original instanceof TermWrapper) {
-                if (path.some(previous => previous.equals(original as Term))) {
-                    return "CYCLE"
-                }
-
-                path = [...path, original]
-            }
-
-            if (typeof current === "object" && current !== null) {
-                ancestors.set(current, path)
-            }
-
-            return current
+            assert.strictEqual(json, `{"name":"Alice"}`)
         })
 
-        assert.deepStrictEqual(JSON.parse(stringified),
-            {
-                name: "o1",
-                child: {
-                    name: "o2",
-                    child: {
-                        name: "o3",
-                    }
-                },
-                child2: {
-                    name: "o3",
-                }
-            })
-    })
+        it("omits a getter that returns undefined", () => {
+            const person = wrap(Person, `<s> <unrelated> "value" .`)
 
-    it("3.3", () => {
-        class Wrapper extends TermWrapper {
-            get name(): string {
-                return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
-            }
+            const json = JSON.stringify(person)
 
-            get child(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Wrapper))
-            }
-        }
+            assert.strictEqual(json, `{}`)
+        })
 
-        const rdf = `
-<s1>
-    <name> "o1" ;
-    <child> <s2> ;
-.
-
-<s2>
-    <name> "o2" ;
-    <child> <s1> ;
-.
-`
-        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
-
-        assert.throws(() => JSON.stringify(wrapper), TypeError)
-    })
-
-    it("3.4", () => {
-        class Wrapper extends TermWrapper {
-            get name(): string {
-                return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
-            }
-
-            get child(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Wrapper))
-            }
-
-            get child2(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "child2", TermAs.instance(Wrapper))
-            }
-        }
-
-        const rdf = `
-<s1>
-    <name> "o1" ;
-    <child> <s2> ;
-    <child2> <s3> ;
-.
-
-<s2>
-    <name> "o2" ;
-    <child> <s3> ;
-.
-
-<s3>
-    <name> "o3" ;
-.
-`
-        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)),
-            {
-                name: "o1",
-                child: {
-                    name: "o2",
-                    child: {
-                        name: "o3",
-                    }
-                },
-                child2: {
-                    name: "o3",
-                }
-            })
-    })
-
-    it("3.5", () => {
-        class Wrapper extends TermWrapper {
-            get child(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Wrapper))
-            }
-        }
-
-        const rdf = `<s> <child> <s> .`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.throws(() => JSON.stringify(wrapper), TypeError)
-    })
-
-    it("3.6", () => {
-        class Wrapper extends TermWrapper {
-            get children(): Set<Wrapper> {
-                return SetFrom.subjectPredicate(this, "children", TermAs.instance(Wrapper), TermFrom.instance)
-            }
-        }
-
-        const rdf = `
-<s1> <children> <s2> .
-<s2> <children> <s1> .
-`
-        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
-
-        assert.throws(() => JSON.stringify(wrapper), TypeError)
-    })
-
-    it("3.7", () => {
-        class Wrapper extends TermWrapper {
-            get children(): Wrapper[] {
-                return RequiredFrom.subjectPredicate(this, "children", TermAs.list(this, "children", TermAs.instance(Wrapper), TermFrom.instance))
-            }
-        }
-
-        const rdf = `
-<s1> <children> ( <s2> ) .
-<s2> <children> ( <s1> ) .
-`
-        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
-
-        assert.throws(() => JSON.stringify(wrapper), TypeError)
-    })
-
-    it("3.8", () => {
-        class Wrapper extends TermWrapper {
-            get name(): string {
-                return RequiredFrom.subjectPredicate(this, "name", LiteralAs.string)
-            }
-
-            get child(): Wrapper | undefined {
-                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Wrapper))
-            }
-        }
-
-        const dataset = datasetFromRdf(`
-<s1> <name> "o1" ; <child> <s2> .
-<s2> <name> "o2" ; <child> <s1> .
-<s3> <name> "o3" .
+        it("serializes a wrapper returned by a getter as a nested object", () => {
+            const person = wrap(Person, `
+<s> <name> "Alice" ; <friend> <bob> .
+<bob> <name> "Bob" .
 `)
 
-        assert.throws(() => JSON.stringify(new Wrapper("s1", dataset, DataFactory)), TypeError)
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(new Wrapper("s3", dataset, DataFactory))), {name: "o3"})
+            const json = JSON.stringify(person)
+
+            assert.strictEqual(json, `{"name":"Alice","friend":{"name":"Bob"}}`)
+        })
+
+        it("does not serialize the members of TermWrapper itself", () => {
+            const wrapper = wrap(TermWrapper, `<s> <name> "Alice" .`)
+
+            const json = JSON.stringify(wrapper)
+
+            assert.strictEqual(json, `{}`)
+        })
+
+        it("serializes only getters that have a string key", () => {
+            class Mixed extends TermWrapper {
+                field = "field"
+
+                static get staticGetter(): string {
+                    return "static getter"
+                }
+
+                get getter(): string {
+                    return "getter"
+                }
+
+                get [Symbol.for("symbol")](): string {
+                    return "symbol getter"
+                }
+
+                set setter(_: string) {
+                }
+
+                method(): string {
+                    return "method"
+                }
+            }
+            const wrapper = wrap(Mixed, ``)
+
+            const json = JSON.stringify(wrapper)
+
+            assert.strictEqual(json, `{"getter":"getter"}`)
+        })
+
+        it("puts the getters of a base class before the getters of a derived class", () => {
+            class Base extends TermWrapper {
+                get z(): number {
+                    return 1
+                }
+
+                get y(): number {
+                    return 2
+                }
+            }
+
+            class Derived extends Base {
+                get a(): number {
+                    return 3
+                }
+            }
+            const wrapper = wrap(Derived, ``)
+
+            const json = JSON.stringify(wrapper)
+
+            assert.strictEqual(json, `{"z":1,"y":2,"a":3}`)
+        })
+
+        it("reads an overridden getter once and keeps it at the position of the base class", () => {
+            let reads = 0
+
+            class Base extends TermWrapper {
+                get first(): string {
+                    return "base"
+                }
+
+                get second(): string {
+                    return "base"
+                }
+            }
+
+            class Derived extends Base {
+                get third(): string {
+                    return "derived"
+                }
+
+                override get first(): string {
+                    reads++
+                    return "derived"
+                }
+            }
+            const wrapper = wrap(Derived, ``)
+
+            const json = JSON.stringify(wrapper)
+
+            assert.strictEqual(json, `{"first":"derived","second":"base","third":"derived"}`)
+            assert.strictEqual(reads, 1)
+        })
+
+        it("serializes a getter named __proto__ as an ordinary property", () => {
+            class Wrapper extends TermWrapper {
+                get __proto__(): string {
+                    return "value"
+                }
+            }
+            const wrapper = wrap(Wrapper, ``)
+
+            const json = JSON.stringify(wrapper)
+
+            assert.strictEqual(json, `{"__proto__":"value"}`)
+        })
+
+        it("leaves a value that has its own toJSON to JSON.stringify", () => {
+            class Event extends TermWrapper {
+                get date(): Date | undefined {
+                    return OptionalFrom.subjectPredicate(this, "date", LiteralAs.date)
+                }
+            }
+            const event = wrap(Event, `<s> <date> "2020-01-01T00:00:00.000Z"^^<http://www.w3.org/2001/XMLSchema#dateTime> .`)
+
+            const json = JSON.stringify(event)
+
+            assert.strictEqual(json, `{"date":"2020-01-01T00:00:00.000Z"}`)
+        })
+
+        it("lets an error thrown by a getter propagate", () => {
+            const error = new Error("getter failed")
+
+            class Wrapper extends TermWrapper {
+                get broken(): string {
+                    throw error
+                }
+            }
+            const wrapper = wrap(Wrapper, ``)
+
+            const act = () => JSON.stringify(wrapper)
+
+            assert.throws(act, error)
+        })
+
+        it("returns a shallow plain object when toJSON is called directly", () => {
+            const person = wrap(Person, `
+<s> <name> "Alice" ; <friend> <bob> .
+<bob> <name> "Bob" .
+`)
+
+            const result = person.toJSON()
+
+            assert.strictEqual(Object.getPrototypeOf(result), Object.prototype)
+            assert.deepStrictEqual(Object.keys(result), ["name", "friend"])
+            assert.strictEqual(result.name, "Alice")
+            assert.ok(result.friend instanceof Person)
+        })
     })
 
-    it("3.9", () => {
-        class Wrapper extends TermWrapper {
-            get m(): Map<string, Wrapper> {
-                return Mapping.languageDictionary(this, "m", term => [term.value, new Wrapper(term as Term, term.dataset, term.factory)], ([, value]) => value as Term)
+    describe("WrappingSet", () => {
+        class Tagged extends TermWrapper {
+            get tags(): Set<string> {
+                return SetFrom.subjectPredicate(this, "tags", LiteralAs.string, LiteralFrom.string)
             }
         }
 
-        const rdf = `
-<s1> <m> <s2> .
-<s2> <m> <s1> .
-`
-        const wrapper = new Wrapper("s1", datasetFromRdf(rdf), DataFactory)
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
 
-        assert.throws(() => JSON.stringify(wrapper), TypeError)
+            get children(): Set<Node> {
+                return SetFrom.subjectPredicate(this, "children", TermAs.instance(Node), TermFrom.instance)
+            }
+        }
+
+        it("serializes as an array of its items", () => {
+            const tagged = wrap(Tagged, `<s> <tags> "one", "two" .`)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `["one","two"]`)
+        })
+
+        it("serializes as an empty array if it has no items", () => {
+            const tagged = wrap(Tagged, ``)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `[]`)
+        })
+
+        it("serializes items that are wrappers as objects", () => {
+            const node = wrap(Node, `<a> <children> <b> .`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", children: [{id: "b", children: []}]})
+        })
+
+        it("serializes a node that two items share in full for each item", () => {
+            const node = wrap(Node, `
+<a> <children> <b>, <c> .
+<b> <children> <shared> .
+<c> <children> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: [
+                    {id: "b", children: [{id: "shared", children: []}]},
+                    {id: "c", children: [{id: "shared", children: []}]},
+                ],
+            })
+        })
+
+        it("throws if an item is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+    })
+
+    describe("RdfList", () => {
+        class Tagged extends TermWrapper {
+            get tags(): string[] | undefined {
+                return OptionalFrom.subjectPredicate(this, "tags", TermAs.list(this, "tags", LiteralAs.string, LiteralFrom.string))
+            }
+        }
+
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get children(): Node[] | undefined {
+                return OptionalFrom.subjectPredicate(this, "children", TermAs.list(this, "children", TermAs.instance(Node), TermFrom.instance))
+            }
+        }
+
+        it("serializes as an array of its items", () => {
+            const tagged = wrap(Tagged, `<s> <tags> ( "one" "two" ) .`)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `["one","two"]`)
+        })
+
+        it("serializes as an empty array if it has no items", () => {
+            const tagged = wrap(Tagged, `<s> <tags> () .`)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `[]`)
+        })
+
+        it("serializes items that are wrappers as objects", () => {
+            const node = wrap(Node, `<a> <children> ( <b> ) .`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", children: [{id: "b"}]})
+        })
+
+        it("serializes a node that two items share in full for each item", () => {
+            const node = wrap(Node, `
+<a> <children> ( <b> <c> ) .
+<b> <children> ( <shared> ) .
+<c> <children> ( <shared> ) .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: [
+                    {id: "b", children: [{id: "shared"}]},
+                    {id: "c", children: [{id: "shared"}]},
+                ],
+            })
+        })
+
+        it("throws if an item is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> ( <b> ) .
+<b> <children> ( <a> ) .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+    })
+
+    describe("WrappingMap", () => {
+        class Labelled extends TermWrapper {
+            get labels(): Map<string, string> {
+                return Mapping.languageDictionary(this, "labels", LiteralAs.langTuple, LiteralFrom.langTuple)
+            }
+
+            get labelsByLength(): Map<number, string> {
+                return Mapping.languageDictionary(this, "labels", term => [term.value.length, term.value], ([, value]) => DataFactory.literal(value))
+            }
+        }
+
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get children(): Map<string, Node> {
+                return Mapping.languageDictionary(this, "children", term => [term.value, new Node(term as Term, term.dataset, term.factory)], ([, value]) => value as Term)
+            }
+        }
+
+        it("serializes as an object with a property for each entry", () => {
+            const labelled = wrap(Labelled, `<s> <labels> "one"@en, "un"@fr .`)
+
+            const json = JSON.stringify(labelled.labels)
+
+            assert.strictEqual(json, `{"en":"one","fr":"un"}`)
+        })
+
+        it("serializes as an empty object if it has no entries", () => {
+            const labelled = wrap(Labelled, ``)
+
+            const json = JSON.stringify(labelled.labels)
+
+            assert.strictEqual(json, `{}`)
+        })
+
+        it("converts keys that are not strings to property names", () => {
+            const labelled = wrap(Labelled, `<s> <labels> "one"@en, "un"@fr .`)
+
+            const json = JSON.stringify(labelled.labelsByLength)
+
+            assert.strictEqual(json, `{"2":"un","3":"one"}`)
+        })
+
+        it("serializes values that are wrappers as objects", () => {
+            const node = wrap(Node, `<a> <children> <b> .`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", children: {b: {id: "b", children: {}}}})
+        })
+
+        it("serializes a node that two values share in full for each value", () => {
+            const node = wrap(Node, `
+<a> <children> <b>, <c> .
+<b> <children> <shared> .
+<c> <children> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: {
+                    b: {id: "b", children: {shared: {id: "shared", children: {}}}},
+                    c: {id: "c", children: {shared: {id: "shared", children: {}}}},
+                },
+            })
+        })
+
+        it("throws if a value is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+    })
+
+    describe("native array returned by a getter", () => {
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get children(): Node[] {
+                return [...SetFrom.subjectPredicate(this, "children", TermAs.instance(Node), TermFrom.instance)]
+            }
+        }
+
+        class NestedNode extends TermWrapper {
+            get children(): NestedNode[][] {
+                return [[...SetFrom.subjectPredicate(this, "children", TermAs.instance(NestedNode), TermFrom.instance)]]
+            }
+        }
+
+        it("serializes a node that two elements share in full for each element", () => {
+            const node = wrap(Node, `
+<a> <children> <b>, <c> .
+<b> <children> <shared> .
+<c> <children> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: [
+                    {id: "b", children: [{id: "shared", children: []}]},
+                    {id: "c", children: [{id: "shared", children: []}]},
+                ],
+            })
+        })
+
+        it("throws if an element is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("throws if an element of a nested array is one of its own ancestors", () => {
+            const node = wrap(NestedNode, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+    })
+
+    describe("shared and circular nodes", () => {
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get child(): Node | undefined {
+                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Node))
+            }
+
+            get otherChild(): Node | undefined {
+                return OptionalFrom.subjectPredicate(this, "otherChild", TermAs.instance(Node))
+            }
+        }
+
+        it("serializes a node that two branches share in full in each branch", () => {
+            const node = wrap(Node, `
+<a> <child> <b> ; <otherChild> <shared> .
+<b> <child> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                child: {id: "b", child: {id: "shared"}},
+                otherChild: {id: "shared"},
+            })
+        })
+
+        it("throws if a node is its own child", () => {
+            const node = wrap(Node, `<a> <child> <a> .`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("throws if a node is one of its own descendants", () => {
+            const node = wrap(Node, `
+<a> <child> <b> .
+<b> <child> <c> .
+<c> <child> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("throws if the cycle does not include the root", () => {
+            const node = wrap(Node, `
+<a> <child> <b> .
+<b> <child> <c> .
+<c> <child> <b> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("serializes the same wrapper after the cycle that made it throw is removed", () => {
+            const dataset = datasetFromRdf(`
+<a> <child> <b> .
+<b> <child> <a> .
+`)
+            const node = new Node("a", dataset, DataFactory)
+            const closingQuad = DataFactory.quad(DataFactory.namedNode("b"), DataFactory.namedNode("child"), DataFactory.namedNode("a"))
+
+            assert.throws(() => JSON.stringify(node), circularStructureError)
+            dataset.delete(closingQuad)
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", child: {id: "b"}})
+        })
+    })
+
+    describe("arguments of JSON.stringify", () => {
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get child(): Node | undefined {
+                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Node))
+            }
+        }
+
+        it("indents the output as the space argument specifies", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+
+            const json = JSON.stringify(node, null, 2)
+
+            assert.strictEqual(json, JSON.stringify({id: "a", child: {id: "b"}}, null, 2))
+        })
+
+        it("keeps only the properties that a replacer array lists", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+
+            const json = JSON.stringify(node, ["id"])
+
+            assert.strictEqual(json, `{"id":"a"}`)
+        })
+
+        it("serializes the value that a replacer function returns", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+
+            const json = JSON.stringify(node, (key, value) => key === "child" ? "replaced" : value)
+
+            assert.strictEqual(json, `{"id":"a","child":"replaced"}`)
+        })
+
+        it("gives a replacer function the original wrapper as this[key] and the plain object as value", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+            let original: unknown
+            let converted: unknown
+
+            JSON.stringify(node, function (this: any, key: string, value: unknown) {
+                if (key === "child" && value !== undefined) {
+                    original = this[key]
+                    converted = value
+                }
+
+                return value
+            })
+
+            assert.ok(original instanceof Node)
+            assert.strictEqual(Object.getPrototypeOf(converted), Object.prototype)
+        })
     })
 
     it("X", () => {
@@ -323,117 +647,6 @@ describe("tojson", () => {
                 console.log(this.name, key, value.name)
                 return value
             }))
-    })
-
-    it("4", () => {
-        class Wrapper extends TermWrapper {
-            get p(): Set<string> {
-                return SetFrom.subjectPredicate(this, "p", LiteralAs.string, LiteralFrom.string)
-            }
-        }
-
-        const rdf = ``
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p: []})
-    })
-
-    it("5", () => {
-        class Wrapper extends TermWrapper {
-            get p(): Set<string> {
-                return SetFrom.subjectPredicate(this, "p", LiteralAs.string, LiteralFrom.string)
-            }
-        }
-
-        const rdf = `<s> <p> "o1", "o2" .`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p: ["o1", "o2"]})
-    })
-
-    it("5.1", () => {
-        class Wrapper extends TermWrapper {
-            get p1(): string {
-                return RequiredFrom.subjectPredicate(this, "p1", LiteralAs.string)
-            }
-
-            get p2(): Set<Wrapper> {
-                return SetFrom.subjectPredicate(this, "p2", TermAs.instance(Wrapper), TermFrom.instance)
-            }
-        }
-
-        const rdf = `
-<s>
-    <p1> "o1" ;
-    <p2> [
-        <p1> "o2" ;
-    ] ;
-.`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p1: "o1", p2: [{p1: "o2", p2: []}]})
-    })
-
-    it("6", () => {
-        class Wrapper extends TermWrapper {
-            get p(): string[] {
-                return RequiredFrom.subjectPredicate(this, "p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
-            }
-        }
-
-        const rdf = `<s> <p> () .`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p: []})
-    })
-
-    it("7", () => {
-        class Wrapper extends TermWrapper {
-            get p(): string[] {
-                return RequiredFrom.subjectPredicate(this, "p", TermAs.list(this, "p", LiteralAs.string, LiteralFrom.string))
-            }
-        }
-
-        const rdf = `<s> <p> ( "o1" "o2" ) .`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p: ["o1", "o2"]})
-    })
-
-    it("7.1", () => {
-        class Wrapper extends TermWrapper {
-            get p1(): string {
-                return RequiredFrom.subjectPredicate(this, "p1", LiteralAs.string)
-            }
-
-            get p2(): Wrapper[] | undefined {
-                return OptionalFrom.subjectPredicate(this, "p2", TermAs.list(this, "p2", TermAs.instance(Wrapper), TermFrom.instance))
-            }
-        }
-
-        const rdf = `
-<s>
-    <p1> "o1" ;
-    <p2> ([
-        <p1> "o2" ;
-    ]) ;
-.`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p1: "o1", p2: [{p1: "o2"}]})
-    })
-
-    it("8", () => {
-        class Wrapper extends TermWrapper {
-            public get p(): Map<string, string> {
-                return Mapping.languageDictionary(this, "p", LiteralAs.langTuple, LiteralFrom.langTuple)
-            }
-        }
-
-        const rdf = `<s> <p> "o1"@en, "o2"@fr .`
-        const wrapper = new Wrapper("s", datasetFromRdf(rdf), DataFactory)
-
-        assert.deepStrictEqual(JSON.parse(JSON.stringify(wrapper)), {p: {"en": "o1", "fr": "o2"}})
     })
 })
 
