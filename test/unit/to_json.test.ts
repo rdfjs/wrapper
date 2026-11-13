@@ -562,4 +562,58 @@ describe("JSON serialization", () => {
             assert.deepStrictEqual(actual, {id: "a", child: {id: "b"}})
         })
     })
+
+    describe("arguments of JSON.stringify", () => {
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get child(): Node | undefined {
+                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Node))
+            }
+        }
+
+        it("indents the output as the space argument specifies", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+
+            const json = JSON.stringify(node, null, 2)
+
+            assert.strictEqual(json, JSON.stringify({id: "a", child: {id: "b"}}, null, 2))
+        })
+
+        it("keeps only the properties that a replacer array lists", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+
+            const json = JSON.stringify(node, ["id"])
+
+            assert.strictEqual(json, `{"id":"a"}`)
+        })
+
+        it("serializes the value that a replacer function returns", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+
+            const json = JSON.stringify(node, (key, value) => key === "child" ? "replaced" : value)
+
+            assert.strictEqual(json, `{"id":"a","child":"replaced"}`)
+        })
+
+        it("gives a replacer function the original wrapper as this[key] and the plain object as value", () => {
+            const node = wrap(Node, `<a> <child> <b> .`, "a")
+            let original: unknown
+            let converted: unknown
+
+            JSON.stringify(node, function (this: any, key: string, value: unknown) {
+                if (key === "child" && value !== undefined) {
+                    original = this[key]
+                    converted = value
+                }
+
+                return value
+            })
+
+            assert.ok(original instanceof Node)
+            assert.strictEqual(Object.getPrototypeOf(converted), Object.prototype)
+        })
+    })
 })
