@@ -242,4 +242,46 @@ describe("JSON serialization", () => {
         })
     })
 
+    describe("RdfList", () => {
+        class Tagged extends TermWrapper {
+            get tags(): string[] | undefined {
+                return OptionalFrom.subjectPredicate(this, "tags", TermAs.list(this, "tags", LiteralAs.string, LiteralFrom.string))
+            }
+        }
+
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get children(): Node[] | undefined {
+                return OptionalFrom.subjectPredicate(this, "children", TermAs.list(this, "children", TermAs.instance(Node), TermFrom.instance))
+            }
+        }
+
+        it("serializes as an array of its items", () => {
+            const tagged = wrap(Tagged, `<s> <tags> ( "one" "two" ) .`)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `["one","two"]`)
+        })
+
+        it("serializes as an empty array if it has no items", () => {
+            const tagged = wrap(Tagged, `<s> <tags> () .`)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `[]`)
+        })
+
+        it("serializes items that are wrappers as objects", () => {
+            const node = wrap(Node, `<a> <children> ( <b> ) .`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", children: [{id: "b"}]})
+        })
+    })
+
 })

@@ -206,6 +206,22 @@ export class RdfList<T> implements Array<T> {
         return this.constructor.name
     }
 
+    /**
+     * Converts this list to a native array for JSON serialization. This method is called by {@link JSON.stringify}; there is usually no reason to call it directly.
+     *
+     * @remarks
+     * Like {@link TermWrapper.toJSON}, this is not an RDF serialization.
+     *
+     * This list behaves like an array but is not one, so without this method {@link JSON.stringify} would serialize it as an object.
+     *
+     * The result is shallow: the items are returned as they are, and {@link JSON.stringify} descends into them.
+     *
+     * @returns A new array that contains the items of this list.
+     */
+    toJSON(): T[] {
+        return Array.from(this, item => item)
+    }
+
     private get items(): Iterable<ListItem<T>> {
         return this.root.items()
     }
