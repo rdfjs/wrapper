@@ -1,9 +1,9 @@
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
-import { LiteralAs, LiteralFrom, OptionalFrom, SetFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, Mapping, OptionalFrom, SetFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
 import assert from "node:assert"
-import type { DatasetCore } from "@rdfjs/types"
+import type { DatasetCore, Term } from "@rdfjs/types"
 
 function wrap<T>(model: new (term: string, dataset: DatasetCore, factory: typeof DataFactory) => T, rdf: string, iri = "s"): T {
     return new model(iri, datasetFromRdf(rdf), DataFactory)
@@ -281,6 +281,60 @@ describe("JSON serialization", () => {
             const actual = parsedJson(node)
 
             assert.deepStrictEqual(actual, {id: "a", children: [{id: "b"}]})
+        })
+    })
+
+    describe("WrappingMap", () => {
+        class Labelled extends TermWrapper {
+            get labels(): Map<string, string> {
+                return Mapping.languageDictionary(this, "labels", LiteralAs.langTuple, LiteralFrom.langTuple)
+            }
+
+            get labelsByLength(): Map<number, string> {
+                return Mapping.languageDictionary(this, "labels", term => [term.value.length, term.value], ([, value]) => DataFactory.literal(value))
+            }
+        }
+
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get children(): Map<string, Node> {
+                return Mapping.languageDictionary(this, "children", term => [term.value, new Node(term as Term, term.dataset, term.factory)], ([, value]) => value as Term)
+            }
+        }
+
+        it("serializes as an object with a property for each entry", () => {
+            const labelled = wrap(Labelled, `<s> <labels> "one"@en, "un"@fr .`)
+
+            const json = JSON.stringify(labelled.labels)
+
+            assert.strictEqual(json, `{"en":"one","fr":"un"}`)
+        })
+
+        it("serializes as an empty object if it has no entries", () => {
+            const labelled = wrap(Labelled, ``)
+
+            const json = JSON.stringify(labelled.labels)
+
+            assert.strictEqual(json, `{}`)
+        })
+
+        it("converts keys that are not strings to property names", () => {
+            const labelled = wrap(Labelled, `<s> <labels> "one"@en, "un"@fr .`)
+
+            const json = JSON.stringify(labelled.labelsByLength)
+
+            assert.strictEqual(json, `{"2":"un","3":"one"}`)
+        })
+
+        it("serializes values that are wrappers as objects", () => {
+            const node = wrap(Node, `<a> <children> <b> .`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", children: {b: {id: "b", children: {}}}})
         })
     })
 

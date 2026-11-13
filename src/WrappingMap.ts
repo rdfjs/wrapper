@@ -96,6 +96,22 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
         return this.constructor.name
     }
 
+    /**
+     * Converts this map to a plain object for JSON serialization. This method is called by {@link JSON.stringify}; there is usually no reason to call it directly.
+     *
+     * @remarks
+     * Like {@link TermWrapper.toJSON}, this is not an RDF serialization.
+     *
+     * A native {@link Map} is serialized as `{}`, which loses its content. A plain object with one property for each entry is the nearest JSON equivalent. Keys that are not strings are converted as property keys usually are.
+     *
+     * The result is shallow: the values are returned as they are, and {@link JSON.stringify} descends into them.
+     *
+     * @returns A new plain object that contains the entries of this map.
+     */
+    toJSON(): Record<string, TValue> {
+        return Object.fromEntries(Array.from(this, ([key, value]) => [key, value]))
+    }
+
     private get matches(): Iterable<Quad> {
         const p = this.subject.factory.namedNode(this.predicate)
 
