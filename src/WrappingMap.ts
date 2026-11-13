@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import { TermWrapper } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
@@ -94,6 +95,25 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
 
     get [Symbol.toStringTag](): string {
         return this.constructor.name
+    }
+
+    /**
+     * Converts this map to a plain object for JSON serialization. This method is called by {@link JSON.stringify}; there is usually no reason to call it directly.
+     *
+     * @remarks
+     * Like {@link TermWrapper.toJSON}, this is not an RDF serialization.
+     *
+     * A native {@link Map} is serialized as `{}`, which loses its content. A plain object with one property for each entry is the nearest JSON equivalent. Keys that are not strings are converted as property keys usually are.
+     *
+     * The result is shallow: the values are returned as they are, and {@link JSON.stringify} descends into them.
+     *
+     * @returns A new plain object that contains the entries of this map.
+     */
+    toJSON(): Record<string, TValue> {
+        // A map is not a node, so it adds nothing to the path: its values have the same ancestors as the map.
+        const path = pathOf(this)
+
+        return Object.fromEntries(Array.from(this, ([key, value]) => [key, withPath(value, path)]))
     }
 
     private get matches(): Iterable<Quad> {
