@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
 import type { DatasetCore, Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
@@ -85,7 +86,10 @@ export class WrappingSet<T> implements Set<T> {
      * @returns A new array that contains the items of this set.
      */
     toJSON(): T[] {
-        return Array.from(this, item => item)
+        // A set is not a node, so it adds nothing to the path: its items have the same ancestors as the set.
+        const path = pathOf(this)
+
+        return Array.from(this, item => withPath(item, path))
     }
 
     private quad(value: T): Quad {

@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import { TermWrapper } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
@@ -219,7 +220,10 @@ export class RdfList<T> implements Array<T> {
      * @returns A new array that contains the items of this list.
      */
     toJSON(): T[] {
-        return Array.from(this, item => item)
+        // A list is not a node, so it adds nothing to the path: its items have the same ancestors as the list.
+        const path = pathOf(this)
+
+        return Array.from(this, item => withPath(item, path))
     }
 
     private get items(): Iterable<ListItem<T>> {

@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import { TermWrapper } from "./TermWrapper.js"
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
@@ -109,7 +110,10 @@ export class WrappingMap<TKey, TValue> implements Map<TKey, TValue> {
      * @returns A new plain object that contains the entries of this map.
      */
     toJSON(): Record<string, TValue> {
-        return Object.fromEntries(Array.from(this, ([key, value]) => [key, value]))
+        // A map is not a node, so it adds nothing to the path: its values have the same ancestors as the map.
+        const path = pathOf(this)
+
+        return Object.fromEntries(Array.from(this, ([key, value]) => [key, withPath(value, path)]))
     }
 
     private get matches(): Iterable<Quad> {

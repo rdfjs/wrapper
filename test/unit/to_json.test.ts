@@ -13,6 +13,8 @@ function parsedJson(value: unknown): unknown {
     return JSON.parse(JSON.stringify(value))
 }
 
+const circularStructureError = {name: "TypeError", message: "Converting circular structure to JSON"}
+
 describe("JSON serialization", () => {
     describe("TermWrapper", () => {
         class Person extends TermWrapper {
@@ -240,6 +242,35 @@ describe("JSON serialization", () => {
 
             assert.deepStrictEqual(actual, {id: "a", children: [{id: "b", children: []}]})
         })
+
+        it("serializes a node that two items share in full for each item", () => {
+            const node = wrap(Node, `
+<a> <children> <b>, <c> .
+<b> <children> <shared> .
+<c> <children> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: [
+                    {id: "b", children: [{id: "shared", children: []}]},
+                    {id: "c", children: [{id: "shared", children: []}]},
+                ],
+            })
+        })
+
+        it("throws if an item is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
     })
 
     describe("RdfList", () => {
@@ -281,6 +312,35 @@ describe("JSON serialization", () => {
             const actual = parsedJson(node)
 
             assert.deepStrictEqual(actual, {id: "a", children: [{id: "b"}]})
+        })
+
+        it("serializes a node that two items share in full for each item", () => {
+            const node = wrap(Node, `
+<a> <children> ( <b> <c> ) .
+<b> <children> ( <shared> ) .
+<c> <children> ( <shared> ) .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: [
+                    {id: "b", children: [{id: "shared"}]},
+                    {id: "c", children: [{id: "shared"}]},
+                ],
+            })
+        })
+
+        it("throws if an item is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> ( <b> ) .
+<b> <children> ( <a> ) .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
         })
     })
 
@@ -336,6 +396,170 @@ describe("JSON serialization", () => {
 
             assert.deepStrictEqual(actual, {id: "a", children: {b: {id: "b", children: {}}}})
         })
+
+        it("serializes a node that two values share in full for each value", () => {
+            const node = wrap(Node, `
+<a> <children> <b>, <c> .
+<b> <children> <shared> .
+<c> <children> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: {
+                    b: {id: "b", children: {shared: {id: "shared", children: {}}}},
+                    c: {id: "c", children: {shared: {id: "shared", children: {}}}},
+                },
+            })
+        })
+
+        it("throws if a value is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
     })
 
+    describe("native array returned by a getter", () => {
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get children(): Node[] {
+                return [...SetFrom.subjectPredicate(this, "children", TermAs.instance(Node), TermFrom.instance)]
+            }
+        }
+
+        class NestedNode extends TermWrapper {
+            get children(): NestedNode[][] {
+                return [[...SetFrom.subjectPredicate(this, "children", TermAs.instance(NestedNode), TermFrom.instance)]]
+            }
+        }
+
+        it("serializes a node that two elements share in full for each element", () => {
+            const node = wrap(Node, `
+<a> <children> <b>, <c> .
+<b> <children> <shared> .
+<c> <children> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                children: [
+                    {id: "b", children: [{id: "shared", children: []}]},
+                    {id: "c", children: [{id: "shared", children: []}]},
+                ],
+            })
+        })
+
+        it("throws if an element is one of its own ancestors", () => {
+            const node = wrap(Node, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("throws if an element of a nested array is one of its own ancestors", () => {
+            const node = wrap(NestedNode, `
+<a> <children> <b> .
+<b> <children> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+    })
+
+    describe("shared and circular nodes", () => {
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get child(): Node | undefined {
+                return OptionalFrom.subjectPredicate(this, "child", TermAs.instance(Node))
+            }
+
+            get otherChild(): Node | undefined {
+                return OptionalFrom.subjectPredicate(this, "otherChild", TermAs.instance(Node))
+            }
+        }
+
+        it("serializes a node that two branches share in full in each branch", () => {
+            const node = wrap(Node, `
+<a> <child> <b> ; <otherChild> <shared> .
+<b> <child> <shared> .
+`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {
+                id: "a",
+                child: {id: "b", child: {id: "shared"}},
+                otherChild: {id: "shared"},
+            })
+        })
+
+        it("throws if a node is its own child", () => {
+            const node = wrap(Node, `<a> <child> <a> .`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("throws if a node is one of its own descendants", () => {
+            const node = wrap(Node, `
+<a> <child> <b> .
+<b> <child> <c> .
+<c> <child> <a> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("throws if the cycle does not include the root", () => {
+            const node = wrap(Node, `
+<a> <child> <b> .
+<b> <child> <c> .
+<c> <child> <b> .
+`, "a")
+
+            const act = () => JSON.stringify(node)
+
+            assert.throws(act, circularStructureError)
+        })
+
+        it("serializes the same wrapper after the cycle that made it throw is removed", () => {
+            const dataset = datasetFromRdf(`
+<a> <child> <b> .
+<b> <child> <a> .
+`)
+            const node = new Node("a", dataset, DataFactory)
+            const closingQuad = DataFactory.quad(DataFactory.namedNode("b"), DataFactory.namedNode("child"), DataFactory.namedNode("a"))
+
+            assert.throws(() => JSON.stringify(node), circularStructureError)
+            dataset.delete(closingQuad)
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", child: {id: "b"}})
+        })
+    })
 })

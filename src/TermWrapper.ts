@@ -1,3 +1,4 @@
+import { pathOf, withPath } from "./jsonPath.js"
 import type { BaseQuad, DataFactory, DatasetCore, Literal, NamedNode, Quad_Subject, Term } from "@rdfjs/types"
 import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
 
@@ -199,8 +200,11 @@ export class TermWrapper implements IRdfJsTerm {
      * - The order of the properties is that of ordinary class fields: properties of base classes come before properties of derived classes, in the order of declaration. An accessor that a derived class overrides keeps the position of the base declaration and is read only once.
      * - The result is shallow. The property values (other wrappers, sets, lists and maps included) are returned as they are, and {@link JSON.stringify} descends into them. The `replacer` and `space` arguments thus work as usual.
      * - A node that can be reached along more than one path is serialized in full each time, because JSON has no concept of identity.
+     * - A node that can be reached from itself cannot be serialized, as is the case with all circular structures.
      *
      * @returns A new plain object that contains the values of the accessors of this instance.
+     *
+     * @throws {@link !TypeError TypeError} If the term of this instance is also the term of one of the wrappers that contain it, i.e. the underlying graph has a cycle.
      *
      * @example
      * ```ts
@@ -218,6 +222,16 @@ export class TermWrapper implements IRdfJsTerm {
      * ```
      */
     toJSON(): Record<string, unknown> {
+        const ancestors = pathOf(this)
+
+        // Compare by term and not by identity: each read of a mapped property creates a new wrapper, so the same instance is never seen twice.
+        // Look only at ancestors and not at everything serialized so far: a node that occurs again in a different branch is not a cycle.
+        if (ancestors.some(ancestor => ancestor.equals(this as Term))) {
+            throw new TypeError("Converting circular structure to JSON")
+        }
+
+        const path = [...ancestors, this as Term]
+
         // The names of the accessors of each class between this instance and TermWrapper, base class first (the order in which ordinary class fields are created).
         const names: string[][] = []
         for (let prototype = Object.getPrototypeOf(this); prototype !== TermWrapper.prototype; prototype = Object.getPrototypeOf(prototype)) {
@@ -229,7 +243,7 @@ export class TermWrapper implements IRdfJsTerm {
 
         // The set removes the names of overridden accessors, so that each is read once and stays at the position of its first declaration.
         // Object.fromEntries defines properties and does not assign them, so a name like "__proto__" becomes an ordinary property.
-        return Object.fromEntries(Array.from(new Set(names.flat()), name => [name, Reflect.get(this, name)]))
+        return Object.fromEntries(Array.from(new Set(names.flat()), name => [name, withPath(Reflect.get(this, name), path)]))
     }
 
     //#region Implementation of RDF/JS Term
