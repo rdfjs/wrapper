@@ -187,6 +187,51 @@ export class TermWrapper implements IRdfJsTerm {
         return this.constructor.name
     }
 
+    /**
+     * Converts this instance to a plain object for JSON serialization. This method is called by {@link JSON.stringify}; there is usually no reason to call it directly.
+     *
+     * The result has one property for each accessor (getter) that the classes derived from {@link TermWrapper} declare. The members of {@link TermWrapper} itself (the RDF/JS term, the dataset and the factory) are not included. Methods, accessors with symbol keys and instance fields are not included either.
+     *
+     * @remarks
+     * This is not an RDF serialization. The output is not JSON-LD and not RDF/JSON, and it cannot be converted back to RDF or to wrappers. This is by design: the aim is the output that {@link JSON.stringify} gives for a plain object literal or for an instance of an ordinary class. To serialize RDF, serialize the underlying dataset with an RDF serializer.
+     *
+     * The behaviour is as close as possible to that of {@link JSON.stringify} on an instance of an ordinary class:
+     * - The order of the properties is that of ordinary class fields: properties of base classes come before properties of derived classes, in the order of declaration. An accessor that a derived class overrides keeps the position of the base declaration and is read only once.
+     * - The result is shallow. The property values (other wrappers, sets, lists and maps included) are returned as they are, and {@link JSON.stringify} descends into them. The `replacer` and `space` arguments thus work as usual.
+     * - A node that can be reached along more than one path is serialized in full each time, because JSON has no concept of identity.
+     *
+     * @returns A new plain object that contains the values of the accessors of this instance.
+     *
+     * @example
+     * ```ts
+     * class Person extends TermWrapper {
+     *   get name(): string {
+     *     return RequiredFrom.subjectPredicate(this, "http://example.com/name", LiteralAs.string)
+     *   }
+     *
+     *   get knows(): Set<Person> {
+     *     return SetFrom.subjectPredicate(this, "http://example.com/knows", TermAs.instance(Person), TermFrom.instance)
+     *   }
+     * }
+     *
+     * JSON.stringify(alice) // {"name":"Alice","knows":[{"name":"Bob","knows":[]}]}
+     * ```
+     */
+    toJSON(): Record<string, unknown> {
+        // The names of the accessors of each class between this instance and TermWrapper, base class first (the order in which ordinary class fields are created).
+        const names: string[][] = []
+        for (let prototype = Object.getPrototypeOf(this); prototype !== TermWrapper.prototype; prototype = Object.getPrototypeOf(prototype)) {
+            names.unshift(Object
+                .entries(Object.getOwnPropertyDescriptors(prototype))
+                .filter(([, {get}]) => get !== undefined)
+                .map(([name]) => name))
+        }
+
+        // The set removes the names of overridden accessors, so that each is read once and stays at the position of its first declaration.
+        // Object.fromEntries defines properties and does not assign them, so a name like "__proto__" becomes an ordinary property.
+        return Object.fromEntries(Array.from(new Set(names.flat()), name => [name, Reflect.get(this, name)]))
+    }
+
     //#region Implementation of RDF/JS Term
 
     get termType(): Term["termType"] {
