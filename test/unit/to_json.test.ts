@@ -1,12 +1,16 @@
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
-import { LiteralAs, OptionalFrom, TermAs, TermWrapper } from "@rdfjs/wrapper"
+import { LiteralAs, LiteralFrom, OptionalFrom, SetFrom, TermAs, TermFrom, TermWrapper } from "@rdfjs/wrapper"
 import assert from "node:assert"
 import type { DatasetCore } from "@rdfjs/types"
 
 function wrap<T>(model: new (term: string, dataset: DatasetCore, factory: typeof DataFactory) => T, rdf: string, iri = "s"): T {
     return new model(iri, datasetFromRdf(rdf), DataFactory)
+}
+
+function parsedJson(value: unknown): unknown {
+    return JSON.parse(JSON.stringify(value))
 }
 
 describe("JSON serialization", () => {
@@ -193,6 +197,48 @@ describe("JSON serialization", () => {
             assert.deepStrictEqual(Object.keys(result), ["name", "friend"])
             assert.strictEqual(result.name, "Alice")
             assert.ok(result.friend instanceof Person)
+        })
+    })
+
+    describe("WrappingSet", () => {
+        class Tagged extends TermWrapper {
+            get tags(): Set<string> {
+                return SetFrom.subjectPredicate(this, "tags", LiteralAs.string, LiteralFrom.string)
+            }
+        }
+
+        class Node extends TermWrapper {
+            get id(): string {
+                return this.value
+            }
+
+            get children(): Set<Node> {
+                return SetFrom.subjectPredicate(this, "children", TermAs.instance(Node), TermFrom.instance)
+            }
+        }
+
+        it("serializes as an array of its items", () => {
+            const tagged = wrap(Tagged, `<s> <tags> "one", "two" .`)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `["one","two"]`)
+        })
+
+        it("serializes as an empty array if it has no items", () => {
+            const tagged = wrap(Tagged, ``)
+
+            const json = JSON.stringify(tagged.tags)
+
+            assert.strictEqual(json, `[]`)
+        })
+
+        it("serializes items that are wrappers as objects", () => {
+            const node = wrap(Node, `<a> <children> <b> .`, "a")
+
+            const actual = parsedJson(node)
+
+            assert.deepStrictEqual(actual, {id: "a", children: [{id: "b", children: []}]})
         })
     })
 

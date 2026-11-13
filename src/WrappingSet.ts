@@ -72,6 +72,22 @@ export class WrappingSet<T> implements Set<T> {
         return this.constructor.name
     }
 
+    /**
+     * Converts this set to an array for JSON serialization. This method is called by {@link JSON.stringify}; there is usually no reason to call it directly.
+     *
+     * @remarks
+     * Like {@link TermWrapper.toJSON}, this is not an RDF serialization.
+     *
+     * A native {@link Set} is serialized as `{}`, which loses its content. An array is the nearest JSON equivalent.
+     *
+     * The result is shallow: the items are returned as they are, and {@link JSON.stringify} descends into them.
+     *
+     * @returns A new array that contains the items of this set.
+     */
+    toJSON(): T[] {
+        return Array.from(this, item => item)
+    }
+
     private quad(value: T): Quad {
         const s = this.subject as Quad_Subject // TODO: guard
         const p = this.subject.factory.namedNode(this.predicate)
