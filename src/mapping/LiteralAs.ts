@@ -1,8 +1,8 @@
 import type { Literal } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
+import { dateDatatypes, parseDate, parseDateTime } from "../xsd/dateTime.js"
 import { integerDatatypes, parseInteger } from "../xsd/integer.js"
 import { numericDatatypes, parseNumeric } from "../xsd/numeric.js"
-import { collapse } from "../xsd/pattern.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
 import type { ILangString } from "../type/ILangString.js"
@@ -40,7 +40,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...dateDatatypes)
 
-        return parseDate(term.value, term.datatype.value)
+        return (term.datatype.value === XSD.date ? parseDate : parseDateTime)(term.value)
     }
 
     export function langString(term: TermWrapper): ILangString {
@@ -184,86 +184,3 @@ const byteArrayDatatypes: string[] = [
     XSD.base64Binary,
     XSD.hexBinary,
 ]
-
-const dateDatatypes: string[] = [
-    XSD.date,
-    XSD.dateTime,
-]
-
-const datePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})(Z|[+-]\d{2}:\d{2})?$/
-const dateTimePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/
-
-function isValidTimezone(timezone: string | undefined): boolean {
-    if (timezone === undefined || timezone === "Z") {
-        return true
-    }
-
-    const hours = Number(timezone.slice(1, 3))
-    const minutes = Number(timezone.slice(4, 6))
-
-    return minutes <= 59 && (hours < 14 || (hours === 14 && minutes === 0))
-}
-
-function daysInMonth(year: number, month: number): number {
-    if (month === 2) {
-        return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28
-    }
-
-    return [4, 6, 9, 11].includes(month) ? 30 : 31
-}
-
-function isoYear(year: number): string {
-    if (year >= 0 && year <= 9999) {
-        return year.toString().padStart(4, "0")
-    }
-
-    return (year < 0 ? "-" : "+") + Math.abs(year).toString().padStart(6, "0")
-}
-
-function parseDate(value: string, datatype: string): Date {
-    const lexical = collapse(value)
-    const invalid = () => new SyntaxError(`Value "${value}" is not a valid lexical form of ${datatype}`)
-    const isDate = datatype === XSD.date
-    const match = (isDate ? datePattern : dateTimePattern).exec(lexical)
-
-    if (match === null) {
-        throw invalid()
-    }
-
-    const year = Number(match[1]) + 0
-    const month = Number(match[2])
-    const day = Number(match[3])
-    const hours = isDate ? 0 : Number(match[4])
-    const minutes = isDate ? 0 : Number(match[5])
-    const seconds = isDate ? 0 : Number(match[6])
-    const fraction = isDate ? "" : match[7] ?? ""
-    const timezone = isDate ? match[4] : match[8]
-
-    const validTime = isDate || (
-        minutes <= 59 &&
-        seconds <= 59 &&
-        (hours <= 23 || (hours === 24 && minutes === 0 && seconds === 0 && /^0*$/.test(fraction)))
-    )
-
-    if (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month) || !validTime || !isValidTimezone(timezone)) {
-        throw invalid()
-    }
-
-    const pad = (n: number) => n.toString().padStart(2, "0")
-    const rollover = hours === 24
-    const date = `${isoYear(year)}-${pad(month)}-${pad(day)}`
-    const time = `${pad(rollover ? 0 : hours)}:${pad(minutes)}:${pad(seconds)}.${fraction.padEnd(3, "0").slice(0, 3)}`
-    const iso = isDate && timezone === undefined ? date : `${date}T${time}${timezone ?? ""}`
-
-    const result = new Date(iso)
-
-    if (rollover) {
-        result.setTime(result.getTime() + 86400000)
-    }
-
-    if (Number.isNaN(result.getTime())) {
-        throw invalid()
-    }
-
-    return result
-}

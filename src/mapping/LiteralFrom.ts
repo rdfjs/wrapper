@@ -1,6 +1,7 @@
 import type { DataFactory, Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import type { ILangString } from "../type/ILangString.js"
+import { formatDate, formatDateTime } from "../xsd/dateTime.js"
 import { formatDouble } from "../xsd/float.js"
 import { formatInteger } from "../xsd/integer.js"
 
@@ -29,11 +30,11 @@ export namespace LiteralFrom {
     }
 
     export function date(value: Date, factory: DataFactory): Term {
-        return factory.literal(value.toISOString().split("T")[0]!, factory.namedNode(XSD.date))
+        return factory.literal(formatDate(value), factory.namedNode(XSD.date))
     }
 
     export function dateTime(value: Date, factory: DataFactory): Term {
-        return factory.literal(value.toISOString(), factory.namedNode(XSD.dateTime))
+        return factory.literal(formatDateTime(value), factory.namedNode(XSD.dateTime))
     }
 
     export function double(value: number, factory: DataFactory): Term {
