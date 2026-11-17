@@ -1,5 +1,6 @@
 import type { Literal } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
+import { collapse } from "../xsd/pattern.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
 import type { ILangString } from "../type/ILangString.js"
@@ -238,12 +239,6 @@ const decimalPattern = /^[+-]?(\d+(\.\d*)?|\.\d+)$/
 const floatPattern = /^[+-]?((\d+(\.\d*)?|\.\d+)([Ee][+-]?\d+)?)$/
 const datePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})(Z|[+-]\d{2}:\d{2})?$/
 const dateTimePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/
-
-const xmlWhitespace = /[\t\n\r ]+/g
-
-function collapse(value: string): string {
-    return value.replaceAll(xmlWhitespace, " ").replace(/^ | $/g, "")
-}
 
 function parseLexical(value: string, pattern: RegExp, datatype: string): string {
     const lexical = collapse(value)
