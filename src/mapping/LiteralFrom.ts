@@ -55,8 +55,20 @@ export namespace LiteralFrom {
         return value.toString()
     }
 
-    export function integer(value: number, factory: DataFactory): Term {
-        return factory.literal(value.toString(), factory.namedNode(XSD.integer))
+    export function integer(value: number | bigint, factory: DataFactory): Term {
+        return factory.literal(integerLexical(value), factory.namedNode(XSD.integer))
+    }
+
+    function integerLexical(value: number | bigint): string {
+        if (typeof value === "bigint") {
+            return value.toString()
+        }
+
+        if (!Number.isInteger(value)) {
+            throw new Error(`Value ${value} is not an integer`)
+        }
+
+        return BigInt(value).toString()
     }
 
     export function hex(value: Uint8Array, factory: DataFactory): Term {

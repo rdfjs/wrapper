@@ -61,5 +61,59 @@ await describe("LiteralFrom", async () => {
         })
     })
 
+    await describe("integer", async () => {
+        const roundTrip = (value: number | bigint) => LiteralAs.bigint(new TermWrapper(LiteralFrom.integer(value, DataFactory), new Store(), DataFactory))
+
+        await it("produces xsd:integer datatype", async () => {
+            const term = LiteralFrom.integer(5, DataFactory)
+            assert.strictEqual((term as any).datatype.value, `${XSD}integer`)
+        })
+
+        await it("produces canonical lexical for number", async () => {
+            assert.strictEqual(LiteralFrom.integer(0, DataFactory).value, "0")
+            assert.strictEqual(LiteralFrom.integer(-0, DataFactory).value, "0")
+            assert.strictEqual(LiteralFrom.integer(5, DataFactory).value, "5")
+            assert.strictEqual(LiteralFrom.integer(-3, DataFactory).value, "-3")
+            assert.strictEqual(LiteralFrom.integer(1e21, DataFactory).value, "1000000000000000000000")
+            assert.strictEqual(LiteralFrom.integer(-1e21, DataFactory).value, "-1000000000000000000000")
+        })
+
+        await it("produces canonical lexical for bigint", async () => {
+            assert.strictEqual(LiteralFrom.integer(0n, DataFactory).value, "0")
+            assert.strictEqual(LiteralFrom.integer(-3n, DataFactory).value, "-3")
+            assert.strictEqual(LiteralFrom.integer(123456789012345678901234567890n, DataFactory).value, "123456789012345678901234567890")
+        })
+
+        await it("throws for NaN", async () => {
+            assert.throws(() => LiteralFrom.integer(NaN, DataFactory))
+        })
+
+        await it("throws for Infinity", async () => {
+            assert.throws(() => LiteralFrom.integer(Infinity, DataFactory))
+        })
+
+        await it("throws for -Infinity", async () => {
+            assert.throws(() => LiteralFrom.integer(-Infinity, DataFactory))
+        })
+
+        await it("throws for non-integer", async () => {
+            assert.throws(() => LiteralFrom.integer(1.5, DataFactory))
+        })
+
+        await it("round-trips through LiteralAs.bigint", async () => {
+            assert.strictEqual(roundTrip(0), 0n)
+            assert.strictEqual(roundTrip(-0), 0n)
+            assert.strictEqual(roundTrip(5), 5n)
+            assert.strictEqual(roundTrip(-3), -3n)
+            assert.strictEqual(roundTrip(1e21), 10n ** 21n)
+            assert.strictEqual(roundTrip(123456789012345678901234567890n), 123456789012345678901234567890n)
+        })
+
+        await it("round-trips through LiteralAs.number", async () => {
+            const term = LiteralFrom.integer(-3, DataFactory)
+            assert.strictEqual(LiteralAs.number(new TermWrapper(term, new Store(), DataFactory)), -3)
+        })
+    })
+
 
 })
