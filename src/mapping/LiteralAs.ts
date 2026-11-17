@@ -1,5 +1,6 @@
 import type { Literal } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
+import { integerDatatypes, parseInteger } from "../xsd/integer.js"
 import { collapse } from "../xsd/pattern.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
@@ -20,7 +21,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...integerDatatypes)
 
-        return BigInt(parseLexical(term.value, integerPattern, term.datatype.value))
+        return parseInteger(term.value, term.datatype.value)
     }
 
     export function boolean(term: TermWrapper): boolean {
@@ -81,7 +82,7 @@ export namespace LiteralAs {
             return Number(parseLexical(term.value, decimalPattern, datatype))
         }
 
-        return Number(parseLexical(term.value, integerPattern, datatype))
+        return Number(parseInteger(term.value, datatype))
     }
 
     export function string(term: TermWrapper): string {
@@ -207,22 +208,6 @@ const byteArrayDatatypes: string[] = [
     XSD.hexBinary,
 ]
 
-const integerDatatypes: string[] = [
-    XSD.integer,
-    XSD.nonPositiveInteger,
-    XSD.long,
-    XSD.nonNegativeInteger,
-    XSD.negativeInteger,
-    XSD.int,
-    XSD.unsignedLong,
-    XSD.positiveInteger,
-    XSD.short,
-    XSD.unsignedInt,
-    XSD.byte,
-    XSD.unsignedShort,
-    XSD.unsignedByte
-]
-
 const numericDatatypes: string[] = integerDatatypes.concat([
     XSD.decimal,
     XSD.float,
@@ -234,7 +219,6 @@ const dateDatatypes: string[] = [
     XSD.dateTime,
 ]
 
-const integerPattern = /^[+-]?\d+$/
 const decimalPattern = /^[+-]?(\d+(\.\d*)?|\.\d+)$/
 const floatPattern = /^[+-]?((\d+(\.\d*)?|\.\d+)([Ee][+-]?\d+)?)$/
 const datePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})(Z|[+-]\d{2}:\d{2})?$/

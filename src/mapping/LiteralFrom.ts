@@ -1,6 +1,7 @@
 import type { DataFactory, Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import type { ILangString } from "../type/ILangString.js"
+import { formatInteger } from "../xsd/integer.js"
 
 /**
  * A collection of {@link ITermFromValueMapping | mappers} that create RDF/JS literals from JavaScript primitives.
@@ -55,19 +56,7 @@ export namespace LiteralFrom {
     }
 
     export function integer(value: number | bigint, factory: DataFactory): Term {
-        return factory.literal(integerLexical(value), factory.namedNode(XSD.integer))
-    }
-
-    function integerLexical(value: number | bigint): string {
-        if (typeof value === "bigint") {
-            return value.toString()
-        }
-
-        if (!Number.isInteger(value)) {
-            throw new Error(`Value ${value} is not an integer`)
-        }
-
-        return BigInt(value).toString()
+        return factory.literal(formatInteger(value), factory.namedNode(XSD.integer))
     }
 
     export function hex(value: Uint8Array, factory: DataFactory): Term {
