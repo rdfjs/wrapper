@@ -6,6 +6,28 @@ import assert from "node:assert"
 // TODO: Cover other methods in LiteralAS
 // TODO: Cover LiteralFrom
 await describe("LiteralAs", async () => {
+    await describe("number", async () => {
+        const read = (value: string, datatype: string) => LiteralAs.number(new TermWrapper(DataFactory.literal(value, DataFactory.namedNode(`http://www.w3.org/2001/XMLSchema#${datatype}`)), new Store(), DataFactory))
+
+        for (const datatype of ["double", "float"]) {
+            await it(`reads INF as Infinity (${datatype})`, async () => {
+                assert.strictEqual(read("INF", datatype), Infinity)
+            })
+
+            await it(`reads +INF as Infinity (${datatype})`, async () => {
+                assert.strictEqual(read("+INF", datatype), Infinity)
+            })
+
+            await it(`reads -INF as -Infinity (${datatype})`, async () => {
+                assert.strictEqual(read("-INF", datatype), -Infinity)
+            })
+
+            await it(`reads NaN as NaN (${datatype})`, async () => {
+                assert.ok(Number.isNaN(read("NaN", datatype)))
+            })
+        }
+    })
+
     await describe("uInt8Array", async () => {
         await it("throws when undefined", async () => {
             assert.throws(() => LiteralAs.uInt8Array(undefined!), ReferenceError)
