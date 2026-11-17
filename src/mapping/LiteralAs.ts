@@ -1,6 +1,7 @@
 import type { Literal } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import { integerDatatypes, parseInteger } from "../xsd/integer.js"
+import { numericDatatypes, parseNumeric } from "../xsd/numeric.js"
 import { collapse } from "../xsd/pattern.js"
 import { RDF } from "../vocabulary/RDF.js"
 import { TermWrapper } from "../TermWrapper.js"
@@ -58,31 +59,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...numericDatatypes)
 
-        const datatype = term.datatype.value
-
-        if (datatype === XSD.float || datatype === XSD.double) {
-            const lexical = collapse(term.value)
-
-            if (lexical === "INF" || lexical === "+INF") {
-                return Number.POSITIVE_INFINITY
-            }
-
-            if (lexical === "-INF") {
-                return Number.NEGATIVE_INFINITY
-            }
-
-            if (lexical === "NaN") {
-                return Number.NaN
-            }
-
-            return Number(parseLexical(lexical, floatPattern, datatype))
-        }
-
-        if (datatype === XSD.decimal) {
-            return Number(parseLexical(term.value, decimalPattern, datatype))
-        }
-
-        return Number(parseInteger(term.value, datatype))
+        return parseNumeric(term.value, term.datatype.value)
     }
 
     export function string(term: TermWrapper): string {
@@ -208,31 +185,13 @@ const byteArrayDatatypes: string[] = [
     XSD.hexBinary,
 ]
 
-const numericDatatypes: string[] = integerDatatypes.concat([
-    XSD.decimal,
-    XSD.float,
-    XSD.double,
-])
-
 const dateDatatypes: string[] = [
     XSD.date,
     XSD.dateTime,
 ]
 
-const decimalPattern = /^[+-]?(\d+(\.\d*)?|\.\d+)$/
-const floatPattern = /^[+-]?((\d+(\.\d*)?|\.\d+)([Ee][+-]?\d+)?)$/
 const datePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})(Z|[+-]\d{2}:\d{2})?$/
 const dateTimePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/
-
-function parseLexical(value: string, pattern: RegExp, datatype: string): string {
-    const lexical = collapse(value)
-
-    if (!pattern.test(lexical)) {
-        throw new SyntaxError(`Value "${value}" is not a valid lexical form of ${datatype}`)
-    }
-
-    return lexical
-}
 
 function isValidTimezone(timezone: string | undefined): boolean {
     if (timezone === undefined || timezone === "Z") {

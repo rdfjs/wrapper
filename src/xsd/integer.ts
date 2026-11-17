@@ -1,5 +1,5 @@
 import { XSD } from "../vocabulary/XSD.js"
-import { collapse, lexicalError, lexicalPattern } from "./pattern.js"
+import { collapse, digits, lexicalError, lexicalPattern, sign } from "./pattern.js"
 
 /**
  * The IRIs of the XSD datatypes whose value space is a subset of the integers.
@@ -22,8 +22,6 @@ export const integerDatatypes: string[] = [
     XSD.unsignedByte
 ]
 
-const sign = /[+-]?/
-const digits = /\d+/
 const integerPattern = lexicalPattern`${sign}${digits}`
 
 /**

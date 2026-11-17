@@ -8,6 +8,16 @@
 const xmlWhitespace = /[\t\n\r ]+/g
 
 /**
+ * A {@link RegExp} fragment that matches an optional sign.
+ */
+export const sign = /[+-]?/
+
+/**
+ * A {@link RegExp} fragment that matches one or more decimal digits.
+ */
+export const digits = /\d+/
+
+/**
  * Applies the XSD `collapse` whitespace facet to a lexical form: each run of XML whitespace (tab, line feed, carriage return and space) becomes one space, then leading and trailing spaces are removed.
  *
  * @param lexical - The lexical form to collapse.

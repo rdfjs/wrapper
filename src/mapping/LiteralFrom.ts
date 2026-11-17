@@ -1,6 +1,7 @@
 import type { DataFactory, Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import type { ILangString } from "../type/ILangString.js"
+import { formatDouble } from "../xsd/float.js"
 import { formatInteger } from "../xsd/integer.js"
 
 /**
@@ -36,23 +37,7 @@ export namespace LiteralFrom {
     }
 
     export function double(value: number, factory: DataFactory): Term {
-        return factory.literal(doubleLexical(value), factory.namedNode(XSD.double))
-    }
-
-    function doubleLexical(value: number): string {
-        if (value === Number.POSITIVE_INFINITY) {
-            return "INF"
-        }
-
-        if (value === Number.NEGATIVE_INFINITY) {
-            return "-INF"
-        }
-
-        if (Object.is(value, -0)) {
-            return "-0"
-        }
-
-        return value.toString()
+        return factory.literal(formatDouble(value), factory.namedNode(XSD.double))
     }
 
     export function integer(value: number | bigint, factory: DataFactory): Term {
