@@ -19,8 +19,7 @@ export namespace LiteralFrom {
     }
 
     export function base64(value: Uint8Array, factory: DataFactory): Term {
-        // TODO: Sort typing
-        return factory.literal((value as any).toBase64(), factory.namedNode(XSD.base64Binary))
+        return factory.literal(value.toBase64(), factory.namedNode(XSD.base64Binary))
     }
 
     export function boolean(value: boolean, factory: DataFactory): Term {
@@ -72,8 +71,7 @@ export namespace LiteralFrom {
     }
 
     export function hex(value: Uint8Array, factory: DataFactory): Term {
-        // TODO: Sort typing
-        return factory.literal((value as any).toHex(), factory.namedNode(XSD.hexBinary))
+        return factory.literal(value.toHex(), factory.namedNode(XSD.hexBinary))
     }
 
     export function langString(value: ILangString, factory: DataFactory): Term {
