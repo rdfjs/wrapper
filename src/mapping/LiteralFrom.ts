@@ -1,6 +1,8 @@
 import type { DataFactory, Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import type { ILangString } from "../type/ILangString.js"
+import { formatBase64Binary, formatHexBinary } from "../xsd/binary.js"
+import { formatBoolean } from "../xsd/boolean.js"
 import { formatDate, formatDateTime } from "../xsd/dateTime.js"
 import { formatDouble } from "../xsd/float.js"
 import { formatInteger } from "../xsd/integer.js"
@@ -22,11 +24,11 @@ export namespace LiteralFrom {
     }
 
     export function base64(value: Uint8Array, factory: DataFactory): Term {
-        return factory.literal(value.toBase64(), factory.namedNode(XSD.base64Binary))
+        return factory.literal(formatBase64Binary(value), factory.namedNode(XSD.base64Binary))
     }
 
     export function boolean(value: boolean, factory: DataFactory): Term {
-        return factory.literal(value.toString(), factory.namedNode(XSD.boolean))
+        return factory.literal(formatBoolean(value), factory.namedNode(XSD.boolean))
     }
 
     export function date(value: Date, factory: DataFactory): Term {
@@ -46,7 +48,7 @@ export namespace LiteralFrom {
     }
 
     export function hex(value: Uint8Array, factory: DataFactory): Term {
-        return factory.literal(value.toHex(), factory.namedNode(XSD.hexBinary))
+        return factory.literal(formatHexBinary(value), factory.namedNode(XSD.hexBinary))
     }
 
     export function langString(value: ILangString, factory: DataFactory): Term {

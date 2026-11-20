@@ -1,5 +1,7 @@
 import type { Literal } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
+import { binaryDatatypes, parseBase64Binary, parseHexBinary } from "../xsd/binary.js"
+import { parseBoolean } from "../xsd/boolean.js"
 import { dateDatatypes, parseDate, parseDateTime } from "../xsd/dateTime.js"
 import { integerDatatypes, parseInteger } from "../xsd/integer.js"
 import { numericDatatypes, parseNumeric } from "../xsd/numeric.js"
@@ -31,7 +33,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, XSD.boolean)
 
-        return term.value === "true" || term.value === "1"
+        return parseBoolean(term.value)
     }
 
     export function date(term: TermWrapper): Date {
@@ -141,16 +143,9 @@ export namespace LiteralAs {
         ensurePresent(term)
         ensureIs(term, TermWrapper)
         ensureTermType(term, "Literal")
-        ensureDatatype(term, ...byteArrayDatatypes)
+        ensureDatatype(term, ...binaryDatatypes)
 
-        switch (term.datatype.value) {
-            case XSD.hexBinary:
-                return Uint8Array.fromHex(term.value)
-
-            default:
-            case XSD.base64Binary:
-                return Uint8Array.fromBase64(term.value)
-        }
+        return (term.datatype.value === XSD.hexBinary ? parseHexBinary : parseBase64Binary)(term.value)
     }
 
     export function url(term: TermWrapper): URL {
@@ -179,8 +174,3 @@ export namespace LiteralAs {
         return [term.datatype.value, term.value]
     }
 }
-
-const byteArrayDatatypes: string[] = [
-    XSD.base64Binary,
-    XSD.hexBinary,
-]
