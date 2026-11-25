@@ -14,7 +14,7 @@ import { ensureIs, ensureListRoot, ensurePresent } from "../ensure.js"
  * - [Nodes in RDF 1.1 Concepts and Abstract Syntax](https://www.w3.org/TR/rdf11-concepts/#dfn-node)
  */
 export namespace TermAs {
-    export function instance<T>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T> {
+    export function instance<T extends TermWrapper>(constructor: ITermWrapperConstructor<T>): ITermAsValueMapping<T> {
         return (term: TermWrapper) => {
             ensurePresent(term)
             ensureIs(term, TermWrapper)
