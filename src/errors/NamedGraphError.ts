@@ -8,6 +8,6 @@ import type { Quad } from "@rdfjs/types"
  */
 export class NamedGraphError extends QuadError {
     constructor(quad: Quad, cause?: any) {
-        super(quad, `Graph must be default (empty) but was ${quad.value}`, cause)
+        super(quad, `Graph must be default (empty) but was ${quad.graph.value}`, cause)
     }
 }
