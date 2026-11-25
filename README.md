@@ -62,7 +62,7 @@ const dataset_x = new N3.Store(new N3.Parser().parse(rdf)) // rdf holds the turt
 Class usage:
 
 ```javascript
-const person1 = new Person("https://example.org/person1", dataset_x, DataFactory)
+const person1 = Person.from("https://example.org/person1", dataset_x, DataFactory)
 
 // Get property
 console.log(person1.name)
@@ -154,7 +154,7 @@ ex:person2
 Class usage:
 
 ```javascript
-const person2 = new Person("https://example.org/person2", dataset_z, DataFactory)
+const person2 = Person.from("https://example.org/person2", dataset_z, DataFactory)
 
 // Get property
 console.log(person2.name)
@@ -165,7 +165,7 @@ console.log(person2.mum.name)
 // outputs "Alice"
 
 // Set class properties
-const person3 = new Person("https://example.org/person3", dataset_z, DataFactory)
+const person3 = Person.from("https://example.org/person3", dataset_z, DataFactory)
 person3.name = "Joanne"
 person1.mum = person3
 console.log(person1.mum.name)
