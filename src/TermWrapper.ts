@@ -68,14 +68,35 @@ import type { IRdfJsTerm } from "./type/IRdfJsTerm.js"
  * // Our instance used as subject when matching statements in a dataset
  * dataset.match(instance as Term)
  * ```
+ *
+ * @example Narrowing the wrapped term type
+ * The type parameter `T` captures the type of the wrapped term, so {@link TermWrapper.termType | termType} narrows accordingly and the compiler can discriminate wrappers by the kind of term they wrap:
+ * ```ts
+ * const namedNode = new TermWrapper(factory.namedNode("http://example.com/someSubject"), dataset, factory)
+ * namedNode.termType // typed as "NamedNode"
+ *
+ * const literal = new TermWrapper(factory.literal("some value"), dataset, factory)
+ * literal.termType // typed as "Literal"
+ *
+ * let wrapper: TermWrapper<NamedNode> | TermWrapper<Literal>
+ *
+ * if (wrapper.termType === "Literal") {
+ *     wrapper // narrowed to TermWrapper<Literal>
+ * }
+ * ```
+ *
+ * @template T - The type of the {@link Term} being wrapped. Defaults to {@link Term}, so existing declarations like `class SomeClass extends TermWrapper` are unaffected. Inferred from the term passed to the {@link TermWrapper.constructor | constructor}; remains the default when constructing from an IRI string.
  */
-export class TermWrapper implements IRdfJsTerm {
-    private readonly original: Term
+export class TermWrapper<T extends Term = Term> implements IRdfJsTerm {
+    private readonly original: T
     private readonly _dataset: DatasetCore
     private readonly _factory: DataFactory
 
     /**
      * Creates a new instance of {@link TermWrapper}.
+     *
+     * @remarks
+     * The IRI is wrapped as a {@link NamedNode} created with the `factory`, so the type parameter `T` is not inferred from this overload and remains the default {@link Term} unless given explicitly.
      *
      * @param term The IRI of a named node that is the original term being wrapped.
      * @param dataset The dataset that contains the term being wrapped.
@@ -86,14 +107,17 @@ export class TermWrapper implements IRdfJsTerm {
     /**
      * Creates a new instance of {@link TermWrapper}.
      *
+     * @remarks
+     * The type parameter `T` is inferred from the `term` argument, narrowing {@link TermWrapper.termType | termType} to the term type of the wrapped term.
+     *
      * @param term The original term being wrapped.
      * @param dataset The dataset that contains the term being wrapped.
      * @param factory A collection of methods for creating terms.
      */
-    constructor(term: Term, dataset: DatasetCore, factory: DataFactory)
+    constructor(term: T, dataset: DatasetCore, factory: DataFactory)
 
-    constructor(term: string | Term, dataset: DatasetCore, factory: DataFactory) {
-        this.original = typeof term === "string" ? factory.namedNode(term) : term
+    constructor(term: string | T, dataset: DatasetCore, factory: DataFactory) {
+        this.original = (typeof term === "string" ? factory.namedNode(term) : term) as T
         this._dataset = dataset
         this._factory = factory
     }
@@ -189,7 +213,7 @@ export class TermWrapper implements IRdfJsTerm {
 
     //#region Implementation of RDF/JS Term
 
-    get termType(): Term["termType"] {
+    get termType(): T["termType"] {
         return this.original.termType
     }
 
