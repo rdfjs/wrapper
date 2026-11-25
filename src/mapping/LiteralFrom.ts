@@ -1,6 +1,11 @@
 import type { DataFactory, Literal, Term } from "@rdfjs/types"
 import { XSD } from "../vocabulary/XSD.js"
 import type { ILangString } from "../type/ILangString.js"
+import { formatBase64Binary, formatHexBinary } from "../xsd/binary.js"
+import { formatBoolean } from "../xsd/boolean.js"
+import { formatDate, formatDateTime } from "../xsd/dateTime.js"
+import { formatDouble } from "../xsd/float.js"
+import { formatInteger } from "../xsd/integer.js"
 
 /**
  * A collection of {@link ITermFromValueMapping | mappers} that create RDF/JS literals from JavaScript primitives.
@@ -19,59 +24,31 @@ export namespace LiteralFrom {
     }
 
     export function base64(value: Uint8Array, factory: DataFactory): Term {
-        return factory.literal(value.toBase64(), factory.namedNode(XSD.base64Binary))
+        return factory.literal(formatBase64Binary(value), factory.namedNode(XSD.base64Binary))
     }
 
     export function boolean(value: boolean, factory: DataFactory): Term {
-        return factory.literal(value.toString(), factory.namedNode(XSD.boolean))
+        return factory.literal(formatBoolean(value), factory.namedNode(XSD.boolean))
     }
 
     export function date(value: Date, factory: DataFactory): Term {
-        return factory.literal(value.toISOString().split("T")[0]!, factory.namedNode(XSD.date))
+        return factory.literal(formatDate(value), factory.namedNode(XSD.date))
     }
 
     export function dateTime(value: Date, factory: DataFactory): Term {
-        return factory.literal(value.toISOString(), factory.namedNode(XSD.dateTime))
+        return factory.literal(formatDateTime(value), factory.namedNode(XSD.dateTime))
     }
 
     export function double(value: number, factory: DataFactory): Term {
-        return factory.literal(doubleLexical(value), factory.namedNode(XSD.double))
-    }
-
-    function doubleLexical(value: number): string {
-        if (value === Number.POSITIVE_INFINITY) {
-            return "INF"
-        }
-
-        if (value === Number.NEGATIVE_INFINITY) {
-            return "-INF"
-        }
-
-        if (Object.is(value, -0)) {
-            return "-0"
-        }
-
-        return value.toString()
+        return factory.literal(formatDouble(value), factory.namedNode(XSD.double))
     }
 
     export function integer(value: number | bigint, factory: DataFactory): Term {
-        return factory.literal(integerLexical(value), factory.namedNode(XSD.integer))
-    }
-
-    function integerLexical(value: number | bigint): string {
-        if (typeof value === "bigint") {
-            return value.toString()
-        }
-
-        if (!Number.isInteger(value)) {
-            throw new Error(`Value ${value} is not an integer`)
-        }
-
-        return BigInt(value).toString()
+        return factory.literal(formatInteger(value), factory.namedNode(XSD.integer))
     }
 
     export function hex(value: Uint8Array, factory: DataFactory): Term {
-        return factory.literal(value.toHex(), factory.namedNode(XSD.hexBinary))
+        return factory.literal(formatHexBinary(value), factory.namedNode(XSD.hexBinary))
     }
 
     export function langString(value: ILangString, factory: DataFactory): Term {
