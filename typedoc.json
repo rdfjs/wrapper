@@ -10,7 +10,12 @@
         "typedoc-plugin-mdn-links"
     ],
     "externalSymbolLinkMappings": {
+        "@jeswr/async-dataset": {
+            "AsyncDatasetCore": "https://github.com/jeswr/async-dataset/blob/feat/async-dataset/src/AsyncDatasetCore.ts",
+            "DatasetCoreSource": "https://github.com/jeswr/async-dataset/blob/feat/async-dataset/src/AsyncDatasetCore.ts"
+        },
         "@rdfjs/types": {
+            "AsyncDatasetCore": "https://github.com/jeswr/types/blob/async-eventful-dataset-types/async-dataset.d.ts",
             "BlankNode": "https://rdf.js.org/data-model-spec/#blanknode-interface",
             "DataFactory": "https://rdf.js.org/data-model-spec/#datafactory-interface",
             "DatasetCore": "https://rdf.js.org/dataset-spec/#datasetcore-interface",
