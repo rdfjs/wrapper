@@ -1,10 +1,67 @@
 import type { ITermAsValueMapping } from "./type/ITermAsValueMapping.js"
 import type { ITermFromValueMapping } from "./type/ITermFromValueMapping.js"
-import type { DatasetCore, Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
+import type { DatasetCore, NamedNode, Quad, Quad_Object, Quad_Subject, Term } from "@rdfjs/types"
 import { TermWrapper } from "./TermWrapper.js"
 
+/**
+ * A {@link Set} view over the objects of all `<subject> <predicate> ?o`
+ * quads in the underlying dataset.
+ *
+ * @remarks
+ * The set is **live**: iteration, {@link size} and {@link has} re-query the
+ * dataset on every call, so the contents always reflect the current state.
+ * Mutations performed via {@link add}, {@link delete} and {@link clear}
+ * write through to the underlying dataset.
+ *
+ * Application code typically obtains instances through
+ * {@link SetFrom.subjectPredicate}, which constructs a fresh
+ * {@link WrappingSet} on every property access.
+ *
+ * @example Exposing a set-valued property on a model
+ * Assume the following RDF data:
+ * ```turtle
+ * BASE <http://example.com/>
+ *
+ * <someSubject> <someProperty> "some value", "some other value" .
+ * ```
+ *
+ * A model can expose the objects of `someProperty` as a mutable set of strings:
+ * ```ts
+ * class SomeClass extends TermWrapper {
+ *   get someProperty(): WrappingSet<string> {
+ *     return SetFrom.subjectPredicate(this, "http://example.com/someProperty", LiteralAs.string, LiteralFrom.string)
+ *   }
+ * }
+ *
+ * const instance = new SomeClass("http://example.com/someSubject", dataset, DataFactory)
+ *
+ * instance.someProperty.size                 // 2
+ * instance.someProperty.add("a third value") // the underlying dataset now contains a third statement
+ * ```
+ *
+ * @see
+ * - {@link SetFrom.subjectPredicate}
+ */
 export class WrappingSet<T> implements Set<T> {
     // TODO: Direction
+
+    /**
+     * Constructs a {@link WrappingSet}.
+     *
+     * Application code typically does not call this constructor directly;
+     * use {@link SetFrom.subjectPredicate} instead, which produces a
+     * {@link WrappingSet} for a given anchor / predicate / mapping triple.
+     *
+     * @param subject  The anchor {@link TermWrapper} - all quads in this
+     *                 set have this term as their subject.
+     * @param predicate The IRI of the predicate - all quads in this set
+     *                  have a {@link NamedNode} with this IRI as their
+     *                  predicate.
+     * @param termAs   Mapping from RDF object to JavaScript value, used by
+     *                 iteration.
+     * @param termFrom Mapping from JavaScript value to RDF object, used by
+     *                 {@link add}, {@link delete} and {@link has}.
+     */
     public constructor(private readonly subject: TermWrapper, private readonly predicate: string, private readonly termAs: ITermAsValueMapping<T>, private readonly termFrom: ITermFromValueMapping<T>) {
     }
 
