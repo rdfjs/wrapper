@@ -1,9 +1,11 @@
 import assert from "node:assert"
 import { describe, it } from "node:test"
 import { DataFactory } from "n3"
+import { CardinalityError } from "@rdfjs/wrapper"
 import { Child } from "./model/Child.js"
 import { datasetFromRdf } from "./util/datasetFromRdf.js"
 import { Parent } from "./model/Parent.js"
+import { Example } from "./vocabulary/Example.js"
 import type { Term } from "@rdfjs/types"
 
 const rdf = `
@@ -124,13 +126,23 @@ await describe("Term Wrapper", async () => {
     await describe("Arity Mapping", async () => {
         await describe("Singular", async () => {
             await it("get singular throws if more than 1", async () => {
-                // TODO: Test for specific errors
-                assert.throws(() => parent.hasTooManySingularString)
+                assert.throws(() => parent.hasTooManySingularString, (error: unknown) => {
+                    assert.ok(error instanceof CardinalityError)
+                    assert.equal(error.found, "multiple")
+                    assert.equal(error.predicate, Example.hasTooManySingularString)
+                    assert.equal(parent.equals(error.term), true)
+                    return true
+                })
             })
 
             await it("get singular throws if no value", async () => {
-                // TODO: Test for specific errors
-                assert.throws(() => parent.hasNoSingularString)
+                assert.throws(() => parent.hasNoSingularString, (error: unknown) => {
+                    assert.ok(error instanceof CardinalityError)
+                    assert.equal(error.found, "none")
+                    assert.equal(error.predicate, Example.hasNoSingularString)
+                    assert.equal(parent.equals(error.term), true)
+                    return true
+                })
             })
 
             await it("set singular to undefined throws", async () => {
@@ -199,8 +211,7 @@ await describe("Term Wrapper", async () => {
             assert.equal(parent.dataset.size, 22)
             parent.hasRecursive = undefined
             assert.equal(parent.dataset.size, 21)
-            // TODO: check for typed error singular no value
-            assert.throws(() => parent.hasRecursive)
+            assert.throws(() => parent.hasRecursive, CardinalityError)
             parent.hasRecursive = parent
             assert.equal(parent.hasRecursive.hasRecursive.hasRecursive.value, "x")
         })
