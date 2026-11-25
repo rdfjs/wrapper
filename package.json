@@ -34,7 +34,9 @@
     "Jesse Wright (https://github.com/jeswr)"
   ],
   "license": "MIT",
-  "dependencies": {},
+  "dependencies": {
+    "@jeswr/eventful-dataset": "github:jeswr/eventful-dataset#feat/eventful-dataset"
+  },
   "devDependencies": {
     "@rdfjs/types": "^2",
     "@types/node": "^26",
