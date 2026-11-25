@@ -19,7 +19,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...integerDatatypes)
 
-        return BigInt(term.value)
+        return BigInt(parseLexical(term.value, integerPattern, term.datatype.value))
     }
 
     export function boolean(term: TermWrapper): boolean {
@@ -37,7 +37,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...dateDatatypes)
 
-        return new Date(term.value)
+        return parseDate(term.value, term.datatype.value)
     }
 
     export function langString(term: TermWrapper): ILangString {
@@ -56,19 +56,31 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...numericDatatypes)
 
-        if (term.value === "INF" || term.value === "+INF") {
-            return Number.POSITIVE_INFINITY
+        const datatype = term.datatype.value
+
+        if (datatype === XSD.float || datatype === XSD.double) {
+            const lexical = collapse(term.value)
+
+            if (lexical === "INF" || lexical === "+INF") {
+                return Number.POSITIVE_INFINITY
+            }
+
+            if (lexical === "-INF") {
+                return Number.NEGATIVE_INFINITY
+            }
+
+            if (lexical === "NaN") {
+                return Number.NaN
+            }
+
+            return Number(parseLexical(lexical, floatPattern, datatype))
         }
 
-        if (term.value === "-INF") {
-            return Number.NEGATIVE_INFINITY
+        if (datatype === XSD.decimal) {
+            return Number(parseLexical(term.value, decimalPattern, datatype))
         }
 
-        if (term.value === "NaN") {
-            return Number.NaN
-        }
-
-        return Number(term.value)
+        return Number(parseLexical(term.value, integerPattern, datatype))
     }
 
     export function string(term: TermWrapper): string {
@@ -222,3 +234,100 @@ const dateDatatypes: string[] = [
     XSD.date,
     XSD.dateTime,
 ]
+
+const integerPattern = /^[+-]?\d+$/
+const decimalPattern = /^[+-]?(\d+(\.\d*)?|\.\d+)$/
+const floatPattern = /^[+-]?((\d+(\.\d*)?|\.\d+)([Ee][+-]?\d+)?)$/
+const datePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})(Z|[+-]\d{2}:\d{2})?$/
+const dateTimePattern = /^(-?(?:[1-9]\d{3,}|0\d{3}))-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/
+
+const xmlWhitespace = /[\t\n\r ]+/g
+
+function collapse(value: string): string {
+    return value.replaceAll(xmlWhitespace, " ").replace(/^ | $/g, "")
+}
+
+function parseLexical(value: string, pattern: RegExp, datatype: string): string {
+    const lexical = collapse(value)
+
+    if (!pattern.test(lexical)) {
+        throw new SyntaxError(`Value "${value}" is not a valid lexical form of ${datatype}`)
+    }
+
+    return lexical
+}
+
+function isValidTimezone(timezone: string | undefined): boolean {
+    if (timezone === undefined || timezone === "Z") {
+        return true
+    }
+
+    const hours = Number(timezone.slice(1, 3))
+    const minutes = Number(timezone.slice(4, 6))
+
+    return minutes <= 59 && (hours < 14 || (hours === 14 && minutes === 0))
+}
+
+function daysInMonth(year: number, month: number): number {
+    if (month === 2) {
+        return year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0) ? 29 : 28
+    }
+
+    return [4, 6, 9, 11].includes(month) ? 30 : 31
+}
+
+function isoYear(year: number): string {
+    if (year >= 0 && year <= 9999) {
+        return year.toString().padStart(4, "0")
+    }
+
+    return (year < 0 ? "-" : "+") + Math.abs(year).toString().padStart(6, "0")
+}
+
+function parseDate(value: string, datatype: string): Date {
+    const lexical = collapse(value)
+    const invalid = () => new SyntaxError(`Value "${value}" is not a valid lexical form of ${datatype}`)
+    const isDate = datatype === XSD.date
+    const match = (isDate ? datePattern : dateTimePattern).exec(lexical)
+
+    if (match === null) {
+        throw invalid()
+    }
+
+    const year = Number(match[1]) + 0
+    const month = Number(match[2])
+    const day = Number(match[3])
+    const hours = isDate ? 0 : Number(match[4])
+    const minutes = isDate ? 0 : Number(match[5])
+    const seconds = isDate ? 0 : Number(match[6])
+    const fraction = isDate ? "" : match[7] ?? ""
+    const timezone = isDate ? match[4] : match[8]
+
+    const validTime = isDate || (
+        minutes <= 59 &&
+        seconds <= 59 &&
+        (hours <= 23 || (hours === 24 && minutes === 0 && seconds === 0 && /^0*$/.test(fraction)))
+    )
+
+    if (month < 1 || month > 12 || day < 1 || day > daysInMonth(year, month) || !validTime || !isValidTimezone(timezone)) {
+        throw invalid()
+    }
+
+    const pad = (n: number) => n.toString().padStart(2, "0")
+    const rollover = hours === 24
+    const date = `${isoYear(year)}-${pad(month)}-${pad(day)}`
+    const time = `${pad(rollover ? 0 : hours)}:${pad(minutes)}:${pad(seconds)}.${fraction.padEnd(3, "0").slice(0, 3)}`
+    const iso = isDate && timezone === undefined ? date : `${date}T${time}${timezone ?? ""}`
+
+    const result = new Date(iso)
+
+    if (rollover) {
+        result.setTime(result.getTime() + 86400000)
+    }
+
+    if (Number.isNaN(result.getTime())) {
+        throw invalid()
+    }
+
+    return result
+}
