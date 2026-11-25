@@ -69,15 +69,55 @@ export class DatasetWrapper implements DatasetCore {
         return new klass(g, this.dataset, this.factory)
     }
 
+    /**
+     * Matches quads in the dataset and wraps their subjects.
+     *
+     * @remarks
+     * Each distinct subject term is yielded at most once, even when it occurs in multiple matching quads. Terms are compared by value, following [Term.equals](https://rdf.js.org/data-model-spec/#dfn-equals) semantics.
+     */
     protected* matchSubjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, predicate?: Term, object?: Term, graph?: Term): Iterable<T> {
+        const seen = new Set<string>()
+
         for (const q of this.match(undefined, predicate, object, graph)) {
-            yield new termWrapper(q.subject, this, this.factory)
+            const key = DatasetWrapper.keyOf(q.subject)
+
+            if (!seen.has(key)) {
+                seen.add(key)
+                yield new termWrapper(q.subject, this, this.factory)
+            }
         }
     }
 
+    /**
+     * Matches quads in the dataset and wraps their objects.
+     *
+     * @remarks
+     * Each distinct object term is yielded at most once, even when it occurs in multiple matching quads. Terms are compared by value, following [Term.equals](https://rdf.js.org/data-model-spec/#dfn-equals) semantics.
+     */
     protected* matchObjectsOf<T>(termWrapper: ITermWrapperConstructor<T>, subject?: Term, predicate?: Term, graph?: Term): Iterable<T> {
+        const seen = new Set<string>()
+
         for (const q of this.match(subject, predicate, undefined, graph)) {
-            yield new termWrapper(q.object, this, this.factory)
+            const key = DatasetWrapper.keyOf(q.object)
+
+            if (!seen.has(key)) {
+                seen.add(key)
+                yield new termWrapper(q.object, this, this.factory)
+            }
+        }
+    }
+
+    /**
+     * Derives a string key that identifies a term by value, so that terms equal per [Term.equals](https://rdf.js.org/data-model-spec/#dfn-equals) map to the same key.
+     */
+    private static keyOf(term: Term): string {
+        switch (term.termType) {
+            case "Literal":
+                return `${term.termType} ${term.language} ${term.direction ?? ""} ${JSON.stringify(term.datatype.value)} ${JSON.stringify(term.value)}`
+            case "Quad":
+                return `${term.termType} ${DatasetWrapper.keyOf(term.subject)} ${DatasetWrapper.keyOf(term.predicate)} ${DatasetWrapper.keyOf(term.object)} ${DatasetWrapper.keyOf(term.graph)}`
+            default:
+                return `${term.termType} ${JSON.stringify(term.value)}`
         }
     }
 
