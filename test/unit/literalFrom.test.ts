@@ -115,5 +115,53 @@ await describe("LiteralFrom", async () => {
         })
     })
 
+    await describe("base64", async () => {
+        await it("produces xsd:base64Binary lexical", async () => {
+            const term = LiteralFrom.base64(Uint8Array.from([48, 49, 50, 51, 52, 53, 54, 55, 56, 57]), DataFactory)
+            assert.strictEqual(term.value, "MDEyMzQ1Njc4OQ==")
+            assert.strictEqual((term as any).datatype.value, `${XSD}base64Binary`)
+        })
 
+        await it("produces empty lexical for empty array", async () => {
+            const term = LiteralFrom.base64(new Uint8Array(0), DataFactory)
+            assert.strictEqual(term.value, "")
+            assert.strictEqual((term as any).datatype.value, `${XSD}base64Binary`)
+        })
+
+        await it("respects byteOffset of subarray", async () => {
+            const term = LiteralFrom.base64(Uint8Array.from([0, 1, 2, 3, 4]).subarray(2, 4), DataFactory)
+            assert.strictEqual(term.value, "AgM=")
+        })
+
+        await it("round-trips through LiteralAs.uInt8Array", async () => {
+            const bytes = Uint8Array.from([0, 255, 128, 7, 42])
+            const term = LiteralFrom.base64(bytes, DataFactory)
+            assert.deepStrictEqual(LiteralAs.uInt8Array(new TermWrapper(term, new Store(), DataFactory)), bytes)
+        })
+    })
+
+    await describe("hex", async () => {
+        await it("produces xsd:hexBinary lexical", async () => {
+            const term = LiteralFrom.hex(Uint8Array.from([48, 49, 50, 51, 52, 53, 54, 55, 56, 57]), DataFactory)
+            assert.strictEqual(term.value, "30313233343536373839")
+            assert.strictEqual((term as any).datatype.value, `${XSD}hexBinary`)
+        })
+
+        await it("produces empty lexical for empty array", async () => {
+            const term = LiteralFrom.hex(new Uint8Array(0), DataFactory)
+            assert.strictEqual(term.value, "")
+            assert.strictEqual((term as any).datatype.value, `${XSD}hexBinary`)
+        })
+
+        await it("respects byteOffset of subarray", async () => {
+            const term = LiteralFrom.hex(Uint8Array.from([0, 1, 2, 3, 4]).subarray(2, 4), DataFactory)
+            assert.strictEqual(term.value, "0203")
+        })
+
+        await it("round-trips through LiteralAs.uInt8Array", async () => {
+            const bytes = Uint8Array.from([0, 255, 128, 7, 42])
+            const term = LiteralFrom.hex(bytes, DataFactory)
+            assert.deepStrictEqual(LiteralAs.uInt8Array(new TermWrapper(term, new Store(), DataFactory)), bytes)
+        })
+    })
 })
