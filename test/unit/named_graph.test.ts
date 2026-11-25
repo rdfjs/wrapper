@@ -117,6 +117,16 @@ await describe("namedGraph", async () => {
         )
     })
 
+    await it("NamedGraphError message reports the offending graph IRI", () => {
+        const ds = new SomeDataset(storeWithNamedGraph(), DataFactory).namedGraph
+        const offendingGraph = DataFactory.namedNode("https://other.org/g")
+
+        assert.throws(
+            () => ds.add(DataFactory.quad(s, p, o, offendingGraph)),
+            (error: unknown) => error instanceof NamedGraphError && error.message.includes(offendingGraph.value),
+        )
+    })
+
     await it("throws TermTypeError when matching with a non-default graph", () => {
         const ds = new SomeDataset(storeWithNamedGraph(), DataFactory).namedGraph
 
