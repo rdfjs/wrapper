@@ -75,6 +75,81 @@ console.log(person1.name)
 ```
 
 
+#### Language-tagged strings
+
+RDF literals can carry a [language tag](https://www.w3.org/TR/rdf11-concepts/#section-Graph-Literal) (giving them the `rdf:langString` datatype):
+
+```turtle
+PREFIX ex: <https://example.org/>
+
+ex:person1 ex:label "The librarian"@en .
+```
+
+`LiteralAs.langString` and `LiteralFrom.langString` map such literals to and from `ILangString` objects of the shape `{lang, string}`:
+
+```javascript
+import { LiteralAs, LiteralFrom, RequiredAs, RequiredFrom, TermWrapper } from "https://unpkg.com/@rdfjs/wrapper"
+
+class Person extends TermWrapper {
+	get label() {
+		return RequiredFrom.subjectPredicate(this, "https://example.org/label", LiteralAs.langString)
+	}
+
+	set label(value) {
+		RequiredAs.object(this, "https://example.org/label", value, LiteralFrom.langString)
+	}
+}
+```
+
+Class usage:
+
+```javascript
+const person1 = new Person("https://example.org/person1", dataset, DataFactory)
+
+// Get property
+console.log(person1.label)
+// outputs { lang: "en", string: "The librarian" }
+
+// Set property
+person1.label = { lang: "fr", string: "Le bibliothécaire" }
+console.log(person1.label)
+// outputs { lang: "fr", string: "Le bibliothécaire" }
+```
+
+If you prefer plain tuples over objects, the `LiteralAs.langTuple` and `LiteralFrom.langTuple` mappers translate the same literals to and from `[language, value]` pairs.
+
+When a property holds one value per language, `Mapping.languageDictionary` wraps it as a JavaScript [`Map`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) keyed by language tag:
+
+```turtle
+PREFIX ex: <https://example.org/>
+
+ex:person1 ex:label "The librarian"@en, "Le bibliothécaire"@fr .
+```
+
+```javascript
+import { LiteralAs, LiteralFrom, Mapping, TermWrapper } from "https://unpkg.com/@rdfjs/wrapper"
+
+class Person extends TermWrapper {
+	get labels() {
+		return Mapping.languageDictionary(this, "https://example.org/label", LiteralAs.langTuple, LiteralFrom.langTuple)
+	}
+}
+```
+
+Reads and writes through the `Map` are backed by the underlying dataset:
+
+```javascript
+const person1 = new Person("https://example.org/person1", dataset, DataFactory)
+
+console.log(person1.labels.get("en"))
+// outputs "The librarian"
+
+person1.labels.set("hu", "A könyvtáros")
+console.log(person1.labels.size)
+// outputs 3
+```
+
+
 ### Wrapping Datasets
 
 Dataset wrapping lets you find data in a graph that is meant to be wrapped.
