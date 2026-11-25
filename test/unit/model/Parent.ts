@@ -18,6 +18,10 @@ import { Example } from "../vocabulary/Example.js"
 
 export class Parent extends TermWrapper {
     /* Value Mapping */
+    public get hasBigint(): bigint {
+        return RequiredFrom.subjectPredicate(this, Example.hasBigint, LiteralAs.bigint)
+    }
+
     public get hasBlankNode(): string {
         return RequiredFrom.subjectPredicate(this, Example.hasBlankNode, LiteralAs.string)
     }
@@ -46,8 +50,16 @@ export class Parent extends TermWrapper {
         return RequiredFrom.subjectPredicate(this, Example.hasIri, LiteralAs.string)
     }
 
+    public get hasSymbol(): symbol {
+        return RequiredFrom.subjectPredicate(this, Example.hasSymbol, LiteralAs.symbol)
+    }
+
 
     /* Term Mapping */
+    public set hasBigint(value: bigint) {
+        RequiredAs.object(this, Example.hasBigint, value, LiteralFrom.bigint)
+    }
+
     public set hasBlankNode(value: string) {
         RequiredAs.object(this, Example.hasBlankNode, value, BlankNodeFrom.string)
     }
@@ -74,6 +86,10 @@ export class Parent extends TermWrapper {
 
     public set hasIri(value: string) {
         RequiredAs.object(this, Example.hasIri, value, NamedNodeFrom.string)
+    }
+
+    public set hasSymbol(value: symbol) {
+        RequiredAs.object(this, Example.hasSymbol, value, LiteralFrom.symbol)
     }
 
 
