@@ -36,7 +36,23 @@ export namespace LiteralFrom {
     }
 
     export function double(value: number, factory: DataFactory): Term {
-        return factory.literal(value.toString(), factory.namedNode(XSD.double))
+        return factory.literal(doubleLexical(value), factory.namedNode(XSD.double))
+    }
+
+    function doubleLexical(value: number): string {
+        if (value === Number.POSITIVE_INFINITY) {
+            return "INF"
+        }
+
+        if (value === Number.NEGATIVE_INFINITY) {
+            return "-INF"
+        }
+
+        if (Object.is(value, -0)) {
+            return "-0"
+        }
+
+        return value.toString()
     }
 
     export function integer(value: number, factory: DataFactory): Term {

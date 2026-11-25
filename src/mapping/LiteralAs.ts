@@ -56,7 +56,7 @@ export namespace LiteralAs {
         ensureTermType(term, "Literal")
         ensureDatatype(term, ...numericDatatypes)
 
-        if (term.value === "INF") {
+        if (term.value === "INF" || term.value === "+INF") {
             return Number.POSITIVE_INFINITY
         }
 
